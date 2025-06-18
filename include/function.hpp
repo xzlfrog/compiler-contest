@@ -1,3 +1,5 @@
+#pragma once
+
 #include"sym.hpp"
 #include"llvm.hpp"
 
@@ -12,4 +14,10 @@ void initial_program();
 
 std::string generate_variable_name();
 
-Symbol* get_tmp_symbol(dataType type,int scope);
+Symbol* get_tmp_variable(dataType type,int scope);
+
+Symbol* get_tmp_label();
+
+int getDataSize(dataType type);
+
+std::string DataTypeToString(dataType type);
