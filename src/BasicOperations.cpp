@@ -5,7 +5,7 @@
 
 void ArithmeticOperationLLVM::setOperandA(Symbol* operand)//set the result operand
     {
-        if(this->ty!=dataType::undefined){
+        if(this->ty!=dataType::data_undefined){
             checkType(operand->data->getType(),this->ty);
         }
         else{
@@ -16,7 +16,7 @@ void ArithmeticOperationLLVM::setOperandA(Symbol* operand)//set the result opera
 
 void ArithmeticOperationLLVM::setOperandB(Symbol* operand)//set the first operand
     {
-        if(this->ty!=dataType::undefined){
+        if(this->ty!=dataType::data_undefined){
             checkType(operand->data->getType(),this->ty);
         }
         else{
@@ -27,7 +27,7 @@ void ArithmeticOperationLLVM::setOperandB(Symbol* operand)//set the first operan
 
 void ArithmeticOperationLLVM::setOperandC(Symbol* operand)//set the first operand
     {
-        if(this->ty!=dataType::undefined){
+        if(this->ty!=dataType::data_undefined){
             checkType(operand->data->getType(),this->ty);
         }
         else{
