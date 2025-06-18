@@ -1,12 +1,15 @@
+#pragma once
+
 #include<string>
 #include<variant>
 #include<stdexcept>
 #include<vector>
+#include<utility>
 
-using ValueVariant = std::variant<bool,char,short,int,long long,float,double>;
+using ValueVariant = std::variant<bool,char,short,int,long long,float,double,void*>;
 
 enum symType{
-    undefined,
+    sym_undefined,
     function,
     label,
     variable,
@@ -16,18 +19,20 @@ enum symType{
     constant_i32,
     constant_i64,
     constant_f32,
-    constant_f64,
+    constant_f64
 };
 
 enum dataType{
-    undefined,
+    data_undefined,
+    void_,
     i1,
     i8,
     i16,
     i32,
     i64,
     f32,
-    f64
+    f64,
+    pointer
 };
 
 class Data {
@@ -187,14 +192,33 @@ public:
     }
 };
 
+class Data_pointer:public Data {
+private:
+    void* value;
+public:
+    dataType getType() const override {
+        return dataType::pointer;
+    }
+    
+    ValueVariant getValue() const override {
+        return value;
+    }
+    
+    void setValue(ValueVariant value) override {
+        if (std::holds_alternative<void*>(value)) {
+            this->value = std::get<void*>(value);
+        } else {
+            throw std::invalid_argument("ValueVariant is not pointer type");
+        }
+    }
+};
 
 class Symbol {
 private:
-    unsigned pointerLevel;//当前的符号是几级指针
-    int memorySize;//当前符号的内存大小，单位为字节
-    int elementNum;//当前符号的元素个数，如果是数组类型，则为数组的长度，否则为1
-    symType elementType;//指针最终指向的类型，比如i32******指向的为i32
-    std::vector<int> dimensions;//如果是数组类型，则为数组的维度，按从外到内的顺序存储  
+    //只考虑了指针，数组，基本数据类型，此处未考虑指针的指针，函数指针，指针数组的情况，若需要该功能，此处需要修改
+    dataType elementType;//当前指针指向的元素类型
+    std::vector<int> dimensions; //数组的维度信息 
+    Symbol* pointedElement;//指向的符号
 
 public:
     std::string name;
@@ -203,24 +227,53 @@ public:
     int offset;
     int scope;
     Symbol* next;
+    bool isArray;//是否是数组
 
-    Symbol(const std::string& name,symType type)
-        : name(name), type(type), data(nullptr), offset(0), scope(0), next(nullptr) {}
+    Symbol(const std::string& name,symType type,Data* data)
+        : name(name), type(type), data(data), offset(0), scope(0), next(nullptr) {}
     
     Symbol(const std::string& name)
-        : name(name), type(symType::undefined) , data(nullptr), offset(0), scope(0), next(nullptr) {}
+        : name(name), type(symType::sym_undefined) , data(nullptr), offset(0), scope(0), next(nullptr) {}
+
+    Symbol(const std::string& name,symType type)
+        : name(name), type(symType::sym_undefined) , data(nullptr), offset(0), scope(0), next(nullptr) {}
 
     Symbol(const std::string& name,Data*data)
-        : name(name), type(symType::undefined) , data(data), offset(0), scope(0), next(nullptr) {}
+        : name(name), type(symType::sym_undefined) , data(data), offset(0), scope(0), next(nullptr){}
 
-    //这几个成员函数写yacc时不用考虑
-    //分配内存空间，在写yacc文件时不用管这个函数，考虑到底分配内存空间还是分配寄存器空间交给后面的工作
-    template<typename T,typename ...Args>
-    void allocateMemory(int memorySize,symType elementType,unsigned pointerLevel,Args ...dimensions);
 
-    //同上,只是这个是分配寄存器空间
+    //yacc文件中不需要调用以下方法
+    //----------------------------------------------------------------
+    //在allocaLLVM类中调用，yacc文件中调用allocaLLVM中的方法，不调用这个方法
+    template<typename... Args>
+    void allocateMemory(dataType elementType,Args... dims){
+        this->elementType = elementType;
+        Data_pointer* data_pointer = new Data_pointer();
+        data_pointer->setValue(nullptr);
+        this->data=data_pointer;
+        this->addDimensions(dims...);
+    }
+
+    template<typename... Args>
+        void addDimensions(Args... dims){ 
+        (this->dimensions.push_back(static_cast<size_t>(dims)), ...);
+    }
+
+    void setPointedElement(Symbol* element){this->pointedElement=element;}
+
+    void addDimensions(){}
+    
     void allocateRegister();
 
     //从内存中加在数据到寄存器中
     Symbol* loadFromMemory();
+
+    dataType getElementType() const {
+        return elementType;
+    }
+
+    const std::vector<int>& getDimensions() const {
+        return dimensions;
+    }
+
 };
