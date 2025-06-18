@@ -1,3 +1,4 @@
+#pragma once
 #include"sym.hpp"
 
 enum LLVMtype{
@@ -10,7 +11,7 @@ enum LLVMtype{
     urem,//unsigned remainder
     logical_and,//logical and
     logical_or,//logical or
-    logical_xor,//logical xor
+    logical_xor,//logical xor 非可以用异或来实现，y=x xor 1即可实现异或操作
     icmp_eq,//integer equal
     icmp_ne,//integer not equal
     icmp_ugt,//integer unsigned greater than
@@ -28,10 +29,11 @@ enum LLVMtype{
     fcmp_ole,//float less than or equal
     fcmp_one,//float not equal
     fcmp_ord,// float ordered
-    alloca,//allocate memory
+    allocate,//allocate memory
     load,//load
     store,//store
     getelementptr,//get element pointer
+    label,//label
     br_unconditional,//unconditional branch
     br_conditional,//conditional branch
     indirectbr,//indirect branch,computed goto
@@ -52,6 +54,10 @@ enum LLVMtype{
     ptrtoint,//指针转整数，如原来地址为0x1000的指针，转为整数后为4096
     inttoptr,//整数转指针,同上，反之
     addrspacecast,//地址空间转换
+    global_def,//全局变量定义
+    const_def,//常量定义
+    func_def,//函数定义
+    func_decl//函数声明
 };
 
 class LLVM {
@@ -60,8 +66,6 @@ class LLVM {
     dataType ty;//[i1,i8,i16,i32,i64,f32,f64]
     LLVM* next;
     LLVM* prev;
-
-    virtual void setLLVMType(LLVMtype type);
 
     virtual std::string out_str() const;
 };
