@@ -9,7 +9,12 @@ public:
     Symbol* b;//operand 1
     Symbol* c;//operand 2
 
-    void setLLVMType(LLVMtype type) override;
+    void setLLVMType(LLVMtype type);
+
+    void BasicOperationLLVMInit(LLVMtype type,Symbol*a,Symbol*b,Symbol*c){
+        this->setOperand(a,b,c);
+        this->setLLVMType(type);
+    }
 
     std::string out_str() const override;//output the LLVM IR string representation
     
