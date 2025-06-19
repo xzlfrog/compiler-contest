@@ -11,143 +11,123 @@ class ControlOperationLLVM:public LLVM{
 //
 class ConditionalBranchLLVM:public ControlOperationLLVM{
 public:
-    Symbol* condition; // The condition for the branch
-    Symbol* trueBranch;  // The LLVM IR for the true branch
-    Symbol* falseBranch; // The LLVM IR for the false branch
+    BasicSymbol* condition; // The condition for the branch
+    LabelSymbol* trueBranch;  // The LLVM IR for the true branch
+    LabelSymbol* falseBranch; // The LLVM IR for the false branch
 
     std::string out_str() const override; // Output the LLVM IR string representation
 
-    void setCondition(Symbol* cond); // Set the condition for the branch
+    void setCondition(BasicSymbol* cond); // Set the condition for the branch
 
-    void setTrueBranch(Symbol* trueBranch); // Set the true branch LLVM IR
+    void setTrueBranch(LabelSymbol* trueBranch); // Set the true branch LLVM IR
 
-    void setFalseBranch(Symbol* falseBranch); // Set the false branch LLVM IR
+    void setFalseBranch(LabelSymbol* falseBranch); // Set the false branch LLVM IR
 
-    ConditionalBranchLLVM(Symbol* cond, Symbol* trueBranch, Symbol* falseBranch)
-        : condition(cond), trueBranch(trueBranch), falseBranch(falseBranch) 
-        { 
-            this->llvmType=LLVMtype::br_conditional; 
-        }
+    BasicSymbol* getCondition(){return this->condition;}
+    LabelSymbol* getTrueBranch(){return this->trueBranch;}
+    LabelSymbol* getFalseBranch(){return this->falseBranch;}
 };
 
 //br target
 class UnconditionalBranchLLVM:public ControlOperationLLVM{
 public:
-    Symbol* target; // The target label for the branch
-
-    UnconditionalBranchLLVM(Symbol* target=nullptr) : target(target){
-        this->llvmType = LLVMtype::br_unconditional;
-    }
+    LabelSymbol* target; // The target label for the branch
 
     std::string out_str() const override; // Output the LLVM IR string representation
 
-    void setTarget(Symbol* target); // Set the target label for the branch
+    void setTarget(LabelSymbol* target); // Set the target label for the branch
+
+    LabelSymbol* getTarget(){return this->target;}
 };
 
 //return 
 class ReturnLLVM:public ControlOperationLLVM{
 public:
-    Symbol* returnValue; // The value to return
-    dataType ty;
-
-    ReturnLLVM(Symbol* returnValue=nullptr): returnValue(returnValue){
-        this->llvmType=LLVMtype::ret;
-        if(returnValue==nullptr||returnValue->data==nullptr)
-            return;
-        ty=returnValue->data->getType();
-    }
+    BasicSymbol* returnValue; // The value to return
 
     std::string out_str() const override; // Output the LLVM IR string representation
 
-    void setReturnValue(Symbol* value); // Set the return value
+    void setReturnValue(BasicSymbol* value); // Set the return value
+    BasicSymbol* getReturnValue(){return this->returnValue;}
+    dataType getReturnType(){return this->returnValue->getDataType();}
 };
 
 //call 
 class CallLLVM:public ControlOperationLLVM{
 public:
-    Symbol* function; // The function to call
+    FuncSymbol* function; // The function to call
 
-    std::vector<Symbol*> arguments; // The arguments to pass to the function
-
-    std::vector<dataType> arguments_ty;
-
-    CallLLVM(Symbol* func=nullptr,std::vector<Symbol*>arguments={}):function(func),arguments(arguments){
-        this->llvmType=LLVMtype::call;
-
-        if(arguments.size()!=0)
-        {
-            for(auto argument:arguments)
-            {
-                if(argument->data!=nullptr)
-                    arguments_ty.push_back(argument->data->getType());
-            }
-        }
-    }
+    std::vector<BasicSymbol*> arguments; // The arguments to pass to the function
 
     std::string out_str() const override; // Output the LLVM IR string representation
 
-    void setFunction(Symbol* func); // Set the function to call
+    void setFunction(FuncSymbol* func); // Set the function to call
 
-    void addArgument(Symbol* arg); // Add an argument to the function call
+    void addArgument(BasicSymbol* arg); // Add an argument to the function call
+
+    void addArguments(std::vector<BasicSymbol*> args);
+
+    void setArguments(std::vector<BasicSymbol*>& args);
+
+    const std::vector<dataType>& getArgumentsType(){return this->function->getArgumentsType();};
+
+    template<typename ...Args>
+    void addArguments(Args... args){
+        (this->arguments.push_back(static_cast<BasicSymbol*>(args),...));
+    }
+
+    FuncSymbol* getFuncSymbol(){return this->function;}
+    const std::vector<BasicSymbol*>& getArguments() const{return this->arguments;}
+    const std::vector<dataType>& getArgumentsType() const{return this->function->getArgumentsType();}
+
 };
 
 //switch (condition) case case_val_dest.first goto label case_val_dest_second
 class SwitchLLVM:public ControlOperationLLVM{
 public:
-    Symbol* condition; // The condition for the switch
+    BasicSymbol* condition; // The condition for the switch
 
-    std::vector<std::pair<Symbol*,Symbol*>> case_val_dest; //case values and destinations
+    std::vector<std::pair<BasicSymbol*,LabelSymbol*>> case_val_dest; //case values and destinations
 
-    Symbol* defaultCase; // The default case LLVM IR
-
-    SwitchLLVM(Symbol* cond=nullptr, Symbol* defaultCase=nullptr)
-        : condition(cond), defaultCase(defaultCase) {
-        this->llvmType = LLVMtype::llvm_switch;
-    }
+    LabelSymbol* defaultCase; // The default case LLVM IR
 
     std::string out_str() const override; // Output the LLVM IR string representation
 
-    void setCondition(Symbol* cond); // Set the condition for the switch
+    void setCondition(BasicSymbol* cond); // Set the condition for the switch
 
-    void addCase(Symbol* case_val, Symbol* case_des); // Add a case to the switch
+    void addCase(BasicSymbol* case_val, LabelSymbol* case_des); // Add a case to the switch
 
-    void addCase(std::vector<Symbol*> case_val, std::vector<Symbol*> case_des); // Add a case to the switch
+    void addCase(std::vector<BasicSymbol*> case_val, std::vector<LabelSymbol*> case_des); // Add a case to the switch
 
-    void setDefaultCase(Symbol* defaultIR); // Set the default case LLVM IR
+    void setDefaultCase(LabelSymbol* defaultIR); // Set the default case LLVM IR
+
+    BasicSymbol* getCondition(){return this->condition;}
+    LabelSymbol* getDefaultCase(){return this->defaultCase;}
+    const std::vector<std::pair<BasicSymbol*,LabelSymbol*>> getCaseValAndDest()const{return this->case_val_dest;}
 };
 
 //dest_sym=phi dest_ty [src_sym1,label1],[src_sym2,label2]......
 class PhiLLVM:public ControlOperationLLVM{
 public:
-    Symbol* dest_sym;
-    std::vector<std::pair<Symbol*,Symbol*>> vals_srcs;
-    dataType dest_ty;
+    BasicSymbol* dest_sym;
+    std::vector<std::pair<BasicSymbol*,LabelSymbol*>> vals_srcs;
 
-    PhiLLVM(Symbol* dest_sym,dataType dest_ty):
-    dest_sym(dest_sym),dest_ty(dest_ty)
-    {
-        this->llvmType=LLVMtype::phi;
-        if(dest_sym->data==nullptr)
-            return;
-        checkType(dest_sym->data->getType(),dest_ty);
-    }
+    void addCase(BasicSymbol*src_sym,LabelSymbol*src_label);
 
-    void addCase(Symbol*src_sym,Symbol*label);
-
-    void addCase(std::vector<Symbol*> src_sym,std::vector<Symbol*>label);
+    void addCase(std::vector<BasicSymbol*> src_sym,std::vector<LabelSymbol*>src_label);
 
     std::string out_str() const override;
+    BasicSymbol* getDestSymbol(){return this->dest_sym;}
+    const std::vector<std::pair<BasicSymbol*,LabelSymbol*>>getValAndSrc() const{return this->vals_srcs;}
+    dataType getDestType(){return this->dest_sym->getDataType();}
 
 };
 
 //label:
 class Label:public ControlOperationLLVM{
 public:
-    Symbol* label;
+    LabelSymbol* label;
 
-    Label(Symbol* label):label(label){
-        if(label->type!=symType::label)
-            throw std::invalid_argument("the symbol is not a label");
-        this->llvmType=LLVMtype::label;
-    }
+    std::string out_str() const override;
+    LabelSymbol* getLabel(){return this->label;}
 };
