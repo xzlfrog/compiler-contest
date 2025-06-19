@@ -1,5 +1,5 @@
 #pragma once
-#include"sym.hpp"
+#include"data.hpp"
 
 enum LLVMtype{
     add,//add
@@ -29,7 +29,8 @@ enum LLVMtype{
     fcmp_ole,//float less than or equal
     fcmp_one,//float not equal
     fcmp_ord,// float ordered
-    allocate,//allocate memory
+    allocate_nonarray,//allocate memory
+    allocate_array,//allocate memory
     load,//load
     store,//store
     getelementptr,//get element pointer
@@ -63,7 +64,6 @@ enum LLVMtype{
 class LLVM {
     public : 
     LLVMtype llvmType;
-    dataType ty;//[i1,i8,i16,i32,i64,f32,f64]
     LLVM* next;
     LLVM* prev;
 
