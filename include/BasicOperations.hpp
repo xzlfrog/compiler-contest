@@ -1,3 +1,5 @@
+#pragma once
+
 #include"sym.hpp"
 #include"llvm.hpp"
 
@@ -5,31 +7,29 @@
 class ArithmeticOperationLLVM : public LLVM{
 
 public:
-    Symbol* a;//result
-    Symbol* b;//operand 1
-    Symbol* c;//operand 2
+    BasicSymbol* a;//result
+    BasicSymbol* b;//operand 1
+    BasicSymbol* c;//operand 2
+    dataType ty;//b,c的数据类型，只有比较指令a，b，c的数据类型不同，此时a的类型位i1，其他时候三者数据类型相同
 
     void setLLVMType(LLVMtype type);
 
-    void BasicOperationLLVMInit(LLVMtype type,Symbol*a,Symbol*b,Symbol*c){
-        this->setOperand(a,b,c);
-        this->setLLVMType(type);
-    }
-
     std::string out_str() const override;//output the LLVM IR string representation
     
-    void setOperandA(Symbol* operand);//set the result operand
+    void setOperandA(BasicSymbol* operand);//set the result operand
 
-    void setOperandB(Symbol* operand);//set the first operand
+    void setOperandB(BasicSymbol* operand);//set the first operand
 
-    void setOperandC(Symbol* operand);//set the second operand
+    void setOperandC(BasicSymbol* operand);//set the second operand
 
-    void setOperand(Symbol* a,Symbol* b,Symbol *c);
+    void setOperand(BasicSymbol* a,BasicSymbol* b,BasicSymbol *c);
+
+    BasicSymbol* getA(){return this->a;}
+    BasicSymbol* getB(){return this->b;}
+    BasicSymbol* getC(){return this->c;}
 
 };
 
 typedef ArithmeticOperationLLVM LogicalOperationLLVM;
 
 typedef ArithmeticOperationLLVM CmpOperationLLVM;
-
-
