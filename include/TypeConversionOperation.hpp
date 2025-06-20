@@ -10,8 +10,8 @@ public:
     BasicSymbol* dest_sym;
 
     std::string out_str() const override;
-    BasicSymbol* getSrcSymbol(){return this->src_sym;}
-    BasicSymbol* getDestSymbol(){return this->dest_sym;}
-    dataType getSrcType(){return this->src_sym->getDataType();}
-    dataType getDestType(){return this->dest_sym->getDataType();}
+    BasicSymbol* getSrcSymbol();
+    BasicSymbol* getDestSymbol();
+    dataType getSrcType();
+    dataType getDestType();
 };
