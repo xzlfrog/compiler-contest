@@ -19,14 +19,25 @@ enum dataType{
     pointer
 };
 
+enum initializer{
+    zeroinitializer,
+    undef
+};
+
 class Data {
 private:
     dataType type;
+    bool isInitialized;
+    initializer initMode;
     
 public:
-    virtual dataType getType() const =0;
-    virtual ValueVariant getValue() const =0;
-    virtual void setValue(ValueVariant value) =0;
+    virtual dataType getType() const;
+    virtual ValueVariant getValue() const;
+    virtual void setValue(ValueVariant value);
+    void setIsInitialize(bool flag);
+    bool getIsInitialized();
+    void setInitMode(initializer initMode);
+    initializer getInitMode();
 };
 
 using ValueVariant = std::variant<bool,char,short,int,long long,float,double,Data*>;
@@ -35,147 +46,63 @@ class Data_i1:public Data {
 private:
     bool value;
 public:
-    dataType getType() const override {
-        return dataType::i1;
-    }
-    
-    ValueVariant getValue() const override {
-        return value;
-    }
-    
-    void setValue(ValueVariant value) override {
-        if (std::holds_alternative<bool>(value)) {
-            this->value = std::get<bool>(value);
-        } else {
-            throw std::invalid_argument("ValueVariant is not bool type");
-        }
-    }
+    dataType getType() const override;
+    ValueVariant getValue() const override;
+    void setValue(ValueVariant value) override;
 };
 
 class Data_i8:public Data {
 private:
     char value;
 public:    
-    dataType getType() const override {
-        return dataType::i8;
-    }
-    
-    ValueVariant getValue() const override {
-        return value;
-    }
-    
-    void setValue(ValueVariant value) override {
-        if (std::holds_alternative<char>(value)) {
-            this->value = std::get<char>(value);
-        } else {
-            throw std::invalid_argument("ValueVariant is not char type");
-        }
-    }
+    dataType getType() const override;
+    ValueVariant getValue() const override;
+    void setValue(ValueVariant value) override;
 };
 
 class Data_i16:public Data {
 private:
     short value;
 public:    
-    dataType getType() const override {
-        return dataType::i16;
-    }
-    
-    ValueVariant getValue() const override {
-        return value;
-    }
-    
-    void setValue(ValueVariant value) override {
-        if (std::holds_alternative<short>(value)) {
-            this->value = std::get<short>(value);
-        } else {
-            throw std::invalid_argument("ValueVariant is not short type");
-        }
-    }
+    dataType getType() const override;
+    ValueVariant getValue() const override;
+    void setValue(ValueVariant value) override;
 };
 
 class Data_i32:public Data {
 private:
     int value;
 public:    
-    dataType getType() const override {
-        return dataType::i32;
-    }
-    
-    ValueVariant getValue() const override {
-        return value;
-    }
-    
-    void setValue(ValueVariant value) override {
-        if (std::holds_alternative<int>(value)) {
-            this->value = std::get<int>(value);
-        } else {
-            throw std::invalid_argument("ValueVariant is not int type");
-        }
-    }
+    dataType getType() const override;
+    ValueVariant getValue() const override;
+    void setValue(ValueVariant value) override;
 };
 
 class Data_i64:public Data {
 private:
     long long value;
 public:    
-    dataType getType() const override {
-        return dataType::i64;
-    }
-    
-    ValueVariant getValue() const override {
-        return value;
-    }
-    
-    void setValue(ValueVariant value) override {
-        if (std::holds_alternative<long long>(value)) {
-            this->value = std::get<long long>(value);
-        } else {
-            throw std::invalid_argument("ValueVariant is not long long type");
-        }
-    }
+    dataType getType() const override;
+    ValueVariant getValue() const override;
+    void setValue(ValueVariant value) override;
 };
 
 class Data_f32:public Data {
 private:
     float value;
 public:    
-    dataType getType() const override {
-        return dataType::f32;
-    }
-    
-    ValueVariant getValue() const override {
-        return value;
-    }
-    
-    void setValue(ValueVariant value) override {
-        if (std::holds_alternative<float>(value)) {
-            this->value = std::get<float>(value);
-        } else {
-            throw std::invalid_argument("ValueVariant is not float type");
-        }
-    }
+    dataType getType() const override;
+    ValueVariant getValue() const override;
+    void setValue(ValueVariant value) override;
 };
 
 class Data_f64:public Data {
 private:
     double value;
 public:    
-    dataType getType() const override {
-        return dataType::f64;
-    }
-    
-    ValueVariant getValue() const override {
-        return value;
-    }
-    
-    void setValue(ValueVariant value) override {
-        if (std::holds_alternative<double>(value)) {
-            this->value = std::get<double>(value);
-        } else {
-            throw std::invalid_argument("ValueVariant is not double type");
-        }
-    }
+    dataType getType() const override;
+    ValueVariant getValue() const override;
+    void setValue(ValueVariant value) override;
 };
 
 class Data_pointer:public Data {
@@ -199,39 +126,5 @@ public:
     }
 };
 
-Data* createData(dataType type,ValueVariant v){
-    Data* ret;
-    switch (type)
-    {
-    case dataType::i1:
-        ret=new Data_i1();
-        ret->setValue(v);
-        return ret;
-    case dataType::i8:
-        ret=new Data_i8();
-        ret->setValue(v);
-        return ret;
-    case dataType::i16:
-        ret=new Data_i16();
-        ret->setValue(v);
-        return ret;
-    case dataType::i32:
-        ret=new Data_i32();
-        ret->setValue(v);
-        return ret;
-    case dataType::i64:
-        ret=new Data_i64();
-        ret->setValue(v);
-        return ret;
-    case dataType::f32:
-        ret=new Data_f32();
-        ret->setValue(v);
-        return ret;
-    case dataType::f64:
-        ret=new Data_f64();
-        ret->setValue(v);
-        return ret;
-    default:
-        throw std::invalid_argument("invalid type in creating a new data");
-    }
-}
+Data* createData(dataType type,ValueVariant v);
+Data* createData(dataType type);
