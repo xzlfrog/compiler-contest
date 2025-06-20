@@ -55,10 +55,12 @@ enum LLVMtype{
     ptrtoint,//指针转整数，如原来地址为0x1000的指针，转为整数后为4096
     inttoptr,//整数转指针,同上，反之
     addrspacecast,//地址空间转换
-    global_def,//全局变量定义
-    const_def,//常量定义
+    global_nonarray,//全局变量(非数组)定义
+    global_array,//全局变量(数组)定义
+    const_nonarray,//常量定义
+    const_array,
     func_def,//函数定义
-    func_decl//函数声明
+    func_decl,//函数声明
 };
 
 class LLVM {
@@ -68,6 +70,7 @@ class LLVM {
     LLVM* prev;
 
     virtual std::string out_str() const;
+    LLVMtype getLLVMType();
 };
 
 class LLVMList{
@@ -76,12 +79,8 @@ public:
     LLVM* tail;
     
     void InsertTail(LLVM* llvm);
-
     void InsertHead(LLVM* llvm);
-
     void InsertAfter(LLVM* pos,LLVM* llvm);//insert after a specific position
-
     void InsertBefore(LLVM* pos,LLVM* llvm);//insert before a specific position
-
     void Remove(LLVM* llvm); //remove a specific LLVM node
 };
