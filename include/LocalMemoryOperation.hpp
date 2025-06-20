@@ -16,8 +16,8 @@ class AllocaNonArrayLLVM:public LocalMemoryOperationLLVM{
         dataType ty=dataType::pointer;
 
         std::string out_str() const override;
-
-        dataType getPointedType(){return this->sym->getPointedType();}
+        dataType getPointedType();
+        PointerSymbol* getSymbol();
 };
 
 //array=alloca [dim[0]*[dim[1]*[......arrayType]]]
@@ -25,14 +25,9 @@ class AllocaArrayLLVM:public LocalMemoryOperationLLVM{
     public:
         ArraySymbol* array;
 
-        dataType getArrayType(){
-            return this->array->getArrayType();
-        }
-
-        const std::vector<int>& getDimensions() const{
-           return this->array->getDimensions();
-        }
-
+        dataType getArrayType();
+        const std::vector<int>& getDimensions() const;
+        ArraySymbol* getArray();
         std::string out_str() const override;
 };
 
@@ -44,11 +39,11 @@ public:
     BasicSymbol* dest_sym;//目的操作数
 
     //dest_ty:this->getDestType()
-    dataType getDestType(){return this->dest_sym->getDataType();}
-
+    dataType getDestType();
     //src_ty:this->getSrcType()
-    dataType getSrcType(){return this->src_sym->getPointedType();}
-
+    dataType getSrcType();
+    PointerSymbol* getSrcSymbol();
+    BasicSymbol* getDestSymbol();
     std::string out_str() const override;
 };
 
@@ -59,29 +54,28 @@ public:
     PointerSymbol* dest_sym;//目的操作数
 
     //dest_ty:this->getDestType()
-    dataType getDestType(){return this->dest_sym->getPointedType();}
-
+    dataType getDestType();
     //src_ty:this->getSrcType()
-    dataType getSrcType(){return this->src_sym->getDataType();}
-
+    dataType getSrcType();
+    BasicSymbol* getSrcSymbol();
+    PointerSymbol* getDestSymbol();
     std::string out_str() const override;
 };
 
-//getelementptr [dim[0]*[dim[1]*......*ty1]] [dim[0]*[dim[1]*......*ty2]]* ptrval ,ty_idx1.first ty_idx1.second,ty_idx2.first ty_idx2.second......
+//dest_sym=getelementptr [dim[0]*[dim[1]*......*ty1]] [dim[0]*[dim[1]*......*ty2]]* ptrval ,ty_idx1.first ty_idx1.second,ty_idx2.first ty_idx2.second......
 class GetElementPtrLLVM:public LocalMemoryOperationLLVM{
 public:
     ArraySymbol* ptrval;
+    BasicSymbol* dest_sym;
     std::vector<std::pair<dataType,BasicSymbol*>> ty_idx;
 
     //即ty1,ty2
-    dataType getArrayType(){return this->ptrval->getArrayType();}
-
-    const std::vector<int>&getDimensions() const{return this->ptrval->getDimensions();}
-
+    dataType getArrayType();
+    const std::vector<int>&getDimensions() const;
+    ArraySymbol* getSrcSymbol();
+    BasicSymbol* getDestSymbol();
+    const std::vector<std::pair<dataType,BasicSymbol*>> getTyAndIdx();
     void addTyIdx(dataType ty,BasicSymbol* idx);
-
     void addTyIdx(std::vector<dataType>ty,std::vector<BasicSymbol*>idx);
-
     std::string out_str() const override;
-
 };
