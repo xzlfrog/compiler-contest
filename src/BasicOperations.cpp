@@ -49,3 +49,8 @@ void ArithmeticOperationLLVM::setOperand(BasicSymbol* a, BasicSymbol* b, BasicSy
     setOperandB(b);
     setOperandC(c);
 }
+
+BasicSymbol* ArithmeticOperationLLVM::getA(){return this->a;}
+BasicSymbol* ArithmeticOperationLLVM::getB(){return this->b;}
+BasicSymbol* ArithmeticOperationLLVM::getC(){return this->c;}
+std::string ArithmeticOperationLLVM::out_str() const {}
