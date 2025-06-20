@@ -12,4 +12,3 @@ public:
     next(next),llvm(llvm),sym(sym){}
     ;
 };
-
