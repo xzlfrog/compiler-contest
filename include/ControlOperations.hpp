@@ -8,7 +8,6 @@ class ControlOperationLLVM:public LLVM{
 
 };
 
-
 class ConditionalBranchLLVM:public ControlOperationLLVM{
 public:
     BasicSymbol* condition; // The condition for the branch
@@ -60,7 +59,7 @@ public:
     FuncSymbol* getFuncSymbol();
     const std::vector<BasicSymbol*>& getArguments() const;
     const std::vector<dataType>& getArgumentsType() const;
-
+    dataType getReturnType();
 };
 
 //switch (condition) case case_val_dest.first goto label case_val_dest_second
@@ -83,8 +82,8 @@ public:
 //dest_sym=phi dest_ty [src_sym1,label1],[src_sym2,label2]......
 class PhiLLVM:public ControlOperationLLVM{
 public:
-    BasicSymbol* dest_sym;
-    std::vector<std::pair<BasicSymbol*,LabelSymbol*>> vals_srcs;
+    BasicSymbol* dest_sym;//被赋值的变量
+    std::vector<std::pair<BasicSymbol*,LabelSymbol*>> vals_srcs;//源操作数和来自哪个基本块
 
     void addCase(BasicSymbol*src_sym,LabelSymbol*src_label);
     void addCase(std::vector<BasicSymbol*> src_sym,std::vector<LabelSymbol*>src_label);

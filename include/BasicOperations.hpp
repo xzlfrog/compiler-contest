@@ -20,6 +20,7 @@ public:
     BasicSymbol* getA();
     BasicSymbol* getB();
     BasicSymbol* getC();
+    dataType getType();
 
 };
 

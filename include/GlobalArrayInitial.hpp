@@ -1,75 +1,118 @@
 #pragma once
 
-#include"data.hpp"
-#include<stack>
+//#include"sym.hpp"
 #include<queue>
+#include<unordered_map>
+#include"data.hpp"
 
-class GlobalArrayInitialTreeNode{
+class HierarchicalBitmap{
+private:
+    std::vector<std::vector<bool>> bitMap;
+    std::vector<int>dims;
+    std::unordered_map<long long,Data*> initializedData;
+
+    long long PosToIdx(std::vector<int>position);
+    std::vector<int> IdxToPos(long long idx);
+
+public:
+    HierarchicalBitmap(std::vector<int>&dims);
+    void Initialize(std::vector<int>position,Data* data);
+    std::vector<std::pair<std::vector<int>,Data*>> getInitializedData();
+};
+
+
+/*若有对第"0"维初始化(给所有数组中所有元素初始化为0)直接结束初始化部分
+接下来开始遍历第一维的每一个元素，比如对a[8][9][10](类型若是i32)进行操作，以下开始举例说明
+对于a[0]，包含了9*10=90个元素，如果全部初始化为0，则直接为
+[9*[10*i32]] zeroinitializer，进入a[1]的初始化部分
+如果不是再进入下一个维度即考虑a[0][0]，同理。
+对于此处，用树来存储是否是一个可行的方式？
+其实本质就是，还是上面的例子，其实我们可以看作根节点root，表示所有的a的元素，
+连下来是8颗子树，每一个分别表示a[0]-a[7]，然后再接着下来
+我们其实就是如果根节点被初始化了，那么就不用继续搜索这颗子树了，
+否则继续搜索
+使用bfs算法即可*/
+/*class GlobalArrayInitialTreeNode{
 public:
     GlobalArrayInitialTreeNode* child=nullptr;
     GlobalArrayInitialTreeNode* brother=nullptr;
-    GlobalArrayInitialTreeNode* lastBrother=nullptr;
     Data* data=nullptr;
-    std::vector<int>pos={0};//表示是数组中的位置,比如a[8][9][10]，如果是a[2][3]，那么返回0,2,3,如果是根节点则只返回0
-
-    GlobalArrayInitialTreeNode* Addchildren()
+    int idx;
+    
+    GlobalArrayInitialTreeNode* Addchildren(int idx)
     {
         if(this->child==nullptr){
             this->child=new GlobalArrayInitialTreeNode();
+            this->child->pos=this->pos;
+            this->child->pos.push_back(idx);
+            this->child->idx=idx;
             return this->child;
         }
-        else if(this->child->brother==nullptr){
-            this->child->brother=new GlobalArrayInitialTreeNode();
-            this->child->lastBrother=this->child->brother;
-            return this->child->lastBrother;
-        }
         else{
-            this->child->lastBrother->brother=new GlobalArrayInitialTreeNode();
-            this->child->lastBrother=this->child->lastBrother->brother;
-            return this->child->lastBrother;
+            GlobalArrayInitialTreeNode* node=this->child;
+            while(node->brother!=nullptr&&node->brother->idx<idx)
+                node=node->brother;
+            if(node->brother!=nullptr&&node->brother->idx==idx)
+                return node->brother;
+            GlobalArrayInitialTreeNode* old_brother=node->brother;
+            node->brother=new GlobalArrayInitialTreeNode();
+            node->brother->pos=node->pos;
+            node->brother->pos.push_back(idx);
+            node->brother->brother=old_brother;
+            return node->brother;
         }
     }
 
     GlobalArrayInitialTreeNode* findNthChild(int n){
-        if(n<0)
-            throw std::invalid_argument("the index exceeds the size of the array");
-        else if(n==0)
-            return this->child;
-        else{
-            n-=1;
-            GlobalArrayInitialTreeNode* node=this->child;
-            for(int i=0;i<=n;i++){
-                if(node->brother!=nullptr)
-                    node=node->brother;
-                else
-                    throw std::invalid_argument("the index exceeds the size of the array");
+        GlobalArrayInitialTreeNode* node=this->child;
+        while(node!=nullptr){
+            if(node->idx==n)
                 return node;
-            }
-        return nullptr;
+            node=node->brother;
         }
+        throw std::invalid_argument("the element in the array is not initialized");
     }
 };
 
 class GlobalArrayInitialTree{
 private:
     GlobalArrayInitialTreeNode* root;
+    std::vector<int>dims;
 
 public:
+    //通过数组维度初始化树，不用传整个数组的那个0
     GlobalArrayInitialTree(std::vector<int>&dims){
-        std::queue<GlobalArrayInitialTreeNode*>q_node;
-        GlobalArrayInitialTreeNode* node;
-        q_node.push(root);
-        int sz=1;
-        for(auto dim : dims){
-            for(int i=0;i<sz;i++){
-                node=q_node.front();
-                q_node.pop();
-                for(int j=0;j<dim;j++){
-                    q_node.push(node->Addchildren());
-                }
-            }
-            sz=sz*dim;
+        this->root = new GlobalArrayInitialTreeNode();
+        this->dims=dims;
+    }
+
+    void addInitialedData(std::vector<int>position,Data* data){
+        GlobalArrayInitialTreeNode* node=this->root;
+        GlobalArrayInitialTreeNode* children;
+        for(auto pos:position){
+            node=node->Addchildren(pos);
         }
+        node->data=data;
+    }
+
+    std::vector<std::pair<std::vector<int>,Data*>> bfs(){
+        std::vector<std::pair<std::vector<int>,Data*>>initialed_positions;
+        std::queue<GlobalArrayInitialTreeNode*>q_node;
+        q_node.push(this->root);
+        GlobalArrayInitialTreeNode* node=nullptr;
+        GlobalArrayInitialTreeNode* child_node=nullptr;
+        while(!q_node.empty()){
+            node=q_node.front();
+            q_node.pop();
+            if(node->data&&node->data->getIsInitialized()){
+                initialed_positions.push_back({node->pos,node->data});
+                continue;
+            }
+            for(child_node=node->child;child_node!=nullptr;child_node=child_node->brother){
+                q_node.push(child_node);
+            }
+        }
+        return initialed_positions;
     }
     
-};
+};*/

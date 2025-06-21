@@ -65,12 +65,12 @@ enum LLVMtype{
 
 class LLVM {
     public : 
-    LLVMtype llvmType;
-    LLVM* next;
-    LLVM* prev;
+    LLVMtype llvmType;//llvm指令类型
+    LLVM* next;//下一条llvm指令
+    LLVM* prev;//上一条llvm指令
 
-    virtual std::string out_str() const;
-    LLVMtype getLLVMType();
+    virtual std::string out_str() const;//输出成文本
+    LLVMtype getLLVMType();//得到llvm指令类型
 };
 
 class LLVMList{
@@ -78,8 +78,8 @@ public:
     LLVM* head;
     LLVM* tail;
     
-    void InsertTail(LLVM* llvm);
-    void InsertHead(LLVM* llvm);
+    void InsertTail(LLVM* llvm);//在头节点插入
+    void InsertHead(LLVM* llvm);//在尾节点插入
     void InsertAfter(LLVM* pos,LLVM* llvm);//insert after a specific position
     void InsertBefore(LLVM* pos,LLVM* llvm);//insert before a specific position
     void Remove(LLVM* llvm); //remove a specific LLVM node
