@@ -4,6 +4,7 @@
 dataType GlobalNonArrayVarDefination::getPointedType(){return this->dest_sym->getPointedType();}
 PointerSymbol* GlobalNonArrayVarDefination::getDestSymbol(){return this->dest_sym;}
 BasicSymbol* GlobalNonArrayVarDefination::getSrcSymbol(){return this->src_sym;}
+initializer GlobalNonArrayVarDefination::getInitMode(){return this->dest_sym->pointedData->getInitMode();}
 
 std::string GlobalNonArrayVarDefination::out_str()const{}
 

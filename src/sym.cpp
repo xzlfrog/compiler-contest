@@ -34,8 +34,24 @@ void ArraySymbol::allocateMemory(dataType type,std::vector<int>&dims){
     for(auto dim:this->dimensions)
         size=size/dim,this->elementNums.push_back(size);
 }
-std::vector<int>ArraySymbol::getDimensions()const{return this->dimensions;}
+
+const std::vector<int>&ArraySymbol::getDimensions()const{return this->dimensions;}
 dataType ArraySymbol::getArrayType()const{return this->arrayType;}
+
+void ArraySymbol::Initialize(std::vector<int>position,Data* data){
+    if(this->isInitialed==false){
+        this->isInitialed=true;
+        this->initialedData=new HierarchicalBitmap(this->dimensions);
+    }
+    this->initialedData->Initialize(position,data);
+}
+
+std::vector<std::pair<std::vector<int>,Data*>> ArraySymbol::getInitializedData(){
+    if(this->isInitialed==false){
+        return std::vector<std::pair<std::vector<int>,Data*>>(0);
+    }
+    return this->initialedData->getInitializedData();
+}
 
 //LabelSymbol
 symType LabelSymbol::getType() const{return symType::label;}
@@ -45,7 +61,7 @@ symType FuncSymbol::getType() const {return symType::function;}
 const std::vector<dataType> FuncSymbol::getParamTypes()const{return this->paramTypes;}
 dataType FuncSymbol::getReturnType()const{return this->returnType;}
 
-void FuncSymbol::addArguments(std::vector<dataType> arguments){}
-void FuncSymbol::addArgument(dataType argument){}
+void FuncSymbol::addParams(std::vector<dataType>& paramTypes){}
+void FuncSymbol::addParam(dataType paramType){}
 
 

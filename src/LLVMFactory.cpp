@@ -86,18 +86,21 @@ AllocaArrayLLVM* LLVMfactory::createAllocaArrayLLVM(ArraySymbol* sym,dataType ty
     return allocaArrayLLVM;
 }
 
+/*
 AllocaArrayLLVM* LLVMfactory::createAllocaArrayLLVM(ArraySymbol* sym){
     AllocaArrayLLVM* allocaArrayLLVM=new AllocaArrayLLVM();
     allocaArrayLLVM->array=sym;
     allocaArrayLLVM->llvmType=LLVMtype::allocate_array;
     return allocaArrayLLVM;
 }
+*/
 
 LoadLLVM* LLVMfactory::createLoadLLVM(PointerSymbol* src_sym,BasicSymbol* dest_sym){
     LoadLLVM* loadLLVM=new LoadLLVM();
     loadLLVM->src_sym=src_sym;
     loadLLVM->dest_sym=dest_sym;
     loadLLVM->llvmType=LLVMtype::load;
+    loadLLVM->dest_sym->data=createData(src_sym->pointedData->getType(),src_sym->pointedData->getValue());
     return loadLLVM;
 }
 
@@ -105,11 +108,12 @@ StoreLLVM* LLVMfactory::createStoreLLVM(BasicSymbol* src_sym,PointerSymbol* dest
     StoreLLVM* storeLLVM=new StoreLLVM();
     storeLLVM->src_sym=src_sym;
     storeLLVM->dest_sym=dest_sym;
+    storeLLVM->dest_sym->pointedData=createData(src_sym->data->getType(),src_sym->data->getValue());
     storeLLVM->llvmType=LLVMtype::store;
     return storeLLVM;
 }
 
-GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(BasicSymbol*dest_sym,ArraySymbol* ptrval,std::vector<dataType>type,std::vector<BasicSymbol*>idx){
+GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,std::vector<dataType>type,std::vector<BasicSymbol*>idx){
     GetElementPtrLLVM* getElementPtrLLVM=new GetElementPtrLLVM();
     getElementPtrLLVM->ptrval=ptrval;
     getElementPtrLLVM->addTyIdx(type,idx);
@@ -124,7 +128,7 @@ GlobalNonArrayVarDefination* LLVMfactory::createGlobalNonArrayVarDefination(Poin
     globalNonArrayVarDefination->dest_sym=dest_sym;
     globalNonArrayVarDefination->src_sym=src_sym;
     globalNonArrayVarDefination->llvmType=LLVMtype::global_nonarray;
-    globalNonArrayVarDefination->dest_sym->data=globalNonArrayVarDefination->src_sym->data;
+    globalNonArrayVarDefination->dest_sym->pointedData=createData(globalNonArrayVarDefination->src_sym->data->getType(),globalNonArrayVarDefination->src_sym->data->getValue());
     return globalNonArrayVarDefination;
  }
 
@@ -266,11 +270,41 @@ FuncDefination* LLVMfactory::createFuncDefination(FuncSymbol* func,std::vector<d
     FuncDefination* funcDefination=LLVMfactory::createFuncDefination(func,param);
     funcDefination->func->paramTypes=paramTypes;
     funcDefination->func->returnType=returnType;
+    funcDefination->func->isDef=true;
     return funcDefination;
 }
 
 FuncDefination* LLVMfactory::createFuncDefination(FuncSymbol* func,std::vector<dataType>paramTypes,std::vector<BasicSymbol*>param){
     FuncDefination* funcDefination=LLVMfactory::createFuncDefination(func,param);
     funcDefination->func->paramTypes=paramTypes;
+    funcDefination->func->isDef=true;
     return funcDefination;
+}
+
+static GlobalArrayVarDefination* createGlobalArrayVarDefination(ArraySymbol* dest_sym){
+    GlobalArrayVarDefination* globalArrayVarDefination=new GlobalArrayVarDefination();
+    globalArrayVarDefination->llvmType=LLVMtype::global_array;
+    globalArrayVarDefination->dest_sym=dest_sym;
+    return globalArrayVarDefination;
+}
+
+static GlobalArrayVarDefination* createGlobalArrayVarDefination(ArraySymbol* dest_sym,initializer initMode){
+    GlobalArrayVarDefination* globalArrayVarDefination=new GlobalArrayVarDefination();
+    globalArrayVarDefination->llvmType=LLVMtype::global_array;
+    globalArrayVarDefination->dest_sym=dest_sym;
+    return globalArrayVarDefination;
+}
+
+static ConstantArrayVarDefination* createConstantArrayVarDefination(ArraySymbol* dest_sym){
+    ConstantArrayVarDefination* constantArrayVarDefination=new ConstantArrayVarDefination();
+    constantArrayVarDefination->llvmType=LLVMtype::global_array;
+    constantArrayVarDefination->dest_sym=dest_sym;
+    return constantArrayVarDefination;
+}
+
+static ConstantArrayVarDefination* createConstantArrayVarDefination(ArraySymbol* dest_sym,initializer initMode){
+    ConstantArrayVarDefination* constantArrayVarDefination=new ConstantArrayVarDefination();
+    constantArrayVarDefination->llvmType=LLVMtype::global_array;
+    constantArrayVarDefination->dest_sym=dest_sym;
+    return constantArrayVarDefination;
 }

@@ -48,6 +48,7 @@ const std::vector<dataType>& CallLLVM::getArgumentsType(){return this->function-
 FuncSymbol* CallLLVM::getFuncSymbol(){return this->function;}
 const std::vector<BasicSymbol*>& CallLLVM::getArguments() const{return this->arguments;}
 const std::vector<dataType>& CallLLVM::getArgumentsType() const{return this->function->getParamTypes();}
+dataType CallLLVM::getReturnType(){return this->function->getReturnType();}
 
 std::string CallLLVM::out_str() const {} // Output the LLVM IR string representation
 void CallLLVM::setFunction(FuncSymbol* func){} // Set the function to call
