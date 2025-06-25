@@ -1,7 +1,9 @@
 #include"../include/SymbolFactory.hpp"
 
-BasicSymbol* SymbolFactory::createBasicSymbol(std::string name,symType type=symType::sym_undefined,Data*data=nullptr){}
-BasicSymbol* SymbolFactory::createTmpBasicSymbol(symType type=symType::sym_undefined,Data*data=nullptr){}
+VarSymbol* SymbolFactory::createVarSymbol(std::string name,Data*data=nullptr){}
+ConstVarSymbol* SymbolFactory::createConstVarSymbol(std::string name,Data* data=nullptr){}
+VarSymbol* SymbolFactory::createTmpVarSymbol(Data*data=nullptr){}
+ConstSymbol* SymbolFactory::createConstSymbol(Data*data=nullptr){}
 PointerSymbol* SymbolFactory::createPointerSymbol(std::string name,dataType pointedType=dataType::data_undefined){}
 PointerSymbol* SymbolFactory::createPointerSymbol(std::string name,ValueVariant value,dataType pointedType=dataType::data_undefined){}
 ArraySymbol* SymbolFactory::createArraySymbol(std::string name,dataType type=dataType::data_undefined){}

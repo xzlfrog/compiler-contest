@@ -166,33 +166,7 @@ ConstantNonArrayVarDefination* LLVMfactory::createConstantNonArrayVarDefination(
     constantNonArrayVarDefination->src_sym=src_sym;
     constantNonArrayVarDefination->dest_sym->data=constantNonArrayVarDefination->src_sym->data;
     constantNonArrayVarDefination->llvmType=LLVMtype::const_nonarray;
-    switch (constantNonArrayVarDefination->dest_sym->getDataType())
-    {
-    case i1:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_i1;
-        break;
-    case i8:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_i8;
-        break;
-    case i16:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_i16;
-        break;
-    case i32:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_i32;
-        break;
-    case i64:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_i64;
-        break;
-    case f32:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_f32;
-        break;
-    case f64:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_f64;
-        break;
-    default:
-        throw std::invalid_argument("constant type is wrong");
-        break;
-    }
+    constantNonArrayVarDefination->dest_sym->type=symType::constant_var;
     return constantNonArrayVarDefination;
 }
 
@@ -201,39 +175,7 @@ ConstantNonArrayVarDefination* LLVMfactory::createConstantNonArrayVarDefination(
     constantNonArrayVarDefination->dest_sym=dest_sym;
     constantNonArrayVarDefination->dest_sym->data->setInitMode(initMode);
     constantNonArrayVarDefination->llvmType=LLVMtype::const_nonarray;
-    switch (constantNonArrayVarDefination->dest_sym->getDataType())
-    {
-    case i1:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_i1;
-        break;
-    case i8:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_i8;
-        break;
-    case i16:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_i16;
-        break;
-    case i32:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_i32;
-        break;
-    case i64:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_i64;
-        break;
-    case f32:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_f32;
-        break;
-    case f64:
-        constantNonArrayVarDefination->dest_sym->type=symType::constant_f64;
-        break;
-    default:
-        throw std::invalid_argument("constant type is wrong");
-        break;
-    }
-    if(initMode==initializer::undef)
-        constantNonArrayVarDefination->dest_sym->data->setIsInitialize(false);
-    else if(initMode==initializer::zeroinitializer){
-        constantNonArrayVarDefination->dest_sym->data->setValue(0);
-        constantNonArrayVarDefination->dest_sym->data->setIsInitialize(true);
-    }
+    constantNonArrayVarDefination->dest_sym->type=symType::constant_var;
     return constantNonArrayVarDefination;
 }
 
