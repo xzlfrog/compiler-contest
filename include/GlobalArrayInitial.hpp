@@ -5,19 +5,29 @@
 #include<unordered_map>
 #include"data.hpp"
 
-class HierarchicalBitmap{
+struct VectorIntHash{
 private:
-    std::vector<std::vector<bool>> bitMap;
-    std::vector<int>dims;
-    std::unordered_map<long long,Data*> initializedData;
-
-    long long PosToIdx(std::vector<int>position);
-    std::vector<int> IdxToPos(long long idx);
+    const long long mod=131L;
 
 public:
-    HierarchicalBitmap(std::vector<int>&dims);
-    void Initialize(std::vector<int>position,Data* data);
-    std::vector<std::pair<std::vector<int>,Data*>> getInitializedData();
+    std::size_t operator()(const std::vector<int>&v) const{
+        size_t seed=v.size();
+        for(auto i:v){
+            seed ^= std::hash<int>{}(i) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        }
+        return seed;
+    }
+};
+
+class ArrayInitial{
+private:
+    std::unordered_map<std::vector<int>,Data*,VectorIntHash> initializedData;
+
+public:
+    void initialize(std::vector<int>position,Data* data);//将某一个初始化为非0的值的位置和值
+    //传入该函数
+    std::vector<std::pair<std::vector<int>,Data*>> getInitializedData();//得到被初始化的
+    //那些值
 };
 
 

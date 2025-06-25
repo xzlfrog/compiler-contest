@@ -56,9 +56,9 @@ enum constExpType{
 
 //初始化方式
 enum initializer{
-    zeroinitializer,
-    undef,
-    assignment
+    zeroinitializer,//全部赋值为0
+    undef,//未初始化
+    assignment//通过赋值进行初始化
 };
 
 class Data;
@@ -72,20 +72,21 @@ private:
     initializer initMode;//初始化方式
     
 public:
-    virtual dataType getType() const;//得到数据类型
+    dataType getType() const;//得到数据类型
     virtual ValueVariant getValue();//得到数据，需要使用std::holds_alternative</*你要的数据类型*/>(data->getValue())来得到数据
     virtual void setValue(ValueVariant value);//设置对应的数据
-    void setIsInitialize(bool flag);
-    bool getIsInitialized();
-    void setInitMode(initializer initMode);
-    initializer getInitMode();
+    void setIsInitialize(bool flag);//设置变量是否被初始化
+    bool getIsInitialized();//变量是否被初始化
+    void setInitMode(initializer initMode);//设置初始化的方式
+    initializer getInitMode();//得到初始化的方式
+    bool checkIsInitialed();//检查是否被初始化，在类的成员方法实现中使用
 };
 
 class Data_i1:public Data {
 private:
     bool value;
 public:
-    dataType getType() const override;
+    dataType getType() const;
     ValueVariant getValue() override;
     void setValue(ValueVariant value) override;
 };
@@ -94,7 +95,7 @@ class Data_i8:public Data {
 private:
     char value;
 public:    
-    dataType getType() const override;
+    dataType getType() const;
     ValueVariant getValue() override;
     void setValue(ValueVariant value) override;
 };
@@ -103,7 +104,7 @@ class Data_i16:public Data {
 private:
     short value;
 public:    
-    dataType getType() const override;
+    dataType getType() const;
     ValueVariant getValue()override;
     void setValue(ValueVariant value) override;
 };
@@ -112,7 +113,7 @@ class Data_i32:public Data {
 private:
     int value;
 public:    
-    dataType getType() const override;
+    dataType getType() const;
     ValueVariant getValue() override;
     void setValue(ValueVariant value) override;
 };
@@ -121,7 +122,7 @@ class Data_i64:public Data {
 private:
     long long value;
 public:    
-    dataType getType() const override;
+    dataType getType() const;
     ValueVariant getValue() override;
     void setValue(ValueVariant value) override;
 };
@@ -130,7 +131,7 @@ class Data_f32:public Data {
 private:
     float value;
 public:    
-    dataType getType() const override;
+    dataType getType() const;
     ValueVariant getValue() override;
     void setValue(ValueVariant value) override;
 };
@@ -139,7 +140,7 @@ class Data_f64:public Data {
 private:
     double value;
 public:    
-    dataType getType() const override;
+    dataType getType() const;
     ValueVariant getValue() override;
     void setValue(ValueVariant value) override;
 };
@@ -148,7 +149,7 @@ class Data_pointer:public Data {
 private:
     Data* value;
 public:
-    dataType getType() const override;
+    dataType getType() const;
     ValueVariant getValue() override;
     void setValue(ValueVariant value) override;
 };
@@ -157,6 +158,7 @@ Data* createData(dataType type,ValueVariant v);//type为对应的数据的类，
 Data* createInitialedData(dataType type);//type为对应的数据的类,生成的data类是实际上已经赋值了的，但是由于我们没有在编译器中进行计算，所以不知道它的值
 Data* createData(dataType type,initializer initMode);//type为对应的数据的类,initMode表示初始化方式，比如undef和zeroinitializer
 Data* createNonInitialedData(dataType type);//type为对应的数据的类,生成的data类是未经过初始化的值
+Data* createData(Data* data);
 
 /*
 我们对于所有的常量表达式进行常量折叠，生成对应的BasicSymbol*类型

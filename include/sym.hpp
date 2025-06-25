@@ -12,13 +12,8 @@ enum symType{
     function,
     label,
     variable,
-    constant_i1,
-    constant_i8,
-    constant_i16,
-    constant_i32,
-    constant_i64,
-    constant_f32,
-    constant_f64,
+    constant_var,
+    constant_nonvar,
     array,
     pointer
 };
@@ -32,7 +27,7 @@ public:
     int scope;//作用域，这次需要考虑每个基本块的作用域，gloabl 0,local 1,block 2
     Symbol* next;//下一个symbol，用于符号表的连接
 
-    virtual symType getType() const;//返回type成员变量
+    virtual symType getType();//返回type成员变量
 };
 
 //只考虑了指针的情况，未考虑指针的指针的情况，如需使用需后续补充
@@ -43,18 +38,42 @@ private:
 public:
     Data* pointedData;//指向的数据
 
-    symType getType() const override;
+    symType getType() override;
     dataType getPointedType() const;//获得指针指向的元素的数据类型，比如源程序中是int类型，此处就是i32
     void allocateMemory(dataType elementType,ValueVariant value);
 };
 
-//包含常数符号和放在寄存器里的符号
+//包含常数和变量和常量变量
 class BasicSymbol: public Symbol{
 public:
-    symType getType() const override;//返回type成员变量
+    symType getType() override;//返回type成员变量
     dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
-    void setData(dataType dtype,ValueVariant v=nullptr);//修改符号存的数据
-    void setType(symType type);//修改type成员变量
+    void setData(dataType dtype,ValueVariant v);//修改符号存的数据
+};
+
+//变量
+class VarSymbol: public BasicSymbol{
+public:
+    symType getType() override;//返回type成员变量
+    dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
+    void setData(dataType dtype,ValueVariant v);//修改符号存的数据
+};
+
+//常量
+class ConstVarSymbol: public BasicSymbol{
+public:
+    symType getType() override;//返回type成员变量
+    dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
+    void setData(dataType dtype,ValueVariant v);//修改符号存的数据
+};
+
+
+//常数
+class ConstSymbol: public BasicSymbol{
+public:
+    symType getType() override;//返回type成员变量
+    dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
+    void setData(dataType dtype,ValueVariant v);//修改符号存的数据
 };
 
 //这里只存了初始化的元素，对于作为全局变量定义的数组，都有初始值，这里可以通过scope来判断
@@ -62,20 +81,18 @@ class ArraySymbol: public Symbol{
 private:
     std::vector<int> dimensions; //数组的维度信息 
     dataType arrayType;//比如int a[2][3]，类型就是int，或者用llvm ir中的数据类型 i32
-    std::vector<int> elementNums;//比如数组a[5][6][7],则该向量中包含5*6*7,6*7,7,1表示每一个维度的"1"有几个元素
-    HierarchicalBitmap* initialedData;//在数组的初始化阶段需要使用，对于初始化，不考虑在初始化之后再对数组元素修改的情况，只解决了数组初始化的问题
+    ArrayInitial* initialedData;//在数组的初始化阶段需要使用，对于初始化，不考虑在初始化之后再对数组元素修改的情况，只解决了数组初始化的问题
     bool isInitialed=false;//是否被初始化
-    /*template<typename... Args>
-        void addDimensions(Args... dims){ 
-        (this->dimensions.push_back(static_cast<size_t>(dims)), ...);
-    }*/
 
 public:
-    symType getType() const override;
+    symType getType() override;
     void allocateMemory(dataType type,std::vector<int>&dims);
     const std::vector<int>&getDimensions() const;//数组大小
     dataType getArrayType()const;//数组保存的数据类型
-    void Initialize(std::vector<int>position,Data* data);//给一个初始化的位置和对应的元素，如果是a[3][3][3]，传入position为{0}表示所有的数据初始化为data，如果传入{0,1,2}，表示a[1][2][0],a[1][2][1],a[1][2][2]都初始化为data
+    //void Initialize(std::vector<int>position,Data* data);//给一个初始化的位置和对应的元素，
+    //如果是a[3][3][3]，如果传入position为{1,2,1}，表示a[1][2][1]被初始化为data
+    void setInitialedData(ArrayInitial* arrayInitial);//在规约ConstDef或者VarDef的时候，
+    //初始化的部分已经先被规约完成了，所以直接设置数组中的已经被初始化的元素(数组越界在这个方法中检查)
     std::vector<std::pair<std::vector<int>,Data*>> getInitializedData();//得到初始化的数据的位置和值，与上一个函数的参数的形式差不多
 };
 
@@ -83,7 +100,7 @@ public:
 //标签对应的符号
 class LabelSymbol:public Symbol{
 public:
-    symType getType() const override;
+    symType getType() override;
 };
 
 //函数对应的符号
@@ -93,7 +110,7 @@ public:
     dataType returnType;//返回值数据类型
     bool isDef=false;
     
-    symType getType() const override;
+    symType getType() override;
     void addParams(std::vector<dataType>& paramTypes);//或许创建完之后还要增加参数？
     void addParam(dataType paramType);//同上
     const std::vector<dataType> getParamTypes()const;//得到函数参数类型

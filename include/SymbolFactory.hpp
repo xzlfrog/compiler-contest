@@ -4,11 +4,13 @@
 
 class SymbolFactory{
 public:
-    static BasicSymbol* createBasicSymbol(std::string name,
-        symType type=symType::sym_undefined,Data*data=nullptr);
+    static VarSymbol* createVarSymbol(std::string name,Data*data=nullptr);
 
-    static BasicSymbol* createTmpBasicSymbol(symType type=symType::sym_undefined,
-        Data*data=nullptr);
+    static ConstVarSymbol* createConstVarSymbol(std::string name,Data* data=nullptr);
+
+    static VarSymbol* createTmpVarSymbol(Data*data=nullptr);
+
+    static ConstSymbol* createConstSymbol(Data*data=nullptr);
 
     static PointerSymbol* createPointerSymbol(std::string name,
         dataType pointedType=dataType::data_undefined);
