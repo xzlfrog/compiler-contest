@@ -2,6 +2,9 @@
 
 #include"sym.hpp"
 
+std::string generate_tmp_var_name();
+std::string generate_tmp_label_name();
+
 class SymbolFactory{
 public:
     static VarSymbol* createVarSymbol(std::string name,Data*data=nullptr);

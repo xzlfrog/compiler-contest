@@ -40,7 +40,7 @@ enum LLVMtype{
     indirectbr,//indirect branch,computed goto
     ret,//return
     call,//function call
-    llvm_switch,//switch
+    //llvm_switch,//switch
     phi,//phi node
     trunc,//截断整数位宽，如i64转i32
     zext,//zero extend

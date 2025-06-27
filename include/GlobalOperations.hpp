@@ -81,8 +81,8 @@ public:
     std::vector<BasicSymbol*> params;
 
 
-    void addArguments(dataType ty,Symbol* sym);
-    void addArguments(std::vector<dataType>ty,std::vector<Symbol*>tym);
+    void addArguments(dataType ty,BasicSymbol* sym);
+    void addArguments(std::vector<dataType>ty,std::vector<BasicSymbol*>sym);
     FuncSymbol* getFuncSymbol(){return this->func;}
     dataType getReturnType(){return this->func->returnType;}
     const std::vector<dataType>getParamTypes()const {return this->func->paramTypes;}

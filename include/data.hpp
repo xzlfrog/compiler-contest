@@ -24,7 +24,6 @@ enum constExpType{
     const_exp_add,
     const_exp_sub,
     const_exp_mul,
-    const_exp_udiv,
     const_exp_sdiv,
     const_exp_and,
     const_exp_or,
@@ -35,10 +34,6 @@ enum constExpType{
     const_exp_fdiv,
     const_exp_icmp_eq,//integer equal
     const_exp_icmp_ne,//integer not equal
-    const_exp_icmp_ugt,//integer unsigned greater than
-    const_exp_icmp_uge,//integer unsigned greater than or equal
-    const_exp_icmp_ult,//integer unsigned less than
-    const_exp_icmp_ule,//integer unsigned less than or equal
     const_exp_icmp_sgt,//integer signed greater than
     const_exp_icmp_sge,//integer signed greater than or equal
     const_exp_icmp_slt,//integer signed less than
@@ -49,8 +44,6 @@ enum constExpType{
     const_exp_fcmp_olt,//float less than
     const_exp_fcmp_ole,//float less than or equal
     const_exp_fcmp_one,//float not equal
-    const_exp_fcmp_ord,// float ordered
-    const_exp_uitofp,//无符号整数转浮点
     const_exp_sitofp,//有符号整数转浮点
 };
 
@@ -177,14 +170,14 @@ private:
     dataType newType;
     
 public:
-    Data* constFolding();//进行常数折叠，生成一个对应的BasicSymbol*类型符号
+    Data* constFolding();//进行常数折叠，生成一个对应的Data*类型变量，只支持f32和i32的折叠，如果其他需要用到再写
 
     /*type表示常数表达式的类型，两个data分别是运算符左右，如果是不需要支持二元运算的常数表达式
     （比如类型转换），则需要给类型转换后转换为的新的数据类型*/
     ConstExp(constExpType type,Data*constData1,Data* constData2=nullptr,dataType newType=dataType::data_undefined):
     type(type),constData1(constData1),constData2(constData2),newType(newType)
     {
-        if(constData2==nullptr&&type<=const_exp_fcmp_ord)
+        if(constData2==nullptr&&type<=const_exp_fcmp_one)
             throw std::invalid_argument("the constant expression type not match the data");
     }
 
@@ -193,3 +186,29 @@ public:
         delete this->constData2;
     }
 };
+
+Data* add(Data* data1,Data* data2);
+Data* sub(Data* data1,Data* data2);
+Data* mul(Data* data1,Data* data2);
+Data* sdiv(Data* data1,Data* data2);
+Data* andi(Data* data1,Data* data2);
+Data* ori(Data* data1,Data* data2);
+Data* xori(Data* data1,Data* data2);
+Data* fadd(Data* data1,Data* data2);
+Data* fsub(Data* data1,Data* data2);
+Data* fmul(Data* data1,Data* data2);
+Data* fdiv(Data* data1,Data* data2);
+Data* icmp_eq(Data* data1,Data* data2);//integer equal
+Data* icmp_ne(Data* data1,Data* data2);//integer not equal
+Data* icmp_sgt(Data* data1,Data* data2);//integer signed greater than
+Data* icmp_sge(Data* data1,Data* data2);//integer signed greater than or equal
+Data* icmp_slt(Data* data1,Data* data2);//integer signed less than
+Data* icmp_sle(Data* data1,Data* data2);// integer signed less than or equal
+Data* fcmp_oeq(Data* data1,Data* data2);//float equal
+Data* fcmp_ogt(Data* data1,Data* data2);//float greater than
+Data* fcmp_oge(Data* data1,Data* data2);//float greater than or equal
+Data* fcmp_olt(Data* data1,Data* data2);//float less than
+Data* fcmp_ole(Data* data1,Data* data2);//float less than or equal
+Data* fcmp_one(Data* data1,Data* data2);//float not equal
+Data* sitofp(Data* data1,Data* data2);//有符号整数转浮点
+

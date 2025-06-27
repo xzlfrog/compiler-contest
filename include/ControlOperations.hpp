@@ -40,7 +40,7 @@ public:
 
     std::string out_str() const override; // Output the LLVM IR string representation
     void setReturnValue(BasicSymbol* value); // Set the return value
-    BasicSymbol* getReturnValue();
+    BasicSymbol* getReturnValue();//未检查return的类型是否和函数的返回值类型相匹配
     dataType getReturnType();
 };
 
@@ -63,7 +63,7 @@ public:
 };
 
 //switch (condition) case case_val_dest.first goto label case_val_dest_second
-class SwitchLLVM:public ControlOperationLLVM{
+/*class SwitchLLVM:public ControlOperationLLVM{
 public:
     BasicSymbol* condition; // The condition for the switch
     std::vector<std::pair<BasicSymbol*,LabelSymbol*>> case_val_dest; //case values and destinations
@@ -77,7 +77,7 @@ public:
     BasicSymbol* getCondition();
     LabelSymbol* getDefaultCase();
     const std::vector<std::pair<BasicSymbol*,LabelSymbol*>> getCaseValAndDest()const;
-};
+};*/
 
 //dest_sym=phi dest_ty [src_sym1,label1],[src_sym2,label2]......
 class PhiLLVM:public ControlOperationLLVM{
