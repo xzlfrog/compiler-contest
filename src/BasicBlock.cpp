@@ -1,13 +1,13 @@
-#include"../include/BasicBlock.hpp"
+/*#include"../include/BasicBlock.hpp"
 #include"SymbolFactory.hpp"
 #include"../include/LLVMFactory.hpp"
 
-extern LLVMList* llvmList;
-extern std::unordered_map<std::string,BasicBlock*> label_to_basicBlock;
-extern int function_num=1;
+LLVMList* llvmList;
+std::unordered_map<std::string,BasicBlock*> label_to_basicBlock;
+int function_num;
 
 std::string generate_begin_label(){
-    return "begin.label."+std::to_string(function_num);
+    return "entry.label."+std::to_string(function_num);
 }
 
 std::string generate_exit_label(){
@@ -58,26 +58,31 @@ void connect(BasicBlock* bb1,BasicBlock* bb2){
 
 //得到数据流图
 void connectBasicBlocks(const MyList<BasicBlock> bbs){
-    for(auto l=bbs.head;l!=nullptr;l++){
+    for(auto l=bbs.head;l!=nullptr;l=l->next){
         switch(l->tail->getLLVMType()){
-            case LLVMtype::br_conditional:
+            case LLVMtype::br_conditional:{
                 ConditionalBranchLLVM* br_cond=dynamic_cast<ConditionalBranchLLVM*>(l->tail);
                 connect(l,label_to_basicBlock[br_cond->getTrueBranch()->name]);
                 connect(l,label_to_basicBlock[br_cond->getFalseBranch()->name]);
                 break;
-            case  LLVMtype::br_unconditional:
+            }
+            case  LLVMtype::br_unconditional:{
                 UnconditionalBranchLLVM* br_uncond=dynamic_cast<UnconditionalBranchLLVM*>(l->tail);
                 connect(l,label_to_basicBlock[br_uncond->getTarget()->name]);
                 break;
-            case LLVMtype::label:
+            }
+            case LLVMtype::label:{
                 if(l==bbs.head)
                     connect(l,l->next);
                 break;
-            case LLVMtype::ret:
+            }
+            case LLVMtype::ret:{
                 connect(l,bbs.tail);
                 break;
-            default:
+            }
+            default:{
                 throw std::runtime_error("basic block dividing is wrong");
+            }
         }
     }
 }
@@ -88,27 +93,29 @@ MyList<BasicBlock> divideBasicBlock(LLVMList* llvmlist){
     LLVM* llvm=llvmlist->head;
     MyList<BasicBlock> basicBlockList;
     Label* beginLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbol(generate_begin_label()));
+    beginLabel->next=llvmlist->head;
     basicBlockList.InsertTail(BasicBlock::createBasicBlock(beginLabel,beginLabel)) ;//begin基本块
     LLVM* start=nullptr;
-    LLVM* end=nullptr;
+    bool flag=false;
     while(llvm!=nullptr){
         if(llvm->getLLVMType()==LLVMtype::label){
-            if(start==end)
-                start=llvm;
+            if(!flag)
+                start=llvm,flag=true;
             else{
                 basicBlockList.InsertTail((BasicBlock::createBasicBlock(start,llvm)));
                 start=llvm->next;
-                end=llvm->next;
+                flag=false;
             }
         }
-        else if(needDivide(llvm)&&llvm->next->getLLVMType()!=LLVMtype::label){
+        else if(needDivide(llvm)&&(llvm->next->getLLVMType()!=LLVMtype::label||llvm->next==nullptr)){
             llvmlist->InsertAfter(llvm,LLVMfactory::createLableLLVM(SymbolFactory::createTmpLabelSymbol()));
         }
         llvm=llvm->next;
     }
     Label* exitLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbol(generate_exit_label()));
+    exitLabel->prev=llvmlist->tail;
     basicBlockList.InsertTail(BasicBlock::createBasicBlock(exitLabel,exitLabel));//exit基本块
     for(auto l=basicBlockList.head;l!=nullptr;l=l->next){
         label_to_basicBlock.insert({l->label->name,l});
     }
-}
+}*/

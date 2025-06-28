@@ -5,6 +5,11 @@ LLVMtype LLVM::getLLVMType(){return this->llvmType;}
 
 //LLVMList
 void LLVMList::InsertTail(LLVM* llvm){
+    if(this->tail==nullptr){
+        this->head=llvm;
+        this->tail=llvm;
+        return ;
+    }
     this->tail->next=llvm;
     llvm->prev=this->tail;
     this->tail=llvm;
@@ -12,6 +17,11 @@ void LLVMList::InsertTail(LLVM* llvm){
 }
 
 void LLVMList::InsertHead(LLVM* llvm){
+    if(this->head==nullptr){
+            this->head=llvm;
+            this->tail=llvm;
+            return ;
+        }
     this->head->prev=llvm;
     llvm->next=this->head;
     this->head=llvm;
@@ -21,9 +31,12 @@ void LLVMList::InsertHead(LLVM* llvm){
 //insert after a specific position
 void LLVMList::InsertAfter(LLVM* pos,LLVM* llvm){
     if(this->tail==pos){
-        this->InsertHead(llvm);
+        this->InsertTail(llvm);
         return;
     }
+    llvm->next=pos->next;
+    if(pos->next)
+        pos->next->prev=llvm;
     pos->next=llvm;
     llvm->prev=pos;
 }
@@ -34,6 +47,9 @@ void LLVMList::InsertBefore(LLVM* pos,LLVM* llvm){
         this->InsertHead(llvm);
         return;
     }
+    if(pos->prev)
+        pos->prev->next=llvm;
+    llvm->prev=pos->prev;
     pos->prev=llvm;
     llvm->next=pos;
 }
@@ -49,7 +65,7 @@ void LLVMList::Remove(LLVM* llvm){
         this->head=after;
 
     if(after!=nullptr)
-        after->next=before;
+        after->prev=before;
     else
         this->tail=before;
 } 

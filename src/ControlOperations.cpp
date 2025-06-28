@@ -14,6 +14,7 @@ BasicSymbol* ReturnLLVM::getReturnValue(){return this->returnValue;}
 dataType ReturnLLVM::getReturnType(){return this->returnValue->getDataType();}
 
 std::string ReturnLLVM::out_str() const{
+    return "";
     //todo
 }
 void ReturnLLVM::setReturnValue(BasicSymbol* value){this->returnValue=value;}
@@ -23,7 +24,10 @@ BasicSymbol* ConditionalBranchLLVM::getCondition(){return this->condition;}
 LabelSymbol* ConditionalBranchLLVM::getTrueBranch(){return this->trueBranch;}
 LabelSymbol* ConditionalBranchLLVM::getFalseBranch(){return this->falseBranch;}
 
-std::string ConditionalBranchLLVM::out_str() const {}// Output the LLVM IR string representation
+std::string ConditionalBranchLLVM::out_str() const {
+    //todo
+    return "";
+}// Output the LLVM IR string representation
 
 // Set the condition for the branch
 void ConditionalBranchLLVM::setCondition(BasicSymbol* cond){
@@ -89,6 +93,7 @@ void PhiLLVM::addCase(std::vector<BasicSymbol*> src_sym,std::vector<LabelSymbol*
 }
 std::string PhiLLVM::out_str() const{
     //todo
+    return "";
 }
 
 //CallLLVM
@@ -98,7 +103,10 @@ const std::vector<BasicSymbol*>& CallLLVM::getArguments() const{return this->arg
 const std::vector<dataType>& CallLLVM::getArgumentsType() const{return this->function->getParamTypes();}
 dataType CallLLVM::getReturnType(){return this->function->getReturnType();}
 
-std::string CallLLVM::out_str() const {} // Output the LLVM IR string representation
+std::string CallLLVM::out_str() const {
+    //todo 
+    return "";
+} // Output the LLVM IR string representation
 // Set the function to call
 void CallLLVM::setFunction(FuncSymbol* func){
     this->function=func;
@@ -128,4 +136,5 @@ LabelSymbol* Label::getLabel(){return this->label;}
 
 std::string Label::out_str() const{
     //todo
+    return "";
 }

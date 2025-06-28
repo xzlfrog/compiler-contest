@@ -8,6 +8,7 @@ initializer GlobalNonArrayVarDefination::getInitMode(){return this->dest_sym->po
 
 std::string GlobalNonArrayVarDefination::out_str()const{
     //todo
+    return "";
 }
 
 //ConstantNonArrayVarDefination
@@ -18,6 +19,7 @@ initializer ConstantNonArrayVarDefination::getInitMode(){return this->dest_sym->
 
 std::string ConstantNonArrayVarDefination::out_str()const{
     //todo
+    return "";
 }
 
 //FuncDeclaration
@@ -36,6 +38,7 @@ void FuncDeclaration::addArguments(std::vector<dataType>ty){
 }
 std::string FuncDeclaration::out_str()const{
     //todo
+    return "";
 }
 
 //FuncDefination
@@ -57,4 +60,41 @@ void FuncDefination::addArguments(std::vector<dataType>ty,std::vector<BasicSymbo
 }
 std::string FuncDefination::out_str()const{
     //todo
+    return "";
+}
+
+
+const std::vector<int>ConstantArrayVarDefination::getDimensions() const{
+    return this->dest_sym->getDimensions();
+}
+
+dataType ConstantArrayVarDefination::getArrayType(){
+    return this->dest_sym->getArrayType();
+}
+
+std::vector<std::pair<std::vector<int>,Data*>> ConstantArrayVarDefination::getInitializedData(){
+    return this->dest_sym->getInitializedData();
+}
+
+std::string ConstantArrayVarDefination::out_str()const{
+    //todo
+    return "";
+}
+
+const std::vector<int>GlobalArrayVarDefination::getDimensions() const{
+    return this->dest_sym->getDimensions();
+}
+
+dataType GlobalArrayVarDefination::getArrayType(){
+    return this->dest_sym->getArrayType();
+}
+
+
+std::vector<std::pair<std::vector<int>,Data*>> GlobalArrayVarDefination::getInitializedData(){
+    return this->dest_sym->getInitializedData();
+}
+
+std::string GlobalArrayVarDefination::out_str()const{
+    //todo
+    return "";
 }

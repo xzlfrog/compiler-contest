@@ -1,8 +1,8 @@
 #include"../include/SymbolFactory.hpp"
 #include<string>
 
-extern int tmp_var_cnt;
-extern int tmp_label_cnt;
+int tmp_var_cnt;
+int tmp_label_cnt;
 
 std::string generate_tmp_var_name(){
     return std::to_string(tmp_var_cnt++);
@@ -26,11 +26,11 @@ ConstVarSymbol* SymbolFactory::createConstVarSymbol(std::string name,Data* data)
     return constVarSymbol;
 }
 
-VarSymbol* SymbolFactory::createTmpVarSymbol(Data*data){
+VarSymbol* SymbolFactory::createTmpVarSymbol(dataType type){
     std::string name=generate_tmp_var_name();
     VarSymbol *varSymbol=new VarSymbol();
     varSymbol->name=name;
-    varSymbol->data=data;
+    varSymbol->data=createNonInitialedData(type);
     return varSymbol;
 }
 
