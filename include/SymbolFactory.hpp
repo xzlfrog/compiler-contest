@@ -11,7 +11,7 @@ public:
 
     static ConstVarSymbol* createConstVarSymbol(std::string name,Data* data=nullptr);
 
-    static VarSymbol* createTmpVarSymbol(Data*data=nullptr);
+    static VarSymbol* createTmpVarSymbol(dataType type);
 
     static ConstSymbol* createConstSymbol(Data*data=nullptr);
 

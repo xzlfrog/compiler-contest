@@ -12,24 +12,37 @@ public:
     T* tail;
     
     void InsertTail(T* v){
+        if(this->tail==nullptr){
+            this->head=v;
+            this->tail=v;
+            return ;
+        }
         this->tail->next=v;
-        llvm->prev=this->tail;
+        v->prev=this->tail;
         this->tail=v;
-        llvm->next=nullptr;
+        v->next=nullptr;
     }
 
     void InsertHead(T* v){
-        this->head->prev=llvm;
-        llvm->next=this->head;
-        this->head=llvm;
-        llvm->prev=nullptr;
+        if(this->head==nullptr){
+            this->head=v;
+            this->tail=v;
+            return ;
+        }
+        this->head->prev=v;
+        v->next=this->head;
+        this->head=v;
+        v->prev=nullptr;
     }
 
     void InsertAfter(T* pos,T* v){
         if(this->tail==pos){
-            this->InsertHead(v);
+            this->InsertTail(v);
             return;
         }
+        v->next=pos->next;
+        if(pos->next)
+            pos->next->prev=v;
         pos->next=v;
         v->prev=pos;
     }
@@ -39,13 +52,16 @@ public:
             this->InsertHead(v);
             return;
         }
+        if(pos->prev)
+            pos->prev->next=v;
+        v->prev=pos->prev;
         pos->prev=v;
         v->next=pos;
     }
 
-    void Remove(T* v);{
-        T* before=llvm->prev;
-        T* after=llvm->next;
+    void Remove(T* v){
+        T* before=v->prev;
+        T* after=v->next;
 
         if(before!=nullptr)
             before->next=after;
@@ -53,7 +69,7 @@ public:
             this->head=after;
 
         if(after!=nullptr)
-            after->next=before;
+            after->prev=before;
         else
             this->tail=before;
     }

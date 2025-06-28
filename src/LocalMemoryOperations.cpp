@@ -6,6 +6,7 @@ PointerSymbol* AllocaNonArrayLLVM::getSymbol(){return this->sym;}
 
 std::string AllocaNonArrayLLVM::out_str() const {
     //todo
+    return "";
 }
 
 //AllocaArrayLLVM
@@ -15,6 +16,7 @@ ArraySymbol* AllocaArrayLLVM::getArray(){return this->array;}
 
 std::string AllocaArrayLLVM::out_str() const {
     //todo
+    return "";
 }
 
 //LoadLLVM
@@ -25,6 +27,7 @@ BasicSymbol* LoadLLVM::getDestSymbol(){return this->dest_sym;}
 
 std::string LoadLLVM::out_str() const {
     //todo
+    return "";
 }
 
 //StoreLLVM::
@@ -35,6 +38,7 @@ PointerSymbol* StoreLLVM::getDestSymbol(){return this->dest_sym;}
 
 std::string StoreLLVM::out_str() const {
     //todo
+    return "";
 }
 
 //GetElementPtrLLVM::
@@ -58,4 +62,5 @@ void GetElementPtrLLVM::addTyIdx(std::vector<dataType>ty,std::vector<BasicSymbol
 }
 std::string GetElementPtrLLVM::out_str() const {
     //todo
+    return "";
 }

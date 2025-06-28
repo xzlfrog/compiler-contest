@@ -48,8 +48,6 @@ ReturnLLVM* LLVMfactory::createReturnLLVM(BasicSymbol* returnValue){
 PhiLLVM* LLVMfactory::createPhiLLVM(BasicSymbol* dest_sym,std::vector<BasicSymbol*> src_sym,std::vector<LabelSymbol*>src_label){
     PhiLLVM* phiLLVM=new PhiLLVM();
     phiLLVM->llvmType=LLVMtype::phi;
-    if(dest_sym->data==nullptr)
-        return;
     phiLLVM->dest_sym=dest_sym;
     phiLLVM->addCase(src_sym,src_label);
     return phiLLVM;
@@ -175,13 +173,13 @@ ConstantNonArrayVarDefination* LLVMfactory::createConstantNonArrayVarDefination(
     return constantNonArrayVarDefination;
 }
 
-FuncDeclaration* createFuncDeclaration(FuncSymbol* func,std::vector<dataType>paramTypes,dataType returnType){
+FuncDeclaration* LLVMfactory::createFuncDeclaration(FuncSymbol* func,std::vector<dataType>paramTypes,dataType returnType){
     FuncDeclaration* funcDeclaration=LLVMfactory::createFuncDeclaration(func,paramTypes);
     funcDeclaration->func->returnType=returnType;
     return funcDeclaration;
 }
 
-FuncDeclaration* createFuncDeclaration(FuncSymbol* func,std::vector<dataType>paramTypes){
+FuncDeclaration* LLVMfactory::createFuncDeclaration(FuncSymbol* func,std::vector<dataType>paramTypes){
     FuncDeclaration* funcDeclaration = new FuncDeclaration();
     funcDeclaration->func=func;
     funcDeclaration->func->paramTypes=paramTypes;

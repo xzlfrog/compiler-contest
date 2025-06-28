@@ -27,3 +27,10 @@ std::string DataTypeToString(dataType type)
         default: throw std::invalid_argument("Unknown data type");
     }
 }
+
+void checkType(dataType type1,dataType type2)
+{
+    if(type1!=type2){
+        throw std::runtime_error("the type is wrong");
+    }
+}

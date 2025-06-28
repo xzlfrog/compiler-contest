@@ -49,7 +49,7 @@ symType LabelSymbol::getType(){this->type=symType::sym_label; return this->type;
 
 //FuncSymbol
 symType FuncSymbol::getType() {this->type=symType::function; return this->type;}
-const std::vector<dataType> FuncSymbol::getParamTypes()const{return this->paramTypes;}
+const std::vector<dataType>& FuncSymbol::getParamTypes()const{return this->paramTypes;}
 dataType FuncSymbol::getReturnType()const{return this->returnType;}
 
 void FuncSymbol::addParams(std::vector<dataType>& paramTypes){

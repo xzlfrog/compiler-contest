@@ -69,8 +69,12 @@ class LLVM {
     LLVM* next;//下一条llvm指令
     LLVM* prev;//上一条llvm指令
 
-    virtual std::string out_str() const;//输出成文本
+    //输出成文本
+    virtual std::string out_str() const{
+        return "";
+    };
     LLVMtype getLLVMType();//得到llvm指令类型
+    virtual ~LLVM() = default;
 };
 
 class LLVMList{

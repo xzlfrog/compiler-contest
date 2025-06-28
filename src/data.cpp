@@ -173,7 +173,7 @@ void Data_f64::setValue(ValueVariant value){
 }
 
 //Data_pointer
-dataType Data_pointer::getType() const {return dataType::pointer;}
+dataType Data_pointer::getType() const {return dataType::const_exp_pointer;}
 
 ValueVariant Data_pointer::getValue(){
     this->checkIsInitialed();
@@ -260,229 +260,229 @@ Data* ConstExp::constFolding(){
     switch(this->type)
     {
         case constExpType::const_exp_add :
-            data=add(this->constData1,this->constData2);
+            data=constExp_add(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_sub :
-            data=sub(this->constData1,this->constData2);
+            data=constExp_sub(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_mul :
-            data=mul(this->constData1,this->constData2);
+            data=constExp_mul(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_sdiv :
-            data=sdiv(this->constData1,this->constData2);
+            data=constExp_sdiv(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_and :
-            data=andi(this->constData1,this->constData2);
+            data=constExp_andi(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_or :
-            data=ori(this->constData1,this->constData2);
+            data=constExp_ori(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_xor :
-            data=xori(this->constData1,this->constData2);
+            data=constExp_xori(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_fadd :
-            data=fadd(this->constData1,this->constData2);
+            data=constExp_fadd(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_fsub :
-            data=fsub(this->constData1,this->constData2);
+            data=constExp_fsub(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_fmul :
-            data=fmul(this->constData1,this->constData2);
+            data=constExp_fmul(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_fdiv :
-            data=fdiv(this->constData1,this->constData2);
+            data=constExp_fdiv(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_fcmp_oeq :
-            data=fcmp_oeq(this->constData1,this->constData2);
+            data=constExp_fcmp_oeq(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_fcmp_oge :
-            data=fcmp_oge(this->constData1,this->constData2);
+            data=constExp_fcmp_oge(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_fcmp_ogt :
-            data=fcmp_ogt(this->constData1,this->constData2);
+            data=constExp_fcmp_ogt(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_fcmp_ole :
-            data=fcmp_ole(this->constData1,this->constData2);
+            data=constExp_fcmp_ole(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_fcmp_olt :
-            data=fcmp_olt(this->constData1,this->constData2);
+            data=constExp_fcmp_olt(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_fcmp_one :
-            data=fcmp_one(this->constData1,this->constData2);
+            data=constExp_fcmp_one(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_icmp_eq :
-            data=icmp_eq(this->constData1,this->constData2);
+            data=constExp_icmp_eq(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_icmp_sge :
-            data=icmp_sge(this->constData1,this->constData2);
+            data=constExp_icmp_sge(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_icmp_sgt :
-            data=icmp_sgt(this->constData1,this->constData2);
+            data=constExp_icmp_sgt(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_icmp_sle :
-            data=icmp_sle(this->constData1,this->constData2);
+            data=constExp_icmp_sle(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_icmp_slt :
-            data=icmp_slt(this->constData1,this->constData2);
+            data=constExp_icmp_slt(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_icmp_ne :
-            data=icmp_ne(this->constData1,this->constData2);
+            data=constExp_icmp_ne(this->constData1,this->constData2);
             break;
         case constExpType::const_exp_sitofp :
-            data=sitofp(this->constData1);
+            data=constExp_sitofp(this->constData1);
             break;
     }
     return data;
 }
 
-Data* add(Data* data1,Data* data2){
+Data* constExp_add(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i32,a+b);
 }
 
-Data* sub(Data* data1,Data* data2){
+Data* constExp_sub(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i32,a-b);
 }
 
-Data* mul(Data* data1,Data* data2){
+Data* constExp_mul(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i32,a*b);
 }
 
-Data* sdiv(Data* data1,Data* data2){
+Data* constExp_sdiv(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i32,a/b);
 }
 
-Data* andi(Data* data1,Data* data2){
+Data* constExp_andi(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i32,a&b);
 }
-Data* ori(Data* data1,Data* data2){
+Data* constExp_ori(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i32,a|b);
 }
 
-Data* xori(Data* data1,Data* data2){
+Data* constExp_xori(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i32,a^b);
 }
 
-Data* fadd(Data* data1,Data* data2){
+Data* constExp_fadd(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
     return createData(dataType::f32,a+b);
 }
 
-Data* fsub(Data* data1,Data* data2){
+Data* constExp_fsub(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
     return createData(dataType::f32,a-b);
 }
 
-Data* fmul(Data* data1,Data* data2){
+Data* constExp_fmul(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
     return createData(dataType::f32,a*b);
 }
 
-Data* fdiv(Data* data1,Data* data2){
+Data* constExp_fdiv(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
     return createData(dataType::f32,a/b);
 }
 
-Data* icmp_eq(Data* data1,Data* data2){
+Data* constExp_icmp_eq(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i1,a==b);
 }
-Data* icmp_ne(Data* data1,Data* data2){
+Data* constExp_icmp_ne(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i1,a!=b);
 }
 
 //integer signed greater than
-Data* icmp_sgt(Data* data1,Data* data2){
+Data* constExp_icmp_sgt(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i1,a>b);
 }
 
 //integer signed greater than or equal
-Data* icmp_sge(Data* data1,Data* data2){
+Data* constExp_icmp_sge(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i1,a>=b);
 }
 
 //integer signed less than
-Data* icmp_slt(Data* data1,Data* data2){
+Data* constExp_icmp_slt(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i1,a<b);
 }
 
 // integer signed less than or equal
-Data* icmp_sle(Data* data1,Data* data2){
+Data* constExp_icmp_sle(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i1,a<=b);
 }
 
 //float equal
-Data* fcmp_oeq(Data* data1,Data* data2){
+Data* constExp_fcmp_oeq(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
     return createData(dataType::i1,a==b);
 }
 
 //float greater than
-Data* fcmp_ogt(Data* data1,Data* data2){
+Data* constExp_fcmp_ogt(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
     return createData(dataType::i1,a>b);
 }
 
 //float greater than or equal
-Data* fcmp_oge(Data* data1,Data* data2){
+Data* constExp_fcmp_oge(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
     return createData(dataType::i1,a>=b);
 }
 
 //float less than
-Data* fcmp_olt(Data* data1,Data* data2){
+Data* constExp_fcmp_olt(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
     return createData(dataType::i1,a<b);
 }
 
 //float less than or equal
-Data* fcmp_ole(Data* data1,Data* data2){
+Data* constExp_fcmp_ole(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
     return createData(dataType::i1,a<=b);
 }
 
 //float not equal
-Data* fcmp_one(Data* data1,Data* data2){
+Data* constExp_fcmp_one(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
     return createData(dataType::i1,a!=b);
 }
 
 //有符号整数转浮点
-Data* sitofp(Data* data1){
+Data* constExp_sitofp(Data* data1){
     int a=std::get<int>(data1->getValue());
     return createData(dataType::f32,(float)a);
 }

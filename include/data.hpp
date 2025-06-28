@@ -70,11 +70,23 @@ public:
     std::string Data::getTypeStr(dataType type) const;//得到数据类型的字符串表示
     virtual ValueVariant getValue();//得到数据，需要使用std::holds_alternative</*你要的数据类型*/>(data->getValue())来得到数据
     virtual void setValue(ValueVariant value);//设置对应的数据
+    virtual dataType getType() const;//得到数据类型
+    //得到数据，需要使用std::holds_alternative</*你要的数据类型*/>(data->getValue())来得到数据
+    virtual ValueVariant getValue(){
+        throw std::runtime_error("Base Data getValue() called");
+    }
+
+    //设置对应的数据
+    virtual void setValue(ValueVariant value){
+        throw std::runtime_error("Base Data setValue() called");
+    }
     void setIsInitialize(bool flag);//设置变量是否被初始化
     bool getIsInitialized();//变量是否被初始化
     void setInitMode(initializer initMode);//设置初始化的方式
     initializer getInitMode();//得到初始化的方式
     bool checkIsInitialed();//检查是否被初始化，在类的成员方法实现中使用
+
+    virtual ~Data() = default;
 };
 
 class Data_i1:public Data {
@@ -82,8 +94,8 @@ private:
     bool value;
 public:
     dataType getType() const;
-    ValueVariant getValue() override;
-    void setValue(ValueVariant value) override;
+    ValueVariant getValue();
+    void setValue(ValueVariant value);
 };
 
 class Data_i8:public Data {
@@ -91,8 +103,8 @@ private:
     char value;
 public:    
     dataType getType() const;
-    ValueVariant getValue() override;
-    void setValue(ValueVariant value) override;
+    ValueVariant getValue();
+    void setValue(ValueVariant value);
 };
 
 class Data_i16:public Data {
@@ -100,8 +112,8 @@ private:
     short value;
 public:    
     dataType getType() const;
-    ValueVariant getValue()override;
-    void setValue(ValueVariant value) override;
+    ValueVariant getValue();
+    void setValue(ValueVariant value);
 };
 
 class Data_i32:public Data {
@@ -109,8 +121,8 @@ private:
     int value;
 public:    
     dataType getType() const;
-    ValueVariant getValue() override;
-    void setValue(ValueVariant value) override;
+    ValueVariant getValue();
+    void setValue(ValueVariant value);
 };
 
 class Data_i64:public Data {
@@ -118,8 +130,8 @@ private:
     long long value;
 public:    
     dataType getType() const;
-    ValueVariant getValue() override;
-    void setValue(ValueVariant value) override;
+    ValueVariant getValue();
+    void setValue(ValueVariant value);
 };
 
 class Data_f32:public Data {
@@ -127,8 +139,8 @@ private:
     float value;
 public:    
     dataType getType() const;
-    ValueVariant getValue() override;
-    void setValue(ValueVariant value) override;
+    ValueVariant getValue();
+    void setValue(ValueVariant value);
 };
 
 class Data_f64:public Data {
@@ -136,8 +148,8 @@ private:
     double value;
 public:    
     dataType getType() const;
-    ValueVariant getValue() override;
-    void setValue(ValueVariant value) override;
+    ValueVariant getValue();
+    void setValue(ValueVariant value);
 };
 
 class Data_pointer:public Data {
@@ -145,8 +157,8 @@ private:
     Data* value;
 public:
     dataType getType() const;
-    ValueVariant getValue() override;
-    void setValue(ValueVariant value) override;
+    ValueVariant getValue();
+    void setValue(ValueVariant value);
 };
 
 Data* createData(dataType type,ValueVariant v);//type为对应的数据的类，v为这个数据初始化的值
@@ -182,35 +194,30 @@ public:
         if(constData2==nullptr&&type<=const_exp_fcmp_one)
             throw std::invalid_argument("the constant expression type not match the data");
     }
-
-    ~ConstExp(){
-        delete this->constData1;
-        delete this->constData2;
-    }
 };
 
-Data* ConstExp_add(Data* data1,Data* data2);
-Data* ConstExp_sub(Data* data1,Data* data2);
-Data* ConstExp_mul(Data* data1,Data* data2);
-Data* ConstExp_sdiv(Data* data1,Data* data2);
-Data* ConstExp_andi(Data* data1,Data* data2);
-Data* ConstExp_ori(Data* data1,Data* data2);
-Data* ConstExp_xori(Data* data1,Data* data2);
-Data* ConstExp_fadd(Data* data1,Data* data2);
-Data* ConstExp_fsub(Data* data1,Data* data2);
-Data* ConstExp_fmul(Data* data1,Data* data2);
-Data* ConstExp_fdiv(Data* data1,Data* data2);
-Data* ConstExp_icmp_eq(Data* data1,Data* data2);//integer equal
-Data* ConstExp_icmp_ne(Data* data1,Data* data2);//integer not equal
-Data* ConstExp_icmp_sgt(Data* data1,Data* data2);//integer signed greater than
-Data* ConstExp_icmp_sge(Data* data1,Data* data2);//integer signed greater than or equal
-Data* ConstExp_icmp_slt(Data* data1,Data* data2);//integer signed less than
-Data* ConstExp_icmp_sle(Data* data1,Data* data2);// integer signed less than or equal
-Data* ConstExp_fcmp_oeq(Data* data1,Data* data2);//float equal
-Data* ConstExp_fcmp_ogt(Data* data1,Data* data2);//float greater than
-Data* ConstExp_fcmp_oge(Data* data1,Data* data2);//float greater than or equal
-Data* ConstExp_fcmp_olt(Data* data1,Data* data2);//float less than
-Data* ConstExp_fcmp_ole(Data* data1,Data* data2);//float less than or equal
-Data* ConstExp_fcmp_one(Data* data1,Data* data2);//float not equal
-Data* ConstExp_sitofp(Data* data1,Data* data2);//有符号整数转浮点
+Data* constExp_add(Data* data1,Data* data2);
+Data* constExp_sub(Data* data1,Data* data2);
+Data* constExp_mul(Data* data1,Data* data2);
+Data* constExp_sdiv(Data* data1,Data* data2);
+Data* constExp_andi(Data* data1,Data* data2);
+Data* constExp_ori(Data* data1,Data* data2);
+Data* constExp_xori(Data* data1,Data* data2);
+Data* constExp_fadd(Data* data1,Data* data2);
+Data* constExp_fsub(Data* data1,Data* data2);
+Data* constExp_fmul(Data* data1,Data* data2);
+Data* constExp_fdiv(Data* data1,Data* data2);
+Data* constExp_icmp_eq(Data* data1,Data* data2);//integer equal
+Data* constExp_icmp_ne(Data* data1,Data* data2);//integer not equal
+Data* constExp_icmp_sgt(Data* data1,Data* data2);//integer signed greater than
+Data* constExp_icmp_sge(Data* data1,Data* data2);//integer signed greater than or equal
+Data* constExp_icmp_slt(Data* data1,Data* data2);//integer signed less than
+Data* constExp_icmp_sle(Data* data1,Data* data2);// integer signed less than or equal
+Data* constExp_fcmp_oeq(Data* data1,Data* data2);//float equal
+Data* constExp_fcmp_ogt(Data* data1,Data* data2);//float greater than
+Data* constExp_fcmp_oge(Data* data1,Data* data2);//float greater than or equal
+Data* constExp_fcmp_olt(Data* data1,Data* data2);//float less than
+Data* constExp_fcmp_ole(Data* data1,Data* data2);//float less than or equal
+Data* constExp_fcmp_one(Data* data1,Data* data2);//float not equal
+Data* constExp_sitofp(Data* data1);//有符号整数转浮点
 
