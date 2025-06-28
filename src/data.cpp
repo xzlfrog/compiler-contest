@@ -11,6 +11,18 @@ bool Data::checkIsInitialed(){
 }
 void Data::setIsInitialize(bool flag){this->isInitialized=flag;}
 dataType Data::getType() const{return dataType::data_undefined;}
+std::string Data::getTypeStr(dataType type) const {
+    switch (type) {
+        case dataType::i1:   return "i1";
+        case dataType::i8:   return "i8";
+        case dataType::i16:  return "i16";
+        case dataType::i32:  return "i32";
+        case dataType::i64:  return "i64";
+        case dataType::f32:  return "f32";
+        case dataType::f64:  return "f64";
+        default: throw std::invalid_argument("Invalid data type for function call");
+    }
+}
 
 //Data_i1
 dataType Data_i1::getType() const{return dataType::i1;}
@@ -474,3 +486,4 @@ Data* sitofp(Data* data1){
     int a=std::get<int>(data1->getValue());
     return createData(dataType::f32,(float)a);
 }
+

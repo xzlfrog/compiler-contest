@@ -67,6 +67,7 @@ private:
     
 public:
     dataType getType() const;//得到数据类型
+    std::string Data::getTypeStr(dataType type) const;//得到数据类型的字符串表示
     virtual ValueVariant getValue();//得到数据，需要使用std::holds_alternative</*你要的数据类型*/>(data->getValue())来得到数据
     virtual void setValue(ValueVariant value);//设置对应的数据
     void setIsInitialize(bool flag);//设置变量是否被初始化

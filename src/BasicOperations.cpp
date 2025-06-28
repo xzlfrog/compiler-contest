@@ -99,6 +99,28 @@ std::string ArithmeticOperationLLVM::out_str() const {
             throw std::invalid_argument("wrong_operand_type");
     }
 
+    switch(b->getType()){
+        case symType::constant_var || symType::constant_nonvar:
+            operandbType = "@";
+            break;
+        case symType::variable:
+            operandbType = "%";
+            break;
+        default:
+            throw std::invalid_argument("wrong_operand_type");
+    }
+
+    switch(c->getType()){
+        case symType::constant_var || symType::constant_nonvar:
+            operandcType = "@";
+            break;
+        case symType::variable:
+            operandcType = "%";
+            break;
+        default:
+            throw std::invalid_argument("wrong_operand_type");
+    }
+
     return operandaType + a->name + " = " + opStr + " " + typeStr + " " + operandaType + b->name + ", " + operandcType + c->name;
 
 }
