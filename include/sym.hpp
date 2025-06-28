@@ -27,7 +27,9 @@ public:
     int scope;//作用域，这次需要考虑每个基本块的作用域，gloabl 0,local 1,block 2
     Symbol* next;//下一个symbol，用于符号表的连接
 
-    virtual symType getType();//返回type成员变量
+    Symbol(){}
+    virtual symType getType(){return this->type;}//返回type成员变量
+    virtual ~Symbol() =default;
 };
 
 //只考虑了指针的情况，未考虑指针的指针的情况，如需使用需后续补充
@@ -41,6 +43,7 @@ public:
     symType getType() override;
     dataType getPointedType() const;//获得指针指向的元素的数据类型，比如源程序中是int类型，此处就是i32
     void allocateMemory(dataType elementType,ValueVariant value);
+    ~PointerSymbol()=default;
 };
 
 //包含常数和变量和常量变量
@@ -49,31 +52,38 @@ public:
     symType getType() override;//返回type成员变量
     dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
     void setData(dataType dtype,ValueVariant v);//修改符号存的数据
+    ~BasicSymbol()=default;
 };
 
 //变量
 class VarSymbol: public BasicSymbol{
 public:
+
     symType getType() override;//返回type成员变量
     dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
     void setData(dataType dtype,ValueVariant v);//修改符号存的数据
+    ~VarSymbol()=default;
 };
 
 //常量
 class ConstVarSymbol: public BasicSymbol{
+
 public:
     symType getType() override;//返回type成员变量
     dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
     void setData(dataType dtype,ValueVariant v);//修改符号存的数据
+    ~ConstVarSymbol()=default;
 };
 
 
 //常数
 class ConstSymbol: public BasicSymbol{
+
 public:
     symType getType() override;//返回type成员变量
     dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
     void setData(dataType dtype,ValueVariant v);//修改符号存的数据
+    ~ConstSymbol()=default;
 };
 
 //这里只存了初始化的元素，对于作为全局变量定义的数组，都有初始值，这里可以通过scope来判断
@@ -85,6 +95,7 @@ private:
     bool isInitialed=false;//是否被初始化
 
 public:
+    ~ArraySymbol()=default;
     symType getType() override;
     void allocateMemory(dataType type,std::vector<int>&dims);
     const std::vector<int>&getDimensions() const;//数组大小
@@ -101,6 +112,7 @@ public:
 class LabelSymbol:public Symbol{
 public:
     symType getType() override;
+    ~LabelSymbol()=default;
 };
 
 //函数对应的符号
@@ -110,10 +122,11 @@ public:
     dataType returnType;//返回值数据类型
     bool isDef=false;
     
+    ~FuncSymbol()=default;
     symType getType() override;
     void addParams(std::vector<dataType>& paramTypes);//或许创建完之后还要增加参数？
     void addParam(dataType paramType);//同上
-    const std::vector<dataType> getParamTypes()const;//得到函数参数类型
+    const std::vector<dataType>& getParamTypes()const;//得到函数参数类型
     dataType getReturnType()const;//返回函数返回值类型
     bool getIsDef();
 };

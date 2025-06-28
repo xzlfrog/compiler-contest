@@ -4,11 +4,7 @@
 #include<vector>
 #include"function.hpp"
 
-class ControlOperationLLVM:public LLVM{
-
-};
-
-class ConditionalBranchLLVM:public ControlOperationLLVM{
+class ConditionalBranchLLVM:public LLVM{
 public:
     BasicSymbol* condition; // The condition for the branch
     LabelSymbol* trueBranch;  // The LLVM IR for the true branch
@@ -21,20 +17,22 @@ public:
     BasicSymbol* getCondition();
     LabelSymbol* getTrueBranch();
     LabelSymbol* getFalseBranch();
+    ~ConditionalBranchLLVM()=default;
 };
 
 //br target
-class UnconditionalBranchLLVM:public ControlOperationLLVM{
+class UnconditionalBranchLLVM:public LLVM{
 public:
     LabelSymbol* target; // The target label for the branch
 
     std::string out_str() const override; // Output the LLVM IR string representation
     void setTarget(LabelSymbol* target); // Set the target label for the branch
     LabelSymbol* getTarget();
+    ~UnconditionalBranchLLVM()=default;
 };
 
 //return 
-class ReturnLLVM:public ControlOperationLLVM{
+class ReturnLLVM:public LLVM{
 public:
     BasicSymbol* returnValue; // The value to return
 
@@ -42,10 +40,11 @@ public:
     void setReturnValue(BasicSymbol* value); // Set the return value
     BasicSymbol* getReturnValue();//未检查return的类型是否和函数的返回值类型相匹配
     dataType getReturnType();
+    ~ReturnLLVM()=default;
 };
 
 //call 
-class CallLLVM:public ControlOperationLLVM{
+class CallLLVM:public LLVM{
 public:
     FuncSymbol* function; // The function to call
     std::vector<BasicSymbol*> arguments; // The arguments to pass to the function
@@ -60,6 +59,7 @@ public:
     const std::vector<BasicSymbol*>& getArguments() const;
     const std::vector<dataType>& getArgumentsType() const;
     dataType getReturnType();
+    ~CallLLVM()=default;
 };
 
 //switch (condition) case case_val_dest.first goto label case_val_dest_second
@@ -80,7 +80,7 @@ public:
 };*/
 
 //dest_sym=phi dest_ty [src_sym1,label1],[src_sym2,label2]......
-class PhiLLVM:public ControlOperationLLVM{
+class PhiLLVM:public LLVM{
 public:
     BasicSymbol* dest_sym;//被赋值的变量
     std::vector<std::pair<BasicSymbol*,LabelSymbol*>> vals_srcs;//源操作数和来自哪个基本块
@@ -91,14 +91,15 @@ public:
     BasicSymbol* getDestSymbol();
     const std::vector<std::pair<BasicSymbol*,LabelSymbol*>>getValAndSrc() const;
     dataType getDestType();
-
+    ~PhiLLVM()=default;
 };
 
 //label:
-class Label:public ControlOperationLLVM{
+class Label:public LLVM{
 public:
     LabelSymbol* label;
 
     std::string out_str() const override;
     LabelSymbol* getLabel();
+    ~Label()=default;
 };

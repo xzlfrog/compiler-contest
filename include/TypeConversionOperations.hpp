@@ -14,4 +14,5 @@ public:
     BasicSymbol* getDestSymbol();
     dataType getSrcType();
     dataType getDestType();
+    ~TypeConversionOperation()=default;
 };

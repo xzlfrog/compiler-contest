@@ -21,6 +21,7 @@ public:
     BasicSymbol* getB();
     BasicSymbol* getC();
     dataType getType();
+    ~ArithmeticOperationLLVM()=default;
 
 };
 
