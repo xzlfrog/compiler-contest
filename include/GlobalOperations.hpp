@@ -16,6 +16,7 @@ public:
     BasicSymbol* getSrcSymbol();
     initializer getInitMode();
     std::string out_str()const override;
+    std::string getPointedTypeStr(dataType PointedType) const; 
 };
 
 //dest_sym = constant ty src_sym
@@ -29,6 +30,7 @@ public:
     BasicSymbol* getSrcSymbol();
     initializer getInitMode();
     std::string out_str()const override;
+    std::string getConstTypeStr(dataType constType) const;
 };
 
 /*
@@ -72,6 +74,8 @@ public:
     dataType getReturnType();
     const std::vector<dataType>getParamTypes()const;
     std::string out_str()const override;
+    std::string getReturnTypeStr(dataType returnType) const;
+    std::string getParamTypeStr(dataType paramType) const;
 };
 
 //define ty func(ty1 param1,ty2 param2......)
