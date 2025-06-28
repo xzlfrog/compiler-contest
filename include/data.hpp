@@ -5,6 +5,7 @@
 #include<stdexcept>
 #include<vector>
 #include<utility>
+#include<variant>
 
 //数据类型
 enum dataType{
@@ -17,7 +18,7 @@ enum dataType{
     i64,
     f32,
     f64,
-    pointer
+    const_exp_pointer
 };
 
 enum constExpType{
@@ -187,28 +188,28 @@ public:
     }
 };
 
-Data* add(Data* data1,Data* data2);
-Data* sub(Data* data1,Data* data2);
-Data* mul(Data* data1,Data* data2);
-Data* sdiv(Data* data1,Data* data2);
-Data* andi(Data* data1,Data* data2);
-Data* ori(Data* data1,Data* data2);
-Data* xori(Data* data1,Data* data2);
-Data* fadd(Data* data1,Data* data2);
-Data* fsub(Data* data1,Data* data2);
-Data* fmul(Data* data1,Data* data2);
-Data* fdiv(Data* data1,Data* data2);
-Data* icmp_eq(Data* data1,Data* data2);//integer equal
-Data* icmp_ne(Data* data1,Data* data2);//integer not equal
-Data* icmp_sgt(Data* data1,Data* data2);//integer signed greater than
-Data* icmp_sge(Data* data1,Data* data2);//integer signed greater than or equal
-Data* icmp_slt(Data* data1,Data* data2);//integer signed less than
-Data* icmp_sle(Data* data1,Data* data2);// integer signed less than or equal
-Data* fcmp_oeq(Data* data1,Data* data2);//float equal
-Data* fcmp_ogt(Data* data1,Data* data2);//float greater than
-Data* fcmp_oge(Data* data1,Data* data2);//float greater than or equal
-Data* fcmp_olt(Data* data1,Data* data2);//float less than
-Data* fcmp_ole(Data* data1,Data* data2);//float less than or equal
-Data* fcmp_one(Data* data1,Data* data2);//float not equal
-Data* sitofp(Data* data1,Data* data2);//有符号整数转浮点
+Data* ConstExp_add(Data* data1,Data* data2);
+Data* ConstExp_sub(Data* data1,Data* data2);
+Data* ConstExp_mul(Data* data1,Data* data2);
+Data* ConstExp_sdiv(Data* data1,Data* data2);
+Data* ConstExp_andi(Data* data1,Data* data2);
+Data* ConstExp_ori(Data* data1,Data* data2);
+Data* ConstExp_xori(Data* data1,Data* data2);
+Data* ConstExp_fadd(Data* data1,Data* data2);
+Data* ConstExp_fsub(Data* data1,Data* data2);
+Data* ConstExp_fmul(Data* data1,Data* data2);
+Data* ConstExp_fdiv(Data* data1,Data* data2);
+Data* ConstExp_icmp_eq(Data* data1,Data* data2);//integer equal
+Data* ConstExp_icmp_ne(Data* data1,Data* data2);//integer not equal
+Data* ConstExp_icmp_sgt(Data* data1,Data* data2);//integer signed greater than
+Data* ConstExp_icmp_sge(Data* data1,Data* data2);//integer signed greater than or equal
+Data* ConstExp_icmp_slt(Data* data1,Data* data2);//integer signed less than
+Data* ConstExp_icmp_sle(Data* data1,Data* data2);// integer signed less than or equal
+Data* ConstExp_fcmp_oeq(Data* data1,Data* data2);//float equal
+Data* ConstExp_fcmp_ogt(Data* data1,Data* data2);//float greater than
+Data* ConstExp_fcmp_oge(Data* data1,Data* data2);//float greater than or equal
+Data* ConstExp_fcmp_olt(Data* data1,Data* data2);//float less than
+Data* ConstExp_fcmp_ole(Data* data1,Data* data2);//float less than or equal
+Data* ConstExp_fcmp_one(Data* data1,Data* data2);//float not equal
+Data* ConstExp_sitofp(Data* data1,Data* data2);//有符号整数转浮点
 

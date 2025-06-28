@@ -12,21 +12,21 @@ std::string generate_tmp_label_name(){
     return "label."+std::to_string(tmp_label_cnt++);
 }
 
-VarSymbol* SymbolFactory::createVarSymbol(std::string name,Data*data=nullptr){
+VarSymbol* SymbolFactory::createVarSymbol(std::string name,Data*data){
     VarSymbol *varSymbol=new VarSymbol();
     varSymbol->name=name;
     varSymbol->data=data;
     return varSymbol;
 }
 
-ConstVarSymbol* SymbolFactory::createConstVarSymbol(std::string name,Data* data=nullptr){
+ConstVarSymbol* SymbolFactory::createConstVarSymbol(std::string name,Data* data){
     ConstVarSymbol *constVarSymbol=new ConstVarSymbol();
     constVarSymbol->name=name;
     constVarSymbol->data=data;
     return constVarSymbol;
 }
 
-VarSymbol* SymbolFactory::createTmpVarSymbol(Data*data=nullptr){
+VarSymbol* SymbolFactory::createTmpVarSymbol(Data*data){
     std::string name=generate_tmp_var_name();
     VarSymbol *varSymbol=new VarSymbol();
     varSymbol->name=name;
@@ -34,27 +34,27 @@ VarSymbol* SymbolFactory::createTmpVarSymbol(Data*data=nullptr){
     return varSymbol;
 }
 
-ConstSymbol* SymbolFactory::createConstSymbol(Data*data=nullptr){
+ConstSymbol* SymbolFactory::createConstSymbol(Data*data){
     ConstSymbol* constSymbol=new ConstSymbol();
     constSymbol->data=data;
     return constSymbol;
 }
 
-PointerSymbol* SymbolFactory::createPointerSymbol(std::string name,dataType pointedType=dataType::data_undefined){
+PointerSymbol* SymbolFactory::createPointerSymbol(std::string name,dataType pointedType){
     PointerSymbol* pointerSymbol=new PointerSymbol();
     pointerSymbol->name=name;
     pointerSymbol->allocateMemory(pointedType,0);
     return pointerSymbol;
 }
 
-PointerSymbol* SymbolFactory::createPointerSymbol(std::string name,ValueVariant value,dataType pointedType=dataType::data_undefined){
+PointerSymbol* SymbolFactory::createPointerSymbol(std::string name,ValueVariant value,dataType pointedType){
     PointerSymbol* pointerSymbol=new PointerSymbol();
     pointerSymbol->name=name;
     pointerSymbol->allocateMemory(pointedType,value);
     return pointerSymbol;
 }
 
-ArraySymbol* SymbolFactory::createArraySymbol(std::string name,dataType type=dataType::data_undefined){
+ArraySymbol* SymbolFactory::createArraySymbol(std::string name,dataType type){
     ArraySymbol* arraySymbol=new ArraySymbol();
     arraySymbol->name=name;
     std::vector<int> dim=std::vector<int>(0);
@@ -62,7 +62,7 @@ ArraySymbol* SymbolFactory::createArraySymbol(std::string name,dataType type=dat
     return arraySymbol;
 }
 
-ArraySymbol* SymbolFactory::createArraySymbol(std::string name,std::vector<int>&dimensions,dataType type=dataType::data_undefined){
+ArraySymbol* SymbolFactory::createArraySymbol(std::string name,std::vector<int>&dimensions,dataType type){
     ArraySymbol* arraySymbol=new ArraySymbol();
     arraySymbol->name=name;
     arraySymbol->allocateMemory(type,dimensions);
@@ -80,7 +80,7 @@ LabelSymbol* SymbolFactory::createTmpLabelSymbol(){
     return SymbolFactory::createLabelSymbol(name);
 }
 
-FuncSymbol* SymbolFactory::createFuncSymbol(std::string name,std::vector<dataType>& paramTypes,dataType returnType=dataType::data_undefined){
+FuncSymbol* SymbolFactory::createFuncSymbol(std::string name,std::vector<dataType>& paramTypes,dataType returnType){
     FuncSymbol* funcSymbol=new FuncSymbol();
     funcSymbol->name=name;
     funcSymbol->paramTypes=paramTypes;
@@ -88,7 +88,7 @@ FuncSymbol* SymbolFactory::createFuncSymbol(std::string name,std::vector<dataTyp
     return funcSymbol;
 }
 
-FuncSymbol* SymbolFactory::createFuncSymbol(std::string name,dataType returnType=dataType::data_undefined){
+FuncSymbol* SymbolFactory::createFuncSymbol(std::string name,dataType returnType){
     FuncSymbol* funcSymbol=new FuncSymbol();
     std::vector<dataType> paramTypes=std::vector<dataType>(0);
     funcSymbol->name=name;

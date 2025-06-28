@@ -9,7 +9,7 @@ int getDataSize(dataType type){
         case dataType::i64: return 8;
         case dataType::f32: return 4;
         case dataType::f64: return 8;
-        case dataType::pointer: return sizeof(void*);
+        case dataType::const_exp_pointer: return sizeof(void*);
         default: throw std::invalid_argument("Unknown data type");
     }
 }

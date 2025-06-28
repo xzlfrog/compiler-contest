@@ -13,7 +13,7 @@ class LocalMemoryOperationLLVM:public LLVM{};
 class AllocaNonArrayLLVM:public LocalMemoryOperationLLVM{
     public:
         PointerSymbol* sym;//分配内存的变量
-        dataType ty=dataType::pointer;//变量的类型
+        dataType ty=dataType::const_exp_pointer;//变量的类型
 
         std::string out_str() const override;
         dataType getPointedType();//举个例子，虽然我们定义的是int类型的变量，

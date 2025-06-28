@@ -10,7 +10,7 @@
 enum symType{
     sym_undefined,
     function,
-    label,
+    sym_label,
     variable,
     constant_var,
     constant_nonvar,

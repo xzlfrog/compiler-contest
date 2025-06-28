@@ -45,7 +45,7 @@ void ArraySymbol::setInitialedData(ArrayInitial* arrayInitial){
 }
 
 //LabelSymbol
-symType LabelSymbol::getType(){this->type=symType::label; return this->type;}
+symType LabelSymbol::getType(){this->type=symType::sym_label; return this->type;}
 
 //FuncSymbol
 symType FuncSymbol::getType() {this->type=symType::function; return this->type;}
