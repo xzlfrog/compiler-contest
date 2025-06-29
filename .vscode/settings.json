@@ -116,6 +116,11 @@
     "istream": "cpp",
     "numbers": "cpp",
     "ranges": "cpp",
-    "span": "cpp"
+    "span": "cpp",
+    "complex": "cpp",
+    "source_location": "cpp",
+    "sstream": "cpp",
+    "cinttypes": "cpp",
+    "typeindex": "cpp"
   }
 }
