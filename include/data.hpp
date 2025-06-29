@@ -66,11 +66,10 @@ private:
     initializer initMode;//初始化方式
     
 public:
-    dataType getType() const;//得到数据类型
-    std::string Data::getTypeStr(dataType type) const;//得到数据类型的字符串表示
-    virtual ValueVariant getValue();//得到数据，需要使用std::holds_alternative</*你要的数据类型*/>(data->getValue())来得到数据
-    virtual void setValue(ValueVariant value);//设置对应的数据
-    virtual dataType getType() const;//得到数据类型
+    static std::string getTypeStr(dataType type);//得到数据类型的字符串表示
+    virtual dataType getType() const{
+        return this->type;
+    };//得到数据类型
     //得到数据，需要使用std::holds_alternative</*你要的数据类型*/>(data->getValue())来得到数据
     virtual ValueVariant getValue(){
         throw std::runtime_error("Base Data getValue() called");
@@ -93,72 +92,72 @@ class Data_i1:public Data {
 private:
     bool value;
 public:
-    dataType getType() const;
-    ValueVariant getValue();
-    void setValue(ValueVariant value);
+    dataType getType() const override;
+    ValueVariant getValue() override;
+    void setValue(ValueVariant value) override;
 };
 
 class Data_i8:public Data {
 private:
     char value;
 public:    
-    dataType getType() const;
-    ValueVariant getValue();
-    void setValue(ValueVariant value);
+    dataType getType() const override;
+    ValueVariant getValue() override;
+    void setValue(ValueVariant value) override;
 };
 
 class Data_i16:public Data {
 private:
     short value;
 public:    
-    dataType getType() const;
-    ValueVariant getValue();
-    void setValue(ValueVariant value);
+    dataType getType() const override;
+    ValueVariant getValue() override;
+    void setValue(ValueVariant value)override;
 };
 
 class Data_i32:public Data {
 private:
     int value;
 public:    
-    dataType getType() const;
-    ValueVariant getValue();
-    void setValue(ValueVariant value);
+    dataType getType() const override;
+    ValueVariant getValue()override;
+    void setValue(ValueVariant value)override;
 };
 
 class Data_i64:public Data {
 private:
     long long value;
 public:    
-    dataType getType() const;
-    ValueVariant getValue();
-    void setValue(ValueVariant value);
+    dataType getType() const override;
+    ValueVariant getValue()override;
+    void setValue(ValueVariant value)override;
 };
 
 class Data_f32:public Data {
 private:
     float value;
 public:    
-    dataType getType() const;
-    ValueVariant getValue();
-    void setValue(ValueVariant value);
+    dataType getType() const override;
+    ValueVariant getValue()override;
+    void setValue(ValueVariant value)override;
 };
 
 class Data_f64:public Data {
 private:
     double value;
 public:    
-    dataType getType() const;
-    ValueVariant getValue();
-    void setValue(ValueVariant value);
+    dataType getType() const override;
+    ValueVariant getValue()override;
+    void setValue(ValueVariant value)override;
 };
 
 class Data_pointer:public Data {
 private:
     Data* value;
 public:
-    dataType getType() const;
-    ValueVariant getValue();
-    void setValue(ValueVariant value);
+    dataType getType() const override;
+    ValueVariant getValue()override;
+    void setValue(ValueVariant value)override;
 };
 
 Data* createData(dataType type,ValueVariant v);//type为对应的数据的类，v为这个数据初始化的值

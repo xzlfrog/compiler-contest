@@ -1,4 +1,4 @@
-/*#include"../include/BasicBlock.hpp"
+#include"../include/BasicBlock.hpp"
 #include"SymbolFactory.hpp"
 #include"../include/LLVMFactory.hpp"
 
@@ -118,4 +118,4 @@ MyList<BasicBlock> divideBasicBlock(LLVMList* llvmlist){
     for(auto l=basicBlockList.head;l!=nullptr;l=l->next){
         label_to_basicBlock.insert({l->label->name,l});
     }
-}*/
+}

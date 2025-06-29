@@ -10,8 +10,7 @@ bool Data::checkIsInitialed(){
     }
 }
 void Data::setIsInitialize(bool flag){this->isInitialized=flag;}
-dataType Data::getType() const{return dataType::data_undefined;}
-std::string Data::getTypeStr(dataType type) const {
+std::string Data::getTypeStr(dataType type){
     switch (type) {
         case dataType::i1:   return "i1";
         case dataType::i8:   return "i8";

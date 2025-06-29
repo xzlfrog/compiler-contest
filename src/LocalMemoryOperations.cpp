@@ -120,18 +120,6 @@ ArraySymbol* GetElementPtrLLVM::getSrcSymbol(){return this->ptrval;}
 PointerSymbol* GetElementPtrLLVM::getDestSymbol(){return this->dest_sym;}
 const std::vector<std::pair<dataType,BasicSymbol*>> GetElementPtrLLVM::getTyAndIdx(){return this->ty_idx;}
 dataType GetElementPtrLLVM::getDestPointedType(){return this->dest_sym->getPointedType();}
-std::string GetElementPtrLLVM::getTypeStr(dataType type) const {
-    switch (type) {
-        case dataType::i1: return "i1";
-        case dataType::i8: return "i8";
-        case dataType::i16: return "i16";
-        case dataType::i32: return "i32";
-        case dataType::i64: return "i64";
-        case dataType::f32: return "f32";
-        case dataType::f64: return "f64";
-        default: throw std::invalid_argument("Unknown data type");
-    }
-}
 
 void GetElementPtrLLVM::addTyIdx(dataType ty,BasicSymbol* idx){
     this->ty_idx.push_back({ty,idx});
@@ -153,12 +141,12 @@ std::string GetElementPtrLLVM::out_str() const {
     for (size_t i = 1; i < ptrval->getDimensions().size(); ++i) {
         result += " x " + std::to_string(ptrval->getDimensions()[i]);
     }
-    result += "] " + getTypeStr(ptrval->getArrayType()) + ", ";
+    result += "] " + Data::getTypeStr(ptrval->getArrayType()) + ", ";
     
     result += "%" + ptrval->name;
     
     for (const auto& pair : ty_idx) {
-        result += ", " + getTypeStr(pair.first) + " %" + pair.second->name;
+        result += ", " + Data::getTypeStr(pair.first) + " %" + pair.second->name;
     }
     
     return result;

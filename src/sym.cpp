@@ -27,7 +27,7 @@ void ArraySymbol::allocateMemory(dataType type,std::vector<int>&dims){
 const std::vector<int>&ArraySymbol::getDimensions()const{return this->dimensions;}
 dataType ArraySymbol::getArrayType()const{return this->arrayType;}
 
-std::vector<std::pair<std::vector<int>,Data*>> ArraySymbol::getInitializedData(){
+const std::vector<std::pair<std::vector<int>,Data*>>& ArraySymbol::getInitializedData(){
     if(this->isInitialed==false){
         return std::vector<std::pair<std::vector<int>,Data*>>(0);
     }

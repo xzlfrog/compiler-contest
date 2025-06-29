@@ -43,14 +43,14 @@ class GlobalArrayVarDefination:public LLVM{
 public:
     ArraySymbol* dest_sym;
 
-    const std::vector<int>getDimensions() const;//数组的大小信息
+    const std::vector<int>&getDimensions() const;//数组的大小信息
     dataType getArrayType();//数组元素类型
     //给一个初始化的位置和对应的元素，如果是a[3][3][3]，传入position为{0}表示所有的数据初始化为data，
     //如果传入{0,1,2}，表示a[1][2][0],a[1][2][1],a[1][2][2]都初始化为data
     //void Initialize(std::vector<int>position,Data* data);
     
     //得到初始化的数据的位置和值，与上一个函数的参数的形式差不多
-    std::vector<std::pair<std::vector<int>,Data*>> getInitializedData();
+    const std::vector<std::pair<std::vector<int>,Data*>>& getInitializedData();
     std::string out_str()const override;
     ~GlobalArrayVarDefination()=default;
 };
@@ -59,10 +59,10 @@ class ConstantArrayVarDefination:public LLVM{
 public:
     ArraySymbol* dest_sym;
 
-    const std::vector<int>getDimensions() const;
+    const std::vector<int>&getDimensions() const;
     dataType getArrayType();
     //void Initialize(std::vector<int>position,Data* data);
-    std::vector<std::pair<std::vector<int>,Data*>> getInitializedData();
+    const std::vector<std::pair<std::vector<int>,Data*>>& getInitializedData();
     std::string out_str()const override;
     ~ConstantArrayVarDefination()=default;
 };

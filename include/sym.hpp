@@ -49,9 +49,9 @@ public:
 //包含常数和变量和常量变量
 class BasicSymbol: public Symbol{
 public:
-    symType getType() override;//返回type成员变量
-    dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
-    void setData(dataType dtype,ValueVariant v);//修改符号存的数据
+    virtual symType getType() override;//返回type成员变量
+    virtual dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
+    virtual void setData(dataType dtype,ValueVariant v);//修改符号存的数据
     ~BasicSymbol()=default;
 };
 
@@ -60,8 +60,8 @@ class VarSymbol: public BasicSymbol{
 public:
 
     symType getType() override;//返回type成员变量
-    dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
-    void setData(dataType dtype,ValueVariant v);//修改符号存的数据
+    dataType getDataType()const override;//返回这个符号存的数据的类型，比如i32,i1,f32等等
+    void setData(dataType dtype,ValueVariant v) override;//修改符号存的数据
     ~VarSymbol()=default;
 };
 
@@ -70,8 +70,8 @@ class ConstVarSymbol: public BasicSymbol{
 
 public:
     symType getType() override;//返回type成员变量
-    dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
-    void setData(dataType dtype,ValueVariant v);//修改符号存的数据
+    dataType getDataType()const override;//返回这个符号存的数据的类型，比如i32,i1,f32等等
+    void setData(dataType dtype,ValueVariant v)override;//修改符号存的数据
     ~ConstVarSymbol()=default;
 };
 
@@ -81,8 +81,8 @@ class ConstSymbol: public BasicSymbol{
 
 public:
     symType getType() override;//返回type成员变量
-    dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
-    void setData(dataType dtype,ValueVariant v);//修改符号存的数据
+    dataType getDataType()const override;//返回这个符号存的数据的类型，比如i32,i1,f32等等
+    void setData(dataType dtype,ValueVariant v)override;//修改符号存的数据
     ~ConstSymbol()=default;
 };
 
@@ -104,7 +104,7 @@ public:
     //如果是a[3][3][3]，如果传入position为{1,2,1}，表示a[1][2][1]被初始化为data
     void setInitialedData(ArrayInitial* arrayInitial);//在规约ConstDef或者VarDef的时候，
     //初始化的部分已经先被规约完成了，所以直接设置数组中的已经被初始化的元素(数组越界在这个方法中检查)
-    std::vector<std::pair<std::vector<int>,Data*>> getInitializedData();//得到初始化的数据的位置和值，与上一个函数的参数的形式差不多
+    const std::vector<std::pair<std::vector<int>,Data*>>& getInitializedData();//得到初始化的数据的位置和值，与上一个函数的参数的形式差不多
 };
 
 
