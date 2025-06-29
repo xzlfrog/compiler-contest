@@ -145,7 +145,7 @@ const std::vector<dataType>& CallLLVM::getArgumentsType(){return this->function-
 FuncSymbol* CallLLVM::getFuncSymbol(){return this->function;}
 const std::vector<BasicSymbol*>& CallLLVM::getArguments() const{return this->arguments;}
 const std::vector<dataType>& CallLLVM::getArgumentsType() const{return this->function->getParamTypes();}
-dataType CallLLVM::getReturnType() const {return this->function->getReturnType();}
+dataType CallLLVM::getReturnType() {return this->function->getReturnType();}
 std::string CallLLVM::getTypeStr(dataType type) const {
     switch (type) {
         case dataType::i1: return "i1";
@@ -166,7 +166,7 @@ std::string CallLLVM::out_str() const {
     }
 
     std::string result;
-    dataType hasReturn = this->getReturnType();
+    dataType hasReturn = function->getReturnType();
     if ( hasReturn != dataType::void_) {
         result += "%" + dest_sym->name + " = ";
     }

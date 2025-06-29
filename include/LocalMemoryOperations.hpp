@@ -17,6 +17,7 @@ class AllocaNonArrayLLVM:public LLVM{
         std::string out_str() const override;
         dataType getPointedType();//举个例子，虽然我们定义的是int类型的变量，
         //但是由于我们当作是把它分配到内存里，所以我们其实是把源程序中的变量变成了一个int*类型的变量来处理
+        std::string getTypeStr(dataType type) const;
         PointerSymbol* getSymbol();//返回这个指针
         ~AllocaNonArrayLLVM()=default;
 };
@@ -27,6 +28,8 @@ class AllocaArrayLLVM:public LLVM{
         ArraySymbol* array;//分配的数组
 
         dataType getArrayType();//数组中元素的类型
+        std::string getTypeStr(dataType type) const;
+
         const std::vector<int>& getDimensions() const;//数组的大小
         ArraySymbol* getArray();//返回这个数组
         std::string out_str() const override;
@@ -42,6 +45,7 @@ public:
 
     //dest_ty:this->getDestType()
     dataType getDestType();
+    std::string getTypeStr(dataType type) const;
     //src_ty:this->getSrcType()
     dataType getSrcPointedType();
     PointerSymbol* getSrcSymbol();
@@ -58,6 +62,8 @@ public:
 
     //dest_ty:this->getDestType()
     dataType getDestPointedType();
+    std::string getTypeStr(dataType type) const;
+    std::string getTypeStr(dataType type) const;
     //src_ty:this->getSrcType()
     dataType getSrcType();
     BasicSymbol* getSrcSymbol();

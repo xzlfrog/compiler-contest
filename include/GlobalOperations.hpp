@@ -94,6 +94,8 @@ public:
     void addArguments(std::vector<dataType>ty,std::vector<BasicSymbol*>sym);
     FuncSymbol* getFuncSymbol();
     dataType getReturnType();
+    std::string getReturnTypeStr(dataType returnType) const;
+    std::string getParamTypeStr(dataType paramType) const;
     const std::vector<dataType>getParamTypes()const ;
     const std::vector<BasicSymbol*>getParams();
     std::string out_str()const override;
