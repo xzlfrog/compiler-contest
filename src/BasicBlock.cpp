@@ -35,11 +35,11 @@ BasicBlock* BasicBlock::createBasicBlock(LLVM* start,LLVM* end){
     return basicBlock;
 }
 
-void BasicBlock::setGen(basicBlockGen func,MyList<BasicBlock> head){
+void BasicBlock::setGen(basicBlockGen func,std::vector<BasicBlock*> head){
     func(this,head);
 }
 
-void BasicBlock::setKill(basicBlockKill func,MyList<BasicBlock> head){
+void BasicBlock::setKill(basicBlockKill func,std::vector<BasicBlock*> head){
     func(this,head);
 }
 
@@ -56,8 +56,8 @@ void connect(BasicBlock* bb1,BasicBlock* bb2){
 }
 
 //得到数据流图
-void connectBasicBlocks(const MyList<BasicBlock> bbs){
-    for(auto l=bbs.head;l!=nullptr;l=l->next){
+void connectBasicBlocks(const std::vector<BasicBlock*> bbs){
+    for(auto& l : bbs){
         switch(l->tail->getLLVMType()){
             case LLVMtype::br_conditional:{
                 ConditionalBranchLLVM* br_cond=dynamic_cast<ConditionalBranchLLVM*>(l->tail);
@@ -71,12 +71,12 @@ void connectBasicBlocks(const MyList<BasicBlock> bbs){
                 break;
             }
             case LLVMtype::label:{
-                if(l==bbs.head)
+                if(l==bbs[0])
                     connect(l,l->next);
                 break;
             }
             case LLVMtype::ret:{
-                connect(l,bbs.tail);
+                connect(l,bbs[bbs.size()-1]);
                 break;
             }
             default:{

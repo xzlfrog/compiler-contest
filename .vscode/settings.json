@@ -132,6 +132,7 @@
     "stop_token": "cpp",
     "thread": "cpp",
     "format": "cpp",
-    "semaphore": "cpp"
+    "semaphore": "cpp",
+    "set": "cpp"
   }
 }
