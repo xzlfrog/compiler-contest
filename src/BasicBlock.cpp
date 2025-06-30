@@ -92,21 +92,26 @@ void connectBasicBlocks(const MyList<BasicBlock> bbs){
 
 //只划分了基本块，但是没有得到对应的数据流图
 std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
-    int cnt=0;
+    int cnt=1;
     llvmlist->InsertHead(LLVMfactory::createLableLLVM(SymbolFactory::createTmpLabelSymbol()));
     LLVM* llvm=llvmlist->head;
     std::vector<BasicBlock*> basicBlocks;
     Label* beginLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbol(generate_begin_label()));
     beginLabel->next=llvmlist->head;
     basicBlocks.push_back(BasicBlock::createBasicBlock(beginLabel,beginLabel)) ;//begin基本块
+    basicBlocks[0]->idx=0;
     LLVM* start=nullptr;
     bool flag=false;
+    BasicBlock* bb;
     while(llvm!=nullptr){
         if(llvm->getLLVMType()==LLVMtype::label){
             if(!flag)
                 start=llvm,flag=true;
             else{
-                basicBlocks.push_back((BasicBlock::createBasicBlock(start,llvm)));
+                BasicBlock* bb=BasicBlock::createBasicBlock(start,llvm);
+                bb->idx=cnt;
+                cnt++;
+                basicBlocks.push_back(bb);
                 start=llvm->next;
                 flag=false;
             }
@@ -118,7 +123,10 @@ std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
     }
     Label* exitLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbol(generate_exit_label()));
     exitLabel->prev=llvmlist->tail;
-    basicBlocks.push_back(BasicBlock::createBasicBlock(exitLabel,exitLabel));//exit基本块
+    bb=BasicBlock::createBasicBlock(exitLabel,exitLabel);
+    bb->idx=cnt;
+    cnt++;
+    basicBlocks.push_back(bb);//exit基本块
     for(auto l : basicBlocks){
         label_to_basicBlock.insert({l->label->label->name,l});
     }

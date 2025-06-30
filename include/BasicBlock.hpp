@@ -85,6 +85,7 @@ public:
     LLVM* head=nullptr;
     LLVM* tail=nullptr;
     Label* label=nullptr;
+    int idx;
     boost::dynamic_bitset<> gen;
     boost::dynamic_bitset<> kill;
     boost::dynamic_bitset<> in;

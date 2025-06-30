@@ -19,7 +19,7 @@ public:
 
     static ReturnLLVM* createReturnLLVM(BasicSymbol* returnValue);
 
-    static CallLLVM* createCallLLVM(FuncSymbol* func,std::vector<BasicSymbol*>& params);
+    static CallLLVM* createCallLLVM(BasicSymbol*dest_sym,FuncSymbol* func,std::vector<BasicSymbol*>& params);
 
     //static SwitchLLVM* createSwitchLLVM(BasicSymbol* cond, LabelSymbol* defaultCase,
         //std::vector<BasicSymbol*>case_val,std::vector<LabelSymbol*>case_dest);
