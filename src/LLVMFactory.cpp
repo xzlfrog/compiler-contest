@@ -60,6 +60,15 @@ Label* LLVMfactory::createLableLLVM(LabelSymbol* label){
     return labl;
 }
 
+CallLLVM* LLVMfactory::createCallLLVM(BasicSymbol*dest_sym,FuncSymbol* func,std::vector<BasicSymbol*>& params){
+    CallLLVM* callLLVM=new CallLLVM();
+    callLLVM->dest_sym=dest_sym;
+    callLLVM->function=func;
+    callLLVM->arguments=params;
+    return callLLVM;
+}
+
+
 TypeConversionOperation* LLVMfactory::createTypeConversionOperation(LLVMtype type,BasicSymbol* src_sym,BasicSymbol* dest_sym){
     TypeConversionOperation* typeConversionOperation=new TypeConversionOperation();
     typeConversionOperation->llvmType=type;

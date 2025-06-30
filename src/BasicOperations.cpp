@@ -97,6 +97,7 @@ std::string ArithmeticOperationLLVM::out_str() const {
             break;
         default:
             throw std::invalid_argument("wrong_operand_type");
+            break;
     }
 
     switch(b->getType()){
@@ -108,6 +109,7 @@ std::string ArithmeticOperationLLVM::out_str() const {
             break;
         default:
             throw std::invalid_argument("wrong_operand_type");
+            break;
     }
 
     switch(c->getType()){
@@ -118,7 +120,8 @@ std::string ArithmeticOperationLLVM::out_str() const {
             operandcType = "%";
             break;
         default:
-            throw std::invalid_argument("wrong_operand_type");
+            //throw std::invalid_argument("wrong_operand_type");
+            break;
     }
 
     return operandaType + a->name + " = " + opStr + " " + typeStr + " " + operandaType + b->name + ", " + operandcType + c->name;

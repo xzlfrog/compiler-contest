@@ -187,3 +187,38 @@ std::string FuncDefination::out_str()const{
     res += "}\n";
     return res;
 }
+
+const std::vector<int>&GlobalArrayVarDefination::getDimensions() const{
+    return this->dest_sym->getDimensions();
+}
+
+dataType GlobalArrayVarDefination::getArrayType(){
+    return this->dest_sym->getArrayType();
+}
+
+const std::vector<std::pair<std::vector<int>,Data*>>& GlobalArrayVarDefination::getInitializedData(){
+    return this->dest_sym->getInitializedData();
+}
+
+std::string GlobalArrayVarDefination::out_str()const{
+    //todo
+    return "";
+}
+
+
+const std::vector<int>&ConstantArrayVarDefination::getDimensions() const{
+    return this->dest_sym->getDimensions();
+}
+
+dataType ConstantArrayVarDefination::getArrayType(){
+    return this->dest_sym->getArrayType();
+}
+
+const std::vector<std::pair<std::vector<int>,Data*>>& ConstantArrayVarDefination::getInitializedData(){
+    return this->dest_sym->getInitializedData();
+}
+
+std::string ConstantArrayVarDefination::out_str()const{
+    //todo
+    return "";   
+}
