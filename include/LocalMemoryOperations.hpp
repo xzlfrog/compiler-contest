@@ -63,7 +63,7 @@ public:
     //dest_ty:this->getDestType()
     dataType getDestPointedType();
     std::string getTypeStr(dataType type) const;
-    std::string getTypeStr(dataType type) const;
+    //std::string getTypeStr(dataType type) const;
     //src_ty:this->getSrcType()
     dataType getSrcType();
     BasicSymbol* getSrcSymbol();

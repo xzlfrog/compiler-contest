@@ -2,6 +2,7 @@
 
 #include"llvm.hpp"
 #include"sym.hpp"
+#include<boost/dynamic_bitset.hpp>
 
 class BasicBlock;
 
@@ -80,15 +81,17 @@ typedef void (*basicBlockKill)(BasicBlock*,MyList<BasicBlock>);
 
 class BasicBlock{
 public:
+    int num;
     LLVM* head=nullptr;
     LLVM* tail=nullptr;
-    LabelSymbol* label=nullptr;
-    std::vector<int> gen=std::vector<int>(0);
-    std::vector<int> kill=std::vector<int>(0);
-    std::vector<int> in=std::vector<int>(0);
-    std::vector<int> out=std::vector<int>(0);
-    std::vector<BasicBlock*> connectIn;//this--->block
-    std::vector<BasicBlock*> connectOut;//block--->this
+    Label* label=nullptr;
+    int idx;
+    boost::dynamic_bitset<> gen;
+    boost::dynamic_bitset<> kill;
+    boost::dynamic_bitset<> in;
+    boost::dynamic_bitset<> out;
+    std::vector<BasicBlock*> prevNode;//block--->this
+    std::vector<BasicBlock*> nextNode;//this--->block
     BasicBlock* next;
     BasicBlock* prev;
 
@@ -96,11 +99,8 @@ public:
     void setGen(basicBlockGen func,MyList<BasicBlock> head);
     void setKill(basicBlockKill func,MyList<BasicBlock> head);
 
-    ~BasicBlock(){
-        //this->gen.clear();
-
-    }
+    ~BasicBlock()=default;
 };
 
-MyList<BasicBlock> divideBasicBlock(LLVMList llvmlist);//划分基本块
+std::vector<BasicBlock*> divideBasicBlock(LLVMList llvmlist);//划分基本块
 void connectBasicBlocks(MyList<BasicBlock>);//得到数据流图

@@ -2,6 +2,11 @@
 #include"data.hpp"
 
 enum LLVMtype{
+    fadd,
+    fsub,
+    fmul,
+    fdiv,
+    frem,
     add,//add
     sub,//subtract
     mul,//multiply
