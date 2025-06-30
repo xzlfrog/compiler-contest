@@ -30,6 +30,7 @@ public:
     Symbol(){}
     virtual symType getType(){return this->type;}//返回type成员变量
     virtual ~Symbol() =default;
+    virtual void setScope(int scope){this->scope=scope;}
 };
 
 //只考虑了指针的情况，未考虑指针的指针的情况，如需使用需后续补充
@@ -44,6 +45,7 @@ public:
     dataType getPointedType() const;//获得指针指向的元素的数据类型，比如源程序中是int类型，此处就是i32
     void allocateMemory(dataType elementType,ValueVariant value);
     ~PointerSymbol()=default;
+    void setScope(int scope) override;
 };
 
 //包含常数和变量和常量变量
@@ -53,6 +55,7 @@ public:
     virtual dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
     virtual void setData(dataType dtype,ValueVariant v);//修改符号存的数据
     ~BasicSymbol()=default;
+    virtual void setScope(int scope);
 };
 
 //变量
@@ -63,6 +66,7 @@ public:
     dataType getDataType()const override;//返回这个符号存的数据的类型，比如i32,i1,f32等等
     void setData(dataType dtype,ValueVariant v) override;//修改符号存的数据
     ~VarSymbol()=default;
+    void setScope(int scope) override;
 };
 
 //常量
@@ -73,6 +77,7 @@ public:
     dataType getDataType()const override;//返回这个符号存的数据的类型，比如i32,i1,f32等等
     void setData(dataType dtype,ValueVariant v)override;//修改符号存的数据
     ~ConstVarSymbol()=default;
+    void setScope(int scope) override;
 };
 
 
@@ -84,6 +89,7 @@ public:
     dataType getDataType()const override;//返回这个符号存的数据的类型，比如i32,i1,f32等等
     void setData(dataType dtype,ValueVariant v)override;//修改符号存的数据
     ~ConstSymbol()=default;
+    void setScope(int scope) override;
 };
 
 //这里只存了初始化的元素，对于作为全局变量定义的数组，都有初始值，这里可以通过scope来判断
@@ -105,6 +111,7 @@ public:
     void setInitialedData(ArrayInitial* arrayInitial);//在规约ConstDef或者VarDef的时候，
     //初始化的部分已经先被规约完成了，所以直接设置数组中的已经被初始化的元素(数组越界在这个方法中检查)
     const std::vector<std::pair<std::vector<int>,Data*>>& getInitializedData();//得到初始化的数据的位置和值，与上一个函数的参数的形式差不多
+    void setScope(int scope) override;
 };
 
 
@@ -113,6 +120,7 @@ class LabelSymbol:public Symbol{
 public:
     symType getType() override;
     ~LabelSymbol()=default;
+    void setScope(int scope) override;
 };
 
 //函数对应的符号
@@ -129,4 +137,5 @@ public:
     const std::vector<dataType>& getParamTypes()const;//得到函数参数类型
     dataType getReturnType()const;//返回函数返回值类型
     bool getIsDef();
+    void setScope(int scope) override;
 };
