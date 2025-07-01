@@ -61,7 +61,7 @@ public:
     ~BasicSymbol()=default;
     virtual void setScope(int scope);
     virtual std::string getName(){
-        if(this->ssa_name.compare(""))
+        if(this->ssa_name.compare(" "))
             return this->name;
         return this->ssa_name;
     }
@@ -77,7 +77,7 @@ public:
     ~VarSymbol()=default;
     void setScope(int scope) override;
     std::string getName(){
-        if(this->ssa_name.compare(""))
+        if(this->ssa_name=="")
             return this->name;
         return this->ssa_name;
     }
@@ -121,10 +121,11 @@ class ArraySymbol: public Symbol{
 private:
     std::vector<int> dimensions; //数组的维度信息 
     dataType arrayType;//比如int a[2][3]，类型就是int，或者用llvm ir中的数据类型 i32
-    ArrayInitial* initialedData;//在数组的初始化阶段需要使用，对于初始化，不考虑在初始化之后再对数组元素修改的情况，只解决了数组初始化的问题
     bool isInitialed=false;//是否被初始化
 
 public:
+    ArrayInitial* initialedData;//在数组的初始化阶段需要使用，对于初始化，不考虑在初始化之后再对数组元素修改的情况，只解决了数组初始化的问题
+    
     ~ArraySymbol()=default;
     symType getType() override;
     void allocateMemory(dataType type,std::vector<int>&dims);

@@ -8,7 +8,7 @@ std::string UnconditionalBranchLLVM::out_str() const {
     if (target == nullptr) {
         throw std::invalid_argument("; <invalid unconditional branch>");
     }
-    return "br label " + target->name;
+    return "br label " + target->getName();
 } 
 void UnconditionalBranchLLVM::setTarget(LabelSymbol* target){this->target=target;} // Set the target label for the branch
 
@@ -37,7 +37,7 @@ std::string ConditionalBranchLLVM::out_str() const {
     }
     std::string cond_out=getSymOut(condition);
 
-    return "br i1 " + cond_out + ", label " + trueBranch->name + ", label " + falseBranch->name;
+    return "br i1 " + cond_out + ", label " + trueBranch->getName() + ", label " + falseBranch->getName();
 }// Output the LLVM IR string representation
 
 // Set the condition for the branch
@@ -107,11 +107,11 @@ std::string PhiLLVM::out_str() const{
         throw std::invalid_argument("; <invalid phi node>");
     }
 
-    std::string result = dest_sym->name + " = phi " + Data::getTypeStr(dest_sym->getDataType()) + " ";
+    std::string result = dest_sym->getName() + " = phi " + Data::getTypeStr(dest_sym->getDataType()) + " ";
 
     for (size_t i = 0; i < vals_srcs.size(); ++i) {
         if (i > 0) result += ", ";
-        result += "[" + getSymOut(vals_srcs[i].first) + ", " + vals_srcs[i].second->name + "]";
+        result += "[" + getSymOut(vals_srcs[i].first) + ", " + vals_srcs[i].second->getName() + "]";
     }
 
     return result;
@@ -132,10 +132,10 @@ std::string CallLLVM::out_str() const {
     std::string result;
     dataType hasReturn = function->getReturnType();
     if ( hasReturn != dataType::void_) {
-        result += dest_sym->name + " = ";
+        result += dest_sym->getName() + " = ";
     }
     std::string funcType = Data::getTypeStr(hasReturn);
-    result += "call " + funcType + " " + function->name + "(";
+    result += "call " + funcType + " " + function->getName() + "(";
 
     for (size_t i = 0; i < arguments.size(); ++i) {
         if (i > 0) result += ", ";
@@ -179,5 +179,5 @@ LabelSymbol* Label::getLabel(){return this->label;}
         if (label == nullptr) {
             throw std::invalid_argument(" <invalid label>");
         }
-        return label->name + ":";
+        return label->getName() + ":";
 }

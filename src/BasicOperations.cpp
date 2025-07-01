@@ -89,6 +89,6 @@ std::string ArithmeticOperationLLVM::out_str() const {
     std::string b_out=getSymOut(b);
     std::string c_out=getSymOut(c);
 
-    return a->name + " = " + opStr + " " + typeStr + " " + b_out + ", " + c_out;
+    return a->getName() + " = " + opStr + " " + typeStr + " " + b_out + ", " + c_out;
 
 }

@@ -9,7 +9,7 @@ std::string AllocaNonArrayLLVM::out_str() const {
     if (sym == nullptr) {
         throw std::invalid_argument("; <invalid alloca non-array>");
     }
-    std::string result =this->sym->name +" = "+"alloca " + Data::getTypeStr(sym->getPointedType()) + ", align 8";
+    std::string result =this->sym->getName() +" = "+"alloca " + Data::getTypeStr(sym->getPointedType()) + ", align 8";
     return result;
 }
 
@@ -23,7 +23,7 @@ std::string AllocaArrayLLVM::out_str() const {
         throw std::invalid_argument("; <invalid alloca array>");
     }
     int cnt=1;
-    std::string result = this->array->name + " = "+"alloca [" + std::to_string(array->getDimensions()[0]);
+    std::string result = this->array->getName() + " = "+"alloca [" + std::to_string(array->getDimensions()[0]);
     for (size_t i = 1; i < array->getDimensions().size(); ++i) {
         result += " x [" + std::to_string(array->getDimensions()[i]);
         cnt++;
@@ -48,8 +48,8 @@ std::string LoadLLVM::out_str() const {
     if (src_sym == nullptr || dest_sym == nullptr) {
         throw std::invalid_argument("; <invalid load instruction>");
     }
-    std::string result = dest_sym->name + " = load " + Data::getTypeStr(dest_sym->getDataType()) + ", ";
-    result += Data::getTypeStr(src_sym->getPointedType()) + "* " + src_sym->name;
+    std::string result = dest_sym->getName() + " = load " + Data::getTypeStr(dest_sym->getDataType()) + ", ";
+    result += Data::getTypeStr(src_sym->getPointedType()) + "* " + src_sym->getName();
     return result;
 }
 
@@ -64,7 +64,7 @@ std::string StoreLLVM::out_str() const {
         throw std::invalid_argument("; <invalid store instruction>");
     }
     std::string result = "store " + Data::getTypeStr(src_sym->getDataType()) + " " +getSymOut(src_sym) + ", ";
-    result += Data::getTypeStr(dest_sym->getPointedType()) + "* " + dest_sym->name;
+    result += Data::getTypeStr(dest_sym->getPointedType()) + "* " + dest_sym->getName();
     return result;
 }
 
@@ -91,7 +91,7 @@ std::string GetElementPtrLLVM::out_str() const {
     if (ptrval == nullptr || dest_sym == nullptr) {
         throw std::invalid_argument("; <invalid getelementptr instruction>");
     }
-    std::string result = dest_sym->name + " = getelementptr ";
+    std::string result = dest_sym->getName() + " = getelementptr ";
     result += "[" + std::to_string(ptrval->getDimensions()[0]);
     int cnt=1;
     for (size_t i = 1; i < ptrval->getDimensions().size(); ++i) {
@@ -120,7 +120,7 @@ std::string GetElementPtrLLVM::out_str() const {
 
     result+="*";
     
-    result += " "+ptrval->name;
+    result += " "+ptrval->getName();
     result += ", " + Data::getTypeStr(dataType::i32) + " " + getSymOut(SymbolFactory::createConstSymbol(createData(dataType::i32,0)));
     for (const auto& pair : ty_idx) {
         result += ", " + Data::getTypeStr(pair.first) + " " + getSymOut(pair.second);

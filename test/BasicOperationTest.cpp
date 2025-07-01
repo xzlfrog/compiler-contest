@@ -125,6 +125,12 @@ int main(){
     std::cout<<funcdefllvm->out_str()<<"\n";
 
     //GlobalArrayVarDefination
-
+    ArraySymbol* global_array=SymbolFactory::createArraySymbolWithScope("global_array",dim,0,dataType::f32);
+    ArrayInitial* arrayInitial=new ArrayInitial();
+    std::vector<int>pos={0,0,1};
+    arrayInitial->initialize(pos,createData(dataType::f32,2.0f));
+    global_array->setInitialedData(arrayInitial);
+    GlobalArrayVarDefination* globalArray=LLVMfactory::createGlobalArrayVarDefination(global_array);
+    std::cout<<globalArray->out_str()<<"\n";
     //ConstantArrayVarDefination
 }

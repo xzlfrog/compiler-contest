@@ -244,14 +244,14 @@ FuncDefination* LLVMfactory::createFuncDefination(FuncSymbol* func,std::vector<d
     return funcDefination;
 }
 
-static GlobalArrayVarDefination* createGlobalArrayVarDefination(ArraySymbol* dest_sym){
+GlobalArrayVarDefination* LLVMfactory::createGlobalArrayVarDefination(ArraySymbol* dest_sym){
     GlobalArrayVarDefination* globalArrayVarDefination=new GlobalArrayVarDefination();
     globalArrayVarDefination->llvmType=LLVMtype::global_array;
     globalArrayVarDefination->dest_sym=dest_sym;
     return globalArrayVarDefination;
 }
 
-static GlobalArrayVarDefination* createGlobalArrayVarDefination(ArraySymbol* dest_sym,initializer initMode){
+GlobalArrayVarDefination* LLVMfactory::createGlobalArrayVarDefination(ArraySymbol* dest_sym,initializer initMode){
     GlobalArrayVarDefination* globalArrayVarDefination=new GlobalArrayVarDefination();
     globalArrayVarDefination->llvmType=LLVMtype::global_array;
     globalArrayVarDefination->dest_sym=dest_sym;

@@ -182,7 +182,7 @@ std::string getSymOut(BasicSymbol* basicSymbol){
     {
     case symType::constant_var:
     case symType::variable:
-        return basicSymbol->name;
+        return basicSymbol->getName();
     case symType::constant_nonvar:
         return my_to_string(basicSymbol->data);
     default:

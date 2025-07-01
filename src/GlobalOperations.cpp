@@ -1,6 +1,8 @@
 #include"../include/GlobalOperations.hpp"
 #include<iostream>
 
+void array_def_recursion(std::vector<int>&dim,int i,dataType& type,std::string& s,bool flag,ArrayInitial* arrayInit,std::vector<int>&pos);
+
 //GlobalNonArrayVarDefination
 dataType GlobalNonArrayVarDefination::getPointedType(){return this->dest_sym->getPointedType();}
 PointerSymbol* GlobalNonArrayVarDefination::getDestSymbol(){return this->dest_sym;}
@@ -11,7 +13,7 @@ std::string GlobalNonArrayVarDefination::out_str()const{
     if(dest_sym->scope>0){
         throw std::runtime_error("the variable is not a global variable");
     }
-    std::string res =  dest_sym->name + " = global ";
+    std::string res =  dest_sym->getName() + " = global ";
     res += Data::getTypeStr(this->dest_sym->getPointedType()) + " ";
     switch (this->dest_sym->pointedData->getInitMode())
     {
@@ -41,7 +43,7 @@ std::string ConstantNonArrayVarDefination::out_str()const{
     if(dest_sym->scope>0){
         throw std::runtime_error("the variable is not a global variable");
     }
-    std::string res =  dest_sym->name + " = constant ";
+    std::string res =  dest_sym->getName() + " = constant ";
     res += Data::getTypeStr(this->dest_sym->data->getType()) + " ";
     switch (this->dest_sym->data->getInitMode())
     {
@@ -106,7 +108,7 @@ std::string FuncDeclaration::getParamTypeStr(dataType paramType) const {
 std::string FuncDeclaration::out_str()const{
     std::string res = "declare ";
     res += this->getReturnTypeStr(this->func->returnType) + " ";
-    res += this->func->name + "(";
+    res += this->func->getName() + "(";
     
     for(size_t i = 0; i < this->func->paramTypes.size(); ++i){
         res += this->getParamTypeStr(this->func->paramTypes[i]);
@@ -168,11 +170,11 @@ std::string FuncDefination::getParamTypeStr(dataType paramType) const {
 std::string FuncDefination::out_str()const{
     std::string res = "define ";
     res += this->getReturnTypeStr(this->func->returnType) + " ";
-    res += this->func->name + "(";
+    res += this->func->getName() + "(";
     
     for(size_t i = 0; i < this->func->paramTypes.size(); ++i){
         res += this->getParamTypeStr(this->func->paramTypes[i]);
-        res += " "+this->params[i]->name;
+        res += " "+this->params[i]->getName();
         if(i < this->func->paramTypes.size() - 1){
             res += ", ";
         }
@@ -207,7 +209,14 @@ const std::vector<std::pair<std::vector<int>,Data*>>& GlobalArrayVarDefination::
 
 std::string GlobalArrayVarDefination::out_str()const{
     //todo
-    return "";
+    std::string res;
+    res=res+this->dest_sym->getName()+" = global ";
+    std::vector<int>dim=this->dest_sym->getDimensions();
+    dataType type=this->dest_sym->getArrayType();
+    ArrayInitial* arrayInit=this->dest_sym->initialedData;
+    std::vector<int>pos;
+    array_def_recursion(dim,0,type,res,false,arrayInit,pos);
+    return res;
 }
 
 //ConstantArrayVarDefination
@@ -226,4 +235,67 @@ const std::vector<std::pair<std::vector<int>,Data*>>& ConstantArrayVarDefination
 std::string ConstantArrayVarDefination::out_str()const{
     //todo
     return "";   
+}
+
+void array_def_recursion(std::vector<int>&dim,int i,dataType& type,std::string& s,bool flag,ArrayInitial* arrayInit,std::vector<int>&pos){
+    s += " [" + std::to_string(dim[i]);
+    int cnt=1;
+    for (size_t j = i+1; j < dim.size(); ++j) {
+        s += " x [" + std::to_string(dim[j]);
+        cnt++;
+    }
+    s+=" x ";
+    
+    s += Data::getTypeStr(type) ;
+    for(int i=0;i<cnt;i++){
+        s+="]";
+    }
+
+    s+=" [";
+    if(i+1<dim.size()){
+        s+="\n";
+        for(int j=0;j<dim[i]-1;j++){
+            pos.push_back(j);
+            array_def_recursion(dim,i+1,type,s,true,arrayInit,pos);
+            pos.pop_back();
+        }
+        pos.push_back(dim[i]-1);
+        array_def_recursion(dim,i+1,type,s,false,arrayInit,pos);
+        pos.pop_back();
+    }
+    else{
+        //默认初始化在前端是有序的？
+        std::cout<<"111"<<"\n";
+        std::vector<std::pair<std::vector<int>,Data*>> init_pos=arrayInit->getInitializedData();
+        bool flag=true;
+        int k;
+        for(k=0;k<init_pos.size();k++){
+            auto & a=init_pos[k];
+            for(int j=0;j<a.first.size()-1;j++){
+                if(a.first[j]!=pos[j]){
+                    flag=false;
+                    break;
+                } 
+            }
+            if(flag)
+                break;
+        }
+        for(int j=0;j<dim[i]-1;j++){
+            if(!flag)
+                break;
+            for(;k<init_pos.size()&&init_pos[k].first[dim[i]-1]<=j;k++){
+                if(init_pos[k].first[dim[i]-1]==j){
+                    std::cout<<"111"<<"\n";
+                    s+=Data::getTypeStr(init_pos[k].second->getType())+" "+getSymOut(SymbolFactory::createConstSymbol(init_pos[k].second))+", ";
+                }
+            }
+            if(init_pos[k].first[dim[i]-1]>j)
+                s+=Data::getTypeStr(dataType::i32)+" "+getSymOut(SymbolFactory::createConstSymbol(createData(dataType::i32,0)))+", ";
+        }
+    }
+
+    if(flag)
+        s+="],\n";
+    else
+        s+="]\n";
 }
