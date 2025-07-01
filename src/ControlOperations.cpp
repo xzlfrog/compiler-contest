@@ -99,7 +99,7 @@ void SwitchLLVM::setDefaultCase(LabelSymbol* defaultIR){
 
 //PhiLLVM
 BasicSymbol* PhiLLVM::getDestSymbol(){return this->dest_sym;}
-const std::vector<std::pair<BasicSymbol*,LabelSymbol*>>PhiLLVM::getValAndSrc() const{return this->vals_srcs;}
+const std::vector<std::pair<BasicSymbol*,LabelSymbol*>>&PhiLLVM::getValAndSrc() const{return this->vals_srcs;}
 dataType PhiLLVM::getDestType(){return this->dest_sym->getDataType();}
 std::string PhiLLVM::getTypeStr(dataType type) const {
     switch (type) {

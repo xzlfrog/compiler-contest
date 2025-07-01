@@ -72,7 +72,7 @@ void connectBasicBlocks(const std::vector<BasicBlock*> bbs){
             }
             case LLVMtype::label:{
                 if(l==bbs[0])
-                    connect(l,l->next);
+                    connect(l,bbs[1]);
                 break;
             }
             case LLVMtype::ret:{
@@ -81,10 +81,6 @@ void connectBasicBlocks(const std::vector<BasicBlock*> bbs){
             }
             default:{
                 throw std::runtime_error("basic block dividing is wrong");
-            }
-            l->label==dynamic_cast<Label*>(l->head);
-            if(l->label==nullptr){
-                throw std::runtime_error("the basic block is not start with a label");
             }
         }
     }
@@ -108,12 +104,15 @@ std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
             if(!flag)
                 start=llvm,flag=true;
             else{
-                BasicBlock* bb=BasicBlock::createBasicBlock(start,llvm);
+                BasicBlock* bb;
+                if(llvm->prev)
+                    bb=BasicBlock::createBasicBlock(start,llvm->prev);
+                else
+                    bb=BasicBlock::createBasicBlock(start,start);
                 bb->idx=cnt;
                 cnt++;
                 basicBlocks.push_back(bb);
-                start=llvm->next;
-                flag=false;
+                start=llvm;
             }
         }
         else if(needDivide(llvm)&&(llvm->next->getLLVMType()!=LLVMtype::label||llvm->next==nullptr)){

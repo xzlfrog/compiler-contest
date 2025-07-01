@@ -23,8 +23,8 @@ public:
     boost::dynamic_bitset<> out;
     std::vector<BasicBlock*> prevNode;//block--->this
     std::vector<BasicBlock*> nextNode;//this--->block
-    BasicBlock* next;
-    BasicBlock* prev;
+    //BasicBlock* next;
+    //BasicBlock* prev;
 
     static BasicBlock* createBasicBlock(LLVM* start,LLVM* end);
     void setGen(basicBlockGen func,std::vector<BasicBlock*> head);

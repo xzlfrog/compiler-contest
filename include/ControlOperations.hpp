@@ -92,7 +92,7 @@ public:
     void addCase(std::vector<BasicSymbol*> src_sym,std::vector<LabelSymbol*>src_label);
     std::string out_str() const override;
     BasicSymbol* getDestSymbol();
-    const std::vector<std::pair<BasicSymbol*,LabelSymbol*>>getValAndSrc() const;
+    const std::vector<std::pair<BasicSymbol*,LabelSymbol*>>&getValAndSrc() const;
     dataType getDestType();
     std::string getTypeStr(dataType type) const;
 
