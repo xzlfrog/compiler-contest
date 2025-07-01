@@ -44,7 +44,7 @@ public:
 
     symType getType() override;
     dataType getPointedType() const;//获得指针指向的元素的数据类型，比如源程序中是int类型，此处就是i32
-    void allocateMemory(dataType elementType,ValueVariant value);
+    void allocateMemory(dataType elementType);
     ~PointerSymbol()=default;
     void setScope(int scope) override;
     std::string getName(){return this->name;}

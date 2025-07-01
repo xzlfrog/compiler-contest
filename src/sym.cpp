@@ -3,10 +3,10 @@
 //PointerSymbol
 symType PointerSymbol::getType() {this->type=symType::pointer;return this->type;}
 dataType PointerSymbol::getPointedType() const {return this->PointedType;}
-void PointerSymbol::allocateMemory(dataType elementType,ValueVariant value){
+void PointerSymbol::allocateMemory(dataType elementType){
     this->PointedType = elementType;
     Data_pointer* data_pointer = new Data_pointer();
-    Data* data=createData(elementType,value);
+    Data* data=createNonInitialedData(elementType);
     this->data=new Data_pointer();
     this->data->setValue(data);
     this->pointedData=std::get<Data*>(this->data->getValue());

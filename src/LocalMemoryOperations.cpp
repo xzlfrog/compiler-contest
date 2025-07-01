@@ -1,4 +1,5 @@
 #include"../include/LocalMemoryOperations.hpp"
+#include"../include/SymbolFactory.hpp"
 
 //AllocaNonArrayLLVM
 dataType AllocaNonArrayLLVM::getPointedType(){return this->sym->getPointedType();}
@@ -8,10 +9,7 @@ std::string AllocaNonArrayLLVM::out_str() const {
     if (sym == nullptr) {
         throw std::invalid_argument("; <invalid alloca non-array>");
     }
-    std::string result = "alloca " + Data::getTypeStr(sym->getPointedType()) + ", align 8";
-    if (!sym->name.empty()) {
-        result += " " + sym->name;
-    }
+    std::string result =this->sym->name +" = "+"alloca " + Data::getTypeStr(sym->getPointedType()) + ", align 8";
     return result;
 }
 
@@ -24,14 +22,19 @@ std::string AllocaArrayLLVM::out_str() const {
     if (array == nullptr) {
         throw std::invalid_argument("; <invalid alloca array>");
     }
-    std::string result = "alloca [" + std::to_string(array->getDimensions()[0]);
+    int cnt=1;
+    std::string result = this->array->name + " = "+"alloca [" + std::to_string(array->getDimensions()[0]);
     for (size_t i = 1; i < array->getDimensions().size(); ++i) {
-        result += " x " + std::to_string(array->getDimensions()[i]);
+        result += " x [" + std::to_string(array->getDimensions()[i]);
+        cnt++;
     }
-    result += "] " + Data::getTypeStr(array->getArrayType()) + ", align 8";
-    if (!array->name.empty()) {
-        result += " %" + array->name;
+    result+=" x ";
+    
+    result += Data::getTypeStr(array->getArrayType()) ;
+    for(int i=0;i<cnt;i++){
+        result+="]";
     }
+    result += ", align 8";
     return result;
 }
 
@@ -45,12 +48,12 @@ std::string LoadLLVM::out_str() const {
     if (src_sym == nullptr || dest_sym == nullptr) {
         throw std::invalid_argument("; <invalid load instruction>");
     }
-    std::string result = "%" + dest_sym->name + " = load " + Data::getTypeStr(dest_sym->getDataType()) + ", ";
-    result += Data::getTypeStr(src_sym->getPointedType()) + "* %" + src_sym->name;
+    std::string result = dest_sym->name + " = load " + Data::getTypeStr(dest_sym->getDataType()) + ", ";
+    result += Data::getTypeStr(src_sym->getPointedType()) + "* " + src_sym->name;
     return result;
 }
 
-//StoreLLVM::
+//StoreLLVM
 dataType StoreLLVM::getDestPointedType(){return this->dest_sym->getPointedType();}
 dataType StoreLLVM::getSrcType(){return this->src_sym->getDataType();}
 BasicSymbol* StoreLLVM::getSrcSymbol(){return this->src_sym;}
@@ -60,12 +63,12 @@ std::string StoreLLVM::out_str() const {
     if (src_sym == nullptr || dest_sym == nullptr) {
         throw std::invalid_argument("; <invalid store instruction>");
     }
-    std::string result = "store " + Data::getTypeStr(src_sym->getDataType()) + " %" + src_sym->name + ", ";
-    result += Data::getTypeStr(dest_sym->getPointedType()) + "* %" + dest_sym->name;
+    std::string result = "store " + Data::getTypeStr(src_sym->getDataType()) + " " +getSymOut(src_sym) + ", ";
+    result += Data::getTypeStr(dest_sym->getPointedType()) + "* " + dest_sym->name;
     return result;
 }
 
-//GetElementPtrLLVM::
+//GetElementPtrLLVM
 dataType GetElementPtrLLVM::getArrayType(){return this->ptrval->getArrayType();}
 const std::vector<int>&GetElementPtrLLVM::getDimensions() const{return this->ptrval->getDimensions();}
 ArraySymbol* GetElementPtrLLVM::getSrcSymbol(){return this->ptrval;}
@@ -88,17 +91,39 @@ std::string GetElementPtrLLVM::out_str() const {
     if (ptrval == nullptr || dest_sym == nullptr) {
         throw std::invalid_argument("; <invalid getelementptr instruction>");
     }
-    std::string result = "%" + dest_sym->name + " = getelementptr ";
+    std::string result = dest_sym->name + " = getelementptr ";
     result += "[" + std::to_string(ptrval->getDimensions()[0]);
+    int cnt=1;
     for (size_t i = 1; i < ptrval->getDimensions().size(); ++i) {
-        result += " x " + std::to_string(ptrval->getDimensions()[i]);
+        result += " x [" + std::to_string(ptrval->getDimensions()[i]);
+        cnt++;
     }
-    result += "] " + Data::getTypeStr(ptrval->getArrayType()) + ", ";
+    result+=" x ";
     
-    result += "%" + ptrval->name;
+    result += Data::getTypeStr(ptrval->getArrayType()) ;
+    for(int i=0;i<cnt;i++){
+        result+="]";
+    }
+
+    result += ", [" + std::to_string(ptrval->getDimensions()[0]);
+    cnt=1;
+    for (size_t i = 1; i < ptrval->getDimensions().size(); ++i) {
+        result += " x [" + std::to_string(ptrval->getDimensions()[i]);
+        cnt++;
+    }
+    result+=" x ";
     
+    result += Data::getTypeStr(ptrval->getArrayType()) ;
+    for(int i=0;i<cnt;i++){
+        result+="]";
+    }
+
+    result+="*";
+    
+    result += " "+ptrval->name;
+    result += ", " + Data::getTypeStr(dataType::i32) + " " + getSymOut(SymbolFactory::createConstSymbol(createData(dataType::i32,0)));
     for (const auto& pair : ty_idx) {
-        result += ", " + Data::getTypeStr(pair.first) + " %" + pair.second->name;
+        result += ", " + Data::getTypeStr(pair.first) + " " + getSymOut(pair.second);
     }
     
     return result;

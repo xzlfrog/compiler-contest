@@ -125,10 +125,20 @@ StoreLLVM* LLVMfactory::createStoreLLVM(BasicSymbol* src_sym,PointerSymbol* dest
     return storeLLVM;
 }
 
-GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,std::vector<dataType>type,std::vector<BasicSymbol*>idx){
+GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,std::vector<dataType>&type,std::vector<BasicSymbol*>&idx){
     GetElementPtrLLVM* getElementPtrLLVM=new GetElementPtrLLVM();
     getElementPtrLLVM->ptrval=ptrval;
     getElementPtrLLVM->addTyIdx(type,idx);
+    getElementPtrLLVM->llvmType=LLVMtype::getelementptr;
+    getElementPtrLLVM->ptrval=ptrval;
+    getElementPtrLLVM->dest_sym=dest_sym;
+    return getElementPtrLLVM;
+}
+
+GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,std::vector<std::pair<dataType,BasicSymbol*>>&ty_idx){
+    GetElementPtrLLVM* getElementPtrLLVM=new GetElementPtrLLVM();
+    getElementPtrLLVM->ptrval=ptrval;
+    getElementPtrLLVM->ty_idx=ty_idx;
     getElementPtrLLVM->llvmType=LLVMtype::getelementptr;
     getElementPtrLLVM->ptrval=ptrval;
     getElementPtrLLVM->dest_sym=dest_sym;
@@ -149,7 +159,7 @@ GlobalNonArrayVarDefination* LLVMfactory::createGlobalNonArrayVarDefination(Poin
     if(initMode==initializer::undef)
         globalNonArrayVarDefination->dest_sym->pointedData->setIsInitialize(false);
     else if(initMode==initializer::zeroinitializer){
-        globalNonArrayVarDefination->dest_sym->pointedData->setValue(0);
+        //globalNonArrayVarDefination->dest_sym->pointedData->setValue(0);
         globalNonArrayVarDefination->dest_sym->pointedData->setIsInitialize(true);
     }
     return globalNonArrayVarDefination;
@@ -262,4 +272,10 @@ static ConstantArrayVarDefination* createConstantArrayVarDefination(ArraySymbol*
     constantArrayVarDefination->dest_sym=dest_sym;
     constantArrayVarDefination->dest_sym->data->setInitMode(initMode);
     return constantArrayVarDefination;
+}
+
+AllocaArrayLLVM* LLVMfactory::createAllocaArrayLLVM(ArraySymbol* sym){
+    AllocaArrayLLVM* allocaArrayLLVM=new AllocaArrayLLVM();
+    allocaArrayLLVM->array=sym;
+    return allocaArrayLLVM;
 }

@@ -20,9 +20,6 @@ public:
     static PointerSymbol* createPointerSymbolWithScope(std::string name,int scope=-1,
         dataType pointedType=dataType::data_undefined);
 
-    static PointerSymbol* createPointerSymbolWithScope(std::string name,ValueVariant value,int scope=-1,
-        dataType pointedType=dataType::data_undefined);
-
     static ArraySymbol* createArraySymbolWithScope(std::string name,int scope=-1,
         dataType type=dataType::data_undefined);
         
@@ -50,9 +47,6 @@ public:
     static ConstSymbol* createConstSymbol(Data*data=nullptr);
 
     static PointerSymbol* createPointerSymbol(std::string name,
-        dataType pointedType=dataType::data_undefined);
-
-    static PointerSymbol* createPointerSymbol(std::string name,ValueVariant value,
         dataType pointedType=dataType::data_undefined);
 
     static ArraySymbol* createArraySymbol(std::string name,

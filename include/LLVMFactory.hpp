@@ -39,6 +39,8 @@ public:
     static AllocaArrayLLVM* createAllocaArrayLLVM(ArraySymbol* sym,dataType type,
         std::vector<int>&dimensions);
 
+    static AllocaArrayLLVM* createAllocaArrayLLVM(ArraySymbol* sym);
+
     //static AllocaArrayLLVM* createAllocaArrayLLVM(ArraySymbol* sym);
 
     static LoadLLVM* createLoadLLVM(PointerSymbol* src_sym,BasicSymbol* dest_sym);
@@ -46,7 +48,7 @@ public:
     static StoreLLVM* createStoreLLVM(BasicSymbol* src_sym,PointerSymbol* dest_sym);
 
     static GetElementPtrLLVM* createGetElementPtrLLVM(PointerSymbol*dest_sym,
-        ArraySymbol* ptrval,std::vector<dataType>type,std::vector<BasicSymbol*>idx);
+        ArraySymbol* ptrval,std::vector<dataType>&type,std::vector<BasicSymbol*>&idx);
 
     static GlobalNonArrayVarDefination* createGlobalNonArrayVarDefination(
         PointerSymbol* dest_sym,BasicSymbol* src_sym);//如果不初始化，则src_sym为nullptr
@@ -84,4 +86,6 @@ public:
     static ConstantArrayVarDefination* createConstantArrayVarDefination(ArraySymbol* dest_sym);
 
     static ConstantArrayVarDefination* createConstantArrayVarDefination(ArraySymbol* dest_sym,initializer initMode);
+
+    static GetElementPtrLLVM* createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,std::vector<std::pair<dataType,BasicSymbol*>>&ty_idx);
 };

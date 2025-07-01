@@ -1,32 +1,32 @@
 #include"../include/GlobalOperations.hpp"
+#include<iostream>
 
 //GlobalNonArrayVarDefination
 dataType GlobalNonArrayVarDefination::getPointedType(){return this->dest_sym->getPointedType();}
 PointerSymbol* GlobalNonArrayVarDefination::getDestSymbol(){return this->dest_sym;}
 BasicSymbol* GlobalNonArrayVarDefination::getSrcSymbol(){return this->src_sym;}
 initializer GlobalNonArrayVarDefination::getInitMode(){return this->dest_sym->pointedData->getInitMode();}
-std::string GlobalNonArrayVarDefination::getPointedTypeStr(dataType PointedType) const{
-    switch(PointedType){
-        case data_undefined: return "undefined";
-        case void_: return "void";
-        case i1: return "i1";
-        case i8: return "i8";
-        case i16: return "i16";
-        case i32: return "i32";
-        case i64: return "i64";
-        case f32: return "f32";
-        case f64: return "f64";
-        default: throw std::invalid_argument("Unknown pointed type");
-    }
-}
 
 std::string GlobalNonArrayVarDefination::out_str()const{
-    std::string res =  "@" + dest_sym->name + " = global ";
-    res += this->getPointedTypeStr(this->dest_sym->getPointedType()) + " ";
-    if(this->src_sym){
-        res += this->src_sym->name;
-    } else {
-        res += "null";
+    if(dest_sym->scope>0){
+        throw std::runtime_error("the variable is not a global variable");
+    }
+    std::string res =  dest_sym->name + " = global ";
+    res += Data::getTypeStr(this->dest_sym->getPointedType()) + " ";
+    switch (this->dest_sym->pointedData->getInitMode())
+    {
+    case initializer::zeroinitializer:
+        res+="zeroinitializer";
+        break;
+    case initializer::undef:
+        res+="undef";
+        break;
+    case initializer::assignment:
+        res+=getSymOut(this->src_sym);
+        break;
+    default:
+        throw std::runtime_error("the global variable initializer is wrong");
+        break;
     }
     return res;
 }
@@ -36,30 +36,29 @@ dataType ConstantNonArrayVarDefination::getConstType(){return this->dest_sym->ge
 BasicSymbol* ConstantNonArrayVarDefination::getDestSymbol(){return this->dest_sym;}
 BasicSymbol* ConstantNonArrayVarDefination::getSrcSymbol(){return this->src_sym;}
 initializer ConstantNonArrayVarDefination::getInitMode(){return this->dest_sym->data->getInitMode();}
-std::string ConstantNonArrayVarDefination::getConstTypeStr(dataType constType) const {
-    switch(constType){
-        case data_undefined: return "undefined";
-        case void_: return "void";
-        case i1: return "i1";
-        case i8: return "i8";
-        case i16: return "i16";
-        case i32: return "i32";
-        case i64: return "i64";
-        case f32: return "f32";
-        case f64: return "f64";
-        default: throw std::invalid_argument("Unknown constant type");
-    }
-}
 
 std::string ConstantNonArrayVarDefination::out_str()const{
-    std::string res =  "@" + dest_sym->name + " = constant ";
-    res += this->getConstTypeStr(this->dest_sym->getDataType()) + " ";
-    if(this->src_sym){
-        res += this->src_sym->name;
-    } else {
-        res += "null";  
+    if(dest_sym->scope>0){
+        throw std::runtime_error("the variable is not a global variable");
     }
-    return res;   
+    std::string res =  dest_sym->name + " = constant ";
+    res += Data::getTypeStr(this->dest_sym->data->getType()) + " ";
+    switch (this->dest_sym->data->getInitMode())
+    {
+    case initializer::zeroinitializer:
+        res+="zeroinitializer";
+        break;
+    case initializer::undef:
+        res+="undef";
+        break;
+    case initializer::assignment:
+        res+=getSymOut(this->src_sym);
+        break;
+    default:
+        throw std::runtime_error("the global variable initializer is wrong");
+        break;
+    }
+    return res;
 }
 
 //FuncDeclaration
@@ -85,8 +84,8 @@ std::string FuncDeclaration::getReturnTypeStr(dataType returnType) const {
         case i16: return "i16";
         case i32: return "i32";
         case i64: return "i64";
-        case f32: return "f32";
-        case f64: return "f64";
+        case f32: return "float";
+        case f64: return "double";
         default: throw std::invalid_argument("Unknown return type");
     }
 }
@@ -99,8 +98,8 @@ std::string FuncDeclaration::getParamTypeStr(dataType paramType) const {
         case i16: return "i16";
         case i32: return "i32";
         case i64: return "i64";
-        case f32: return "f32";
-        case f64: return "f64";
+        case f32: return "float";
+        case f64: return "double";
         default: throw std::invalid_argument("Unknown parameter type");
     }
 }
@@ -146,8 +145,8 @@ std::string FuncDefination::getReturnTypeStr(dataType returnType) const {
         case i16: return "i16";
         case i32: return "i32";
         case i64: return "i64";
-        case f32: return "f32";
-        case f64: return "f64";
+        case f32: return "float";
+        case f64: return "double";
         default: throw std::invalid_argument("Unknown return type");
     }
 }
@@ -173,21 +172,27 @@ std::string FuncDefination::out_str()const{
     
     for(size_t i = 0; i < this->func->paramTypes.size(); ++i){
         res += this->getParamTypeStr(this->func->paramTypes[i]);
+        res += " "+this->params[i]->name;
         if(i < this->func->paramTypes.size() - 1){
             res += ", ";
         }
     }
     
     res += ") {\n";
+    if(this->block==nullptr){
+        res+="}\n";
+        return res;
+    }
     
-    for(auto& param : this->params){
-        res += "  " + param->name + ";\n"; // Assuming params are BasicSymbol with a name
+    for(LLVM*llvm=this->block->head;llvm!=nullptr;llvm=llvm->next){
+        res += llvm->out_str()+ ";\n"; // Assuming params are BasicSymbol with a name
     }
     
     res += "}\n";
     return res;
 }
 
+//GlobalArrayVarDefination
 const std::vector<int>&GlobalArrayVarDefination::getDimensions() const{
     return this->dest_sym->getDimensions();
 }
@@ -205,7 +210,7 @@ std::string GlobalArrayVarDefination::out_str()const{
     return "";
 }
 
-
+//ConstantArrayVarDefination
 const std::vector<int>&ConstantArrayVarDefination::getDimensions() const{
     return this->dest_sym->getDimensions();
 }

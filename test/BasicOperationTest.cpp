@@ -7,7 +7,7 @@ int main(){
     //算术指令/逻辑运算指令/比较运算指令测试
     BasicSymbol* a=SymbolFactory::createVarSymbol("a",dataType::f32);
     a->setScope(1);
-    BasicSymbol* b=SymbolFactory::createConstVarSymbolWithScope("b",0,createData(dataType::f32,3.0f));
+    BasicSymbol* b=SymbolFactory::createConstVarSymbolWithScope("b",1,createData(dataType::f32,3.0f));
     BasicSymbol* c=SymbolFactory::createConstSymbol(createData(dataType::f32,1.0f));
 
     ArithmeticOperationLLVM* bsollvm=LLVMfactory::createBasicOperationLLVM(LLVMtype::llvm_fadd,a,b,c);
@@ -25,7 +25,7 @@ int main(){
     label_true->setScope(1);
     label_false->setScope(1);
     BasicSymbol* cond=SymbolFactory::createVarSymbol("cond",dataType::i1);
-    cond->setScope(0);
+    cond->setScope(1);
     ConditionalBranchLLVM* br_cond=LLVMfactory::createConditionalBranchLLVM(cond,label_true,label_false);
     std::cout<<br_cond->out_str()<<"\n";
 
@@ -58,5 +58,73 @@ int main(){
     LLVM* labelLLVM=LLVMfactory::createLableLLVM(label_test);
     std::cout<<labelLLVM->out_str()<<"\n";
 
-    //
+    //AllocaArrayLLVM语句测试
+    PointerSymbol* allca_sym=SymbolFactory::createPointerSymbolWithScope("pointer_nonarray",1,dataType::i32);
+    LLVM* allocaNonarrayLLVM=LLVMfactory::createAllocaNonArrayLLVM(allca_sym);
+    std::cout<<allocaNonarrayLLVM->out_str()<<"\n";
+
+    std::vector<int> dim;
+    dim.push_back(3);
+    dim.push_back(4);
+    dim.push_back(5);
+    ArraySymbol* local_array=SymbolFactory::createArraySymbolWithScope("pointer_array",dim,1,dataType::i32);
+    LLVM* allocaArrayLLVM=LLVMfactory::createAllocaArrayLLVM(local_array);
+    std::cout<<allocaArrayLLVM->out_str()<<"\n";
+
+    //LoadLLVM语句测试
+    PointerSymbol* load_src=SymbolFactory::createPointerSymbolWithScope("load_src",1,dataType::i32);
+    BasicSymbol* load_dest=SymbolFactory::createVarSymbolWithScope("load_dest",dataType::i32,1);
+    LLVM* loadLLVM=LLVMfactory::createLoadLLVM(load_src,load_dest);
+    std::cout<<loadLLVM->out_str()<<"\n";
+
+    //StoreLLVM语句测试
+    PointerSymbol* store_dest=SymbolFactory::createPointerSymbolWithScope("store_dest",1,dataType::i32);
+    BasicSymbol* store_src=SymbolFactory::createVarSymbolWithScope("store_src",dataType::i32,1);
+    LLVM* storeLLVM=LLVMfactory::createStoreLLVM(store_src,store_dest);
+    std::cout<<storeLLVM->out_str()<<"\n";
+
+    //GetElementPtrLLVM语句测试
+    PointerSymbol* getelementptr_dest=SymbolFactory::createPointerSymbolWithScope("getelementptr_dest",1,dataType::i32);
+    std::vector<std::pair<dataType,BasicSymbol*>> ty_idx;
+    ty_idx.push_back({dataType::i32,SymbolFactory::createConstSymbol(createData(dataType::i32,1))});
+    ty_idx.push_back({dataType::i32,SymbolFactory::createConstSymbol(createData(dataType::i32,2))});
+    ty_idx.push_back({dataType::i32,SymbolFactory::createConstSymbol(createData(dataType::i32,3))});
+    LLVM* getelementptr=LLVMfactory::createGetElementPtrLLVM(getelementptr_dest,local_array,ty_idx);
+    std::cout<<getelementptr->out_str()<<"\n";
+
+    //GlobalNonArrayVarDefination
+    PointerSymbol* global_dest_nonarray=SymbolFactory::createPointerSymbolWithScope("global_dest_nonarray",0,dataType::f32);
+    BasicSymbol * global_src_nonarray=SymbolFactory::createConstSymbol(createData(dataType::f32,3.0f));
+    LLVM* globalnonarraydef=LLVMfactory::createGlobalNonArrayVarDefination(global_dest_nonarray,global_src_nonarray);
+    std::cout<<globalnonarraydef->out_str()<<"\n";
+    globalnonarraydef=LLVMfactory::createGlobalNonArrayVarDefination(global_dest_nonarray,initializer::zeroinitializer);
+    std::cout<<globalnonarraydef->out_str()<<"\n";
+
+
+    //ConstantNonArrayVarDefination
+    ConstVarSymbol* const_dest_nonarray=SymbolFactory::createConstVarSymbolWithScope("const_dest_nonarray",0,createNonInitialedData(dataType::f32));
+    BasicSymbol * const_src_nonarray=SymbolFactory::createConstSymbol(createData(dataType::f32,2.0f));
+    LLVM* constnonarraydef=LLVMfactory::createConstantNonArrayVarDefination(const_dest_nonarray,const_src_nonarray);
+    std::cout<<constnonarraydef->out_str()<<"\n";
+
+    //FuncDeclaration
+    std::vector<dataType> param;
+    param.push_back(dataType::i32);
+    param.push_back(dataType::f32);
+    param.push_back(dataType::i1);
+    FuncSymbol* func_decl=SymbolFactory::createFuncSymbolWithScope("func_decl",param,0,dataType::void_);
+    FuncDeclaration* funcdeclllvm=LLVMfactory::createFuncDeclaration(func_decl);
+    std::cout<<funcdeclllvm->out_str()<<"\n";
+
+    //FuncDefination
+    std::vector<BasicSymbol*>func_param;
+    func_param.push_back(SymbolFactory::createVarSymbol("func_param1",dataType::i32));
+    func_param.push_back(SymbolFactory::createVarSymbol("func_param2",dataType::f32));
+    func_param.push_back(SymbolFactory::createVarSymbol("func_param3",dataType::i1));
+    FuncDefination* funcdefllvm=LLVMfactory::createFuncDefination(func_decl,func_param);
+    std::cout<<funcdefllvm->out_str()<<"\n";
+
+    //GlobalArrayVarDefination
+
+    //ConstantArrayVarDefination
 }

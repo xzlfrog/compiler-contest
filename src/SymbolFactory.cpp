@@ -67,17 +67,8 @@ PointerSymbol* SymbolFactory::createPointerSymbolWithScope(std::string name,int 
     pointerSymbol->name=name;
     if(scope>=0)
         pointerSymbol->setScope(scope);
-    pointerSymbol->allocateMemory(pointedType,0);
-    pointerSymbol->type=symType::pointer;
-    return pointerSymbol;
-}
-
-PointerSymbol* SymbolFactory::createPointerSymbolWithScope(std::string name,ValueVariant value,int scope,dataType pointedType){
-    PointerSymbol* pointerSymbol=new PointerSymbol();
-    pointerSymbol->name=name;
-    if(scope>=0)
-        pointerSymbol->setScope(scope);
-    pointerSymbol->allocateMemory(pointedType,value);
+    pointerSymbol->allocateMemory(pointedType);
+    pointerSymbol->pointedData->setInitMode(initializer::assignment);
     pointerSymbol->type=symType::pointer;
     return pointerSymbol;
 }
@@ -163,11 +154,7 @@ ConstSymbol* SymbolFactory::createConstSymbol(Data*data){
 }
 
 PointerSymbol* SymbolFactory::createPointerSymbol(std::string name,dataType pointedType){
-    return SymbolFactory::createPointerSymbolWithScope(name,-1,pointedType);
-}
-
-PointerSymbol* SymbolFactory::createPointerSymbol(std::string name,ValueVariant value,dataType pointedType){
-    return createPointerSymbolWithScope(name,value,-1,pointedType);
+    return createPointerSymbolWithScope(name,-1,pointedType);
 }
 
 ArraySymbol* SymbolFactory::createArraySymbol(std::string name,dataType type){

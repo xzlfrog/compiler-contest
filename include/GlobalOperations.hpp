@@ -16,7 +16,6 @@ public:
     BasicSymbol* getSrcSymbol();
     initializer getInitMode();
     std::string out_str()const override;
-    std::string getPointedTypeStr(dataType PointedType) const; 
     ~GlobalNonArrayVarDefination()=default;
 };
 
@@ -31,7 +30,6 @@ public:
     BasicSymbol* getSrcSymbol();
     initializer getInitMode();
     std::string out_str()const override;
-    std::string getConstTypeStr(dataType constType) const;
     ~ConstantNonArrayVarDefination()=default;
 };
 
@@ -88,6 +86,7 @@ class FuncDefination:public LLVM{
 public:
     FuncSymbol* func;
     std::vector<BasicSymbol*> params;
+    LLVMList* block=nullptr;
 
 
     void addArguments(dataType ty,BasicSymbol* sym);
