@@ -2,11 +2,11 @@
 #include"data.hpp"
 
 enum LLVMtype{
-    fadd,
-    fsub,
-    fmul,
-    fdiv,
-    frem,
+    llvm_fadd,
+    llvm_fsub,
+    llvm_fmul,
+    llvm_fdiv,
+    llvm_frem,
     add,//add
     sub,//subtract
     mul,//multiply
@@ -47,7 +47,7 @@ enum LLVMtype{
     call,//function call
     //llvm_switch,//switch
     phi,//phi node
-    trunc,//截断整数位宽，如i64转i32
+    llvm_trunc,//截断整数位宽，如i64转i32
     zext,//zero extend
     sext,// sign extend
     bitcast,//等位宽类型间位级转换

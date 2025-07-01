@@ -1,4 +1,5 @@
 #include"../include/data.hpp"
+#include<iostream>
 
 //Data
 bool Data::getIsInitialized(){return this->isInitialized;};
@@ -6,8 +7,9 @@ void Data::setInitMode(initializer initMode){this->initMode=initMode;}
 initializer Data::getInitMode(){return this->initMode;}
 bool Data::checkIsInitialed(){
     if(this->isInitialized==false){
-        throw std::runtime_error("the variable is not initialized");
+        return false;
     }
+    return true;
 }
 void Data::setIsInitialize(bool flag){this->isInitialized=flag;}
 std::string Data::getTypeStr(dataType type){
@@ -29,9 +31,9 @@ dataType Data_i1::getType() const{return dataType::i1;}
 ValueVariant Data_i1::getValue(){
     this->checkIsInitialed();
     if(this->getInitMode()==initializer::zeroinitializer)
-        return (bool)0;
+        return ValueVariant((bool)0);
     else
-        return value;
+        return ValueVariant(value);
 } 
 
 void Data_i1::setValue(ValueVariant value){
@@ -50,9 +52,9 @@ dataType Data_i8::getType() const{return dataType::i8;}
 ValueVariant Data_i8::getValue(){
     this->checkIsInitialed();
     if(this->getInitMode()==initializer::zeroinitializer)
-        return (char)0;
+        return ValueVariant((char)0);
     else
-        return value;
+        return ValueVariant(value);
 }
 
 void Data_i8::setValue(ValueVariant value){
@@ -72,9 +74,9 @@ dataType Data_i16::getType() const{return dataType::i16;}
 ValueVariant Data_i16::getValue(){
     this->checkIsInitialed();
     if(this->getInitMode()==initializer::zeroinitializer)
-        return (short)0;
+        return ValueVariant((short)0);
     else
-        return value;
+        return ValueVariant(value);
 }
 
 void Data_i16::setValue(ValueVariant value){
@@ -93,9 +95,9 @@ dataType Data_i32::getType() const{return dataType::i32;}
 ValueVariant Data_i32::getValue(){
     this->checkIsInitialed();
     if(this->getInitMode()==initializer::zeroinitializer)
-        return (int)0;
+        return ValueVariant(0);
     else
-        return value;
+        return ValueVariant(value);
 }
 
 void Data_i32::setValue(ValueVariant value){
@@ -114,9 +116,9 @@ dataType Data_i64::getType() const{return dataType::i64;}
 ValueVariant Data_i64::getValue(){
     this->checkIsInitialed();
     if(this->getInitMode()==initializer::zeroinitializer)
-        return (long long)0;
+        return ValueVariant(0LL);
     else
-        return value;
+        return ValueVariant(this->value);
 }
 
 void Data_i64::setValue(ValueVariant value){
@@ -135,9 +137,9 @@ dataType Data_f32::getType() const{return dataType::f32;}
 ValueVariant Data_f32::getValue(){
     this->checkIsInitialed();
     if(this->getInitMode()==initializer::zeroinitializer)
-        return (float)0;
+        return ValueVariant(0.0f);
     else
-        return value;
+        return ValueVariant(value);
 }
 
 void Data_f32::setValue(ValueVariant value){
@@ -156,9 +158,9 @@ dataType Data_f64::getType() const{return dataType::f64;}
 ValueVariant Data_f64::getValue(){
     this->checkIsInitialed();
     if(this->getInitMode()==initializer::zeroinitializer)
-        return (double)0;
+        return ValueVariant(0.0);
     else
-        return value;
+        return ValueVariant(value);
 }
 
 void Data_f64::setValue(ValueVariant value){
@@ -177,9 +179,9 @@ dataType Data_pointer::getType() const {return dataType::const_exp_pointer;}
 ValueVariant Data_pointer::getValue(){
     this->checkIsInitialed();
     if(this->getInitMode()==initializer::zeroinitializer)
-        return nullptr;
+        return ValueVariant((Data*)nullptr);
     else
-        return value;
+        return ValueVariant(this->value);
 }
 
 void Data_pointer::setValue(ValueVariant value) {
@@ -197,6 +199,7 @@ Data* createData(dataType type,ValueVariant v){
     Data* ret=createInitialedData(type);
     ret->setValue(v);
     ret->setInitMode(initializer::assignment);
+    ret->setIsInitialize(true);
     return ret;
 }
 
@@ -205,6 +208,8 @@ Data* createData(dataType type,initializer initMode){
     ret->setInitMode(initMode);
     if(initMode==initializer::undef)
         ret->setIsInitialize(false);
+    else
+        ret->setIsInitialize(true);
     return ret;
 }
 
@@ -486,3 +491,23 @@ Data* constExp_sitofp(Data* data1){
     return createData(dataType::f32,(float)a);
 }
 
+std::string my_to_string(Data* data){
+    switch (data->getType()) {
+    case dataType::i1:
+        return std::to_string(static_cast<int>(std::get<bool>(data->getValue())));
+    case dataType::i8:
+        return std::to_string(static_cast<int>(std::get<char>(data->getValue())));
+    case dataType::i16:
+        return std::to_string(std::get<short>(data->getValue()));
+    case dataType::i32:
+        return std::to_string(std::get<int>(data->getValue()));
+    case dataType::i64:
+        return std::to_string(std::get<long long>(data->getValue()));
+    case dataType::f32:
+        return std::to_string(std::get<float>(data->getValue()));
+    case dataType::f64:
+        return std::to_string(std::get<double>(data->getValue()));
+    default:
+        throw std::runtime_error("this type is not a constant type");
+    }
+}

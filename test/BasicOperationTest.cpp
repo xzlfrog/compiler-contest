@@ -4,12 +4,11 @@
 #include<iostream>
 
 int main(){
-    BasicSymbol* a=SymbolFactory::createTmpVarSymbol(dataType::i32);
-    std::cout<<a->getType()<<std::endl;
-    BasicSymbol* b=SymbolFactory::createConstSymbol(createData(dataType::i32,1));
-    std::cout<<b->getType()<<std::endl;
-    BasicSymbol* c=SymbolFactory::createConstSymbol(createData(dataType::i32,1));
-    std::cout<<c->getType()<<std::endl;
-    ArithmeticOperationLLVM* bsollvm=LLVMfactory::createBasicOperationLLVM(LLVMtype::add,a,b,c);
+    BasicSymbol* a=SymbolFactory::createVarSymbol("a",dataType::f32);
+    a->setScope(1);
+    BasicSymbol* b=SymbolFactory::createConstVarSymbol("b",createData(dataType::f32,3.0f));
+    BasicSymbol* c=SymbolFactory::createConstSymbol(createData(dataType::f32,1.0f));
+
+    ArithmeticOperationLLVM* bsollvm=LLVMfactory::createBasicOperationLLVM(LLVMtype::llvm_fadd,a,b,c);
     std::cout<<bsollvm->out_str()<<std::endl;
 }

@@ -3,6 +3,8 @@
 #include"llvm.hpp"
 #include"sym.hpp"
 #include<boost/dynamic_bitset.hpp>
+#include"../include/SymbolFactory.hpp"
+#include"../include/LLVMFactory.hpp"
 
 class BasicBlock;
 

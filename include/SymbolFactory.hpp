@@ -9,6 +9,8 @@ class SymbolFactory{
 public:
     static VarSymbol* createVarSymbol(std::string name,Data*data=nullptr);
 
+    static VarSymbol* createVarSymbol(std::string name,dataType type);
+
     static ConstVarSymbol* createConstVarSymbol(std::string name,Data* data=nullptr);
 
     static VarSymbol* createTmpVarSymbol(dataType type);

@@ -63,6 +63,10 @@ void ArraySymbol::setInitialedData(ArrayInitial* arrayInitial){
     }
 }
 
+void ArraySymbol::setScope(int scope){
+    this->scope=scope;
+}
+
 //LabelSymbol
 symType LabelSymbol::getType(){this->type=symType::sym_label; return this->type;}
 void LabelSymbol::setScope(int scope){
@@ -133,7 +137,7 @@ void ConstSymbol::setScope(int scope){
 }
 
 //ConstVarSymbol
-symType ConstVarSymbol::getType() {this->type=symType::constant_nonvar; return this->type;}
+symType ConstVarSymbol::getType() {this->type=symType::constant_var; return this->type;}
 dataType ConstVarSymbol::getDataType()const{return this->data->getType();}
 void ConstVarSymbol::setData(dataType dtype,ValueVariant v){
     if(dtype==dataType::data_undefined){
