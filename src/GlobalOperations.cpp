@@ -285,7 +285,7 @@ void array_def_recursion(std::vector<int>&dim,int i,dataType& type,std::string& 
                 break;
             for(;k<init_pos.size()&&init_pos[k].first[dim[i]-1]<=j;k++){
                 if(init_pos[k].first[dim[i]-1]==j){
-                    std::cout<<"111"<<"\n";
+                    //std::cout<<"111"<<"\n";
                     s+=Data::getTypeStr(init_pos[k].second->getType())+" "+getSymOut(SymbolFactory::createConstSymbol(init_pos[k].second))+", ";
                 }
             }
