@@ -45,11 +45,19 @@ ReturnLLVM* LLVMfactory::createReturnLLVM(BasicSymbol* returnValue){
     return switchLLVM;
 }*/
 
-PhiLLVM* LLVMfactory::createPhiLLVM(BasicSymbol* dest_sym,std::vector<BasicSymbol*> src_sym,std::vector<LabelSymbol*>src_label){
+PhiLLVM* LLVMfactory::createPhiLLVM(BasicSymbol* dest_sym,std::vector<BasicSymbol*>& src_sym,std::vector<LabelSymbol*>&src_label){
     PhiLLVM* phiLLVM=new PhiLLVM();
     phiLLVM->llvmType=LLVMtype::phi;
     phiLLVM->dest_sym=dest_sym;
     phiLLVM->addCase(src_sym,src_label);
+    return phiLLVM;
+}
+
+PhiLLVM* LLVMfactory::createPhiLLVM(BasicSymbol* dest_sym,std::vector<std::pair<BasicSymbol*,LabelSymbol*>>& val_src){
+    PhiLLVM* phiLLVM=new PhiLLVM();
+    phiLLVM->llvmType=LLVMtype::phi;
+    phiLLVM->dest_sym=dest_sym;
+    phiLLVM->vals_srcs=val_src;
     return phiLLVM;
 }
 

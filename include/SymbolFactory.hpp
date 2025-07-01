@@ -7,6 +7,38 @@ std::string generate_tmp_label_name();
 
 class SymbolFactory{
 public:
+    static VarSymbol* createVarSymbolWithScope(std::string name,int scope=-1,Data*data=nullptr);
+
+    static VarSymbol* createVarSymbolWithScope(std::string name,dataType type,int scope=-1);
+
+    static ConstVarSymbol* createConstVarSymbolWithScope(std::string name,int scope=-1,Data* data=nullptr);
+
+    static VarSymbol* createTmpVarSymbolWithScope(dataType type,int scope=-1);
+
+    static ConstSymbol* createConstSymbolWithScope(Data*data=nullptr,int scope=-1);
+
+    static PointerSymbol* createPointerSymbolWithScope(std::string name,int scope=-1,
+        dataType pointedType=dataType::data_undefined);
+
+    static PointerSymbol* createPointerSymbolWithScope(std::string name,ValueVariant value,int scope=-1,
+        dataType pointedType=dataType::data_undefined);
+
+    static ArraySymbol* createArraySymbolWithScope(std::string name,int scope=-1,
+        dataType type=dataType::data_undefined);
+        
+    static ArraySymbol* createArraySymbolWithScope(std::string name,
+        std::vector<int>&dimensions,int scope=-1,dataType type=dataType::data_undefined);
+
+    static LabelSymbol* createLabelSymbolWithScope(std::string name,int scope=-1);
+
+    static LabelSymbol* createTmpLabelSymbolWithScope(int scope=-1);
+
+    static FuncSymbol* createFuncSymbolWithScope(std::string name,
+        std::vector<dataType>& paramTypes,int scope=-1,dataType returnType=dataType::data_undefined);
+
+    static FuncSymbol* createFuncSymbolWithScope(std::string name,int scope=-1,
+        dataType returnType=dataType::data_undefined);
+
     static VarSymbol* createVarSymbol(std::string name,Data*data=nullptr);
 
     static VarSymbol* createVarSymbol(std::string name,dataType type);

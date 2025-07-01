@@ -76,34 +76,18 @@ std::string ArithmeticOperationLLVM::out_str() const {
         case LLVMtype::icmp_sgt: opStr = "icmp sgt"; break;
         case LLVMtype::icmp_sge: opStr = "icmp sge"; break;
         case LLVMtype::icmp_sle: opStr = "icmp sgt"; break;
+        case LLVMtype::fcmp_oeq:  opStr = "fcmp oeq"; break;
+        case LLVMtype::fcmp_one:  opStr = "fcmp one"; break;
+        case LLVMtype::fcmp_oge: opStr = "fcmp oge"; break;
+        case LLVMtype::fcmp_ogt: opStr = "fcmp ogt"; break;
+        case LLVMtype::fcmp_ole: opStr = "fcmp ole"; break;
+        case LLVMtype::fcmp_olt: opStr = "fcmp olt"; break;
         default: throw std::invalid_argument("unknown arithmetic operation");
     }
 
     std::string typeStr=Data::getTypeStr(ty);
-    std::string b_out;
-    std::string c_out;
-
-
-    if(this->b->getType()==symType::constant_var||this->b->getType()==symType::variable){
-        b_out=b->name;
-    }
-    else if(this->b->getType()==symType::constant_nonvar){
-        b_out=my_to_string(b->data);
-    }
-    else{
-        throw std::runtime_error("the type of b is wrong");
-    }
-
-    if(this->c->getType()==symType::constant_var||this->c->getType()==symType::variable){
-        c_out=c->name;
-    }
-    else if(this->c->getType()==symType::constant_nonvar){
-        c_out=my_to_string(c->data);
-    }
-    else{
-        throw std::runtime_error("the type of c is wrong");
-    }
-
+    std::string b_out=getSymOut(b);
+    std::string c_out=getSymOut(c);
 
     return a->name + " = " + opStr + " " + typeStr + " " + b_out + ", " + c_out;
 

@@ -3,26 +3,14 @@
 //AllocaNonArrayLLVM
 dataType AllocaNonArrayLLVM::getPointedType(){return this->sym->getPointedType();}
 PointerSymbol* AllocaNonArrayLLVM::getSymbol(){return this->sym;}
-std::string AllocaNonArrayLLVM::getTypeStr(dataType type) const {
-    switch (type) {
-        case dataType::i1: return "i1";
-        case dataType::i8: return "i8";
-        case dataType::i16: return "i16";
-        case dataType::i32: return "i32";
-        case dataType::i64: return "i64";
-        case dataType::f32: return "f32";
-        case dataType::f64: return "f64";
-        default: throw std::invalid_argument("Unknown data type");
-    }
-}
 
 std::string AllocaNonArrayLLVM::out_str() const {
     if (sym == nullptr) {
         throw std::invalid_argument("; <invalid alloca non-array>");
     }
-    std::string result = "alloca " + getTypeStr(sym->getPointedType()) + ", align 8";
+    std::string result = "alloca " + Data::getTypeStr(sym->getPointedType()) + ", align 8";
     if (!sym->name.empty()) {
-        result += " %" + sym->name;
+        result += " " + sym->name;
     }
     return result;
 }
@@ -31,18 +19,6 @@ std::string AllocaNonArrayLLVM::out_str() const {
 dataType AllocaArrayLLVM::getArrayType(){return this->array->getArrayType();}
 const std::vector<int>& AllocaArrayLLVM::getDimensions() const{return this->array->getDimensions();}
 ArraySymbol* AllocaArrayLLVM::getArray(){return this->array;}
-std::string AllocaArrayLLVM::getTypeStr(dataType type) const {
-    switch (type) {
-        case dataType::i1: return "i1";
-        case dataType::i8: return "i8";
-        case dataType::i16: return "i16";
-        case dataType::i32: return "i32";
-        case dataType::i64: return "i64";
-        case dataType::f32: return "f32";
-        case dataType::f64: return "f64";
-        default: throw std::invalid_argument("Unknown data type");
-    }
-}
 
 std::string AllocaArrayLLVM::out_str() const {
     if (array == nullptr) {
@@ -52,7 +28,7 @@ std::string AllocaArrayLLVM::out_str() const {
     for (size_t i = 1; i < array->getDimensions().size(); ++i) {
         result += " x " + std::to_string(array->getDimensions()[i]);
     }
-    result += "] " + getTypeStr(array->getArrayType()) + ", align 8";
+    result += "] " + Data::getTypeStr(array->getArrayType()) + ", align 8";
     if (!array->name.empty()) {
         result += " %" + array->name;
     }
@@ -64,25 +40,13 @@ dataType LoadLLVM::getDestType(){return this->dest_sym->getDataType();}
 dataType LoadLLVM::getSrcPointedType(){return this->src_sym->getPointedType();}
 PointerSymbol* LoadLLVM::getSrcSymbol(){return this->src_sym;}
 BasicSymbol* LoadLLVM::getDestSymbol(){return this->dest_sym;}
-std::string LoadLLVM::getTypeStr(dataType type) const {
-    switch (type) {
-        case dataType::i1: return "i1";
-        case dataType::i8: return "i8";
-        case dataType::i16: return "i16";
-        case dataType::i32: return "i32";
-        case dataType::i64: return "i64";
-        case dataType::f32: return "f32";
-        case dataType::f64: return "f64";
-        default: throw std::invalid_argument("Unknown data type");
-    }
-}
 
 std::string LoadLLVM::out_str() const {
     if (src_sym == nullptr || dest_sym == nullptr) {
         throw std::invalid_argument("; <invalid load instruction>");
     }
-    std::string result = "%" + dest_sym->name + " = load " + getTypeStr(dest_sym->getDataType()) + ", ";
-    result += getTypeStr(src_sym->getPointedType()) + "* %" + src_sym->name;
+    std::string result = "%" + dest_sym->name + " = load " + Data::getTypeStr(dest_sym->getDataType()) + ", ";
+    result += Data::getTypeStr(src_sym->getPointedType()) + "* %" + src_sym->name;
     return result;
 }
 
@@ -91,25 +55,13 @@ dataType StoreLLVM::getDestPointedType(){return this->dest_sym->getPointedType()
 dataType StoreLLVM::getSrcType(){return this->src_sym->getDataType();}
 BasicSymbol* StoreLLVM::getSrcSymbol(){return this->src_sym;}
 PointerSymbol* StoreLLVM::getDestSymbol(){return this->dest_sym;}
-std::string StoreLLVM::getTypeStr(dataType type) const {
-    switch (type) {
-        case dataType::i1: return "i1";
-        case dataType::i8: return "i8";
-        case dataType::i16: return "i16";
-        case dataType::i32: return "i32";
-        case dataType::i64: return "i64";
-        case dataType::f32: return "f32";
-        case dataType::f64: return "f64";
-        default: throw std::invalid_argument("Unknown data type");
-    }
-}
 
 std::string StoreLLVM::out_str() const {
     if (src_sym == nullptr || dest_sym == nullptr) {
         throw std::invalid_argument("; <invalid store instruction>");
     }
-    std::string result = "store " + getTypeStr(src_sym->getDataType()) + " %" + src_sym->name + ", ";
-    result += getTypeStr(dest_sym->getPointedType()) + "* %" + dest_sym->name;
+    std::string result = "store " + Data::getTypeStr(src_sym->getDataType()) + " %" + src_sym->name + ", ";
+    result += Data::getTypeStr(dest_sym->getPointedType()) + "* %" + dest_sym->name;
     return result;
 }
 

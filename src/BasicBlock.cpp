@@ -28,7 +28,7 @@ BasicBlock* BasicBlock::createBasicBlock(LLVM* start,LLVM* end){
         LabelSymbol* labelSymbol=dynamic_cast<LabelSymbol*>(start);
     }
     else{
-        LabelSymbol* labelSymbol=SymbolFactory::createTmpLabelSymbol();
+        LabelSymbol* labelSymbol=SymbolFactory::createTmpLabelSymbolWithScope(1);
         Label* label=LLVMfactory::createLableLLVM(labelSymbol);
         llvmList->InsertBefore(start,label);
         basicBlock->head=label;
@@ -91,20 +91,20 @@ void connectBasicBlocks(const std::vector<BasicBlock*> bbs){
 //只划分了基本块，但是没有得到对应的数据流图
 std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
     int cnt=0;
-    llvmlist->InsertHead(LLVMfactory::createLableLLVM(SymbolFactory::createTmpLabelSymbol()));
+    llvmlist->InsertHead(LLVMfactory::createLableLLVM(SymbolFactory::createTmpLabelSymbolWithScope(1)));
     std::vector<BasicBlock*> basicBlocks;
-    Label* beginLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbol(generate_begin_label()));
+    Label* beginLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbolWithScope(generate_begin_label(),1));
     basicBlocks.push_back(BasicBlock::createBasicBlock(beginLabel,beginLabel)) ;//begin基本块
     basicBlocks[0]->idx=cnt;
     cnt++;
 
-    Label* entryLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbol(generate_entry_label()));
+    Label* entryLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbolWithScope(generate_entry_label(),1));
     llvmlist->InsertHead(entryLabel);
 
     LLVM* start=entryLabel;
     LLVM* llvm=llvmlist->head->next;
     BasicBlock* bb;
-    Label* exitLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbol(generate_exit_label()));
+    Label* exitLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbolWithScope(generate_exit_label(),1));
     llvmlist->InsertTail(exitLabel);
 
     while(llvm!=nullptr){
@@ -120,7 +120,7 @@ std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
             start=llvm;
             }
         else if(needDivide(llvm)&&(llvm->next==nullptr||llvm->next->getLLVMType()!=LLVMtype::label)){
-            llvmlist->InsertAfter(llvm,LLVMfactory::createLableLLVM(SymbolFactory::createTmpLabelSymbol()));
+            llvmlist->InsertAfter(llvm,LLVMfactory::createLableLLVM(SymbolFactory::createTmpLabelSymbolWithScope(1)));
         }
         llvm=llvm->next;
     }

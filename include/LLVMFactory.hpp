@@ -25,7 +25,9 @@ public:
         //std::vector<BasicSymbol*>case_val,std::vector<LabelSymbol*>case_dest);
 
     static PhiLLVM* createPhiLLVM(BasicSymbol* dest_sym,
-        std::vector<BasicSymbol*> src_sym,std::vector<LabelSymbol*>src_label);
+        std::vector<BasicSymbol*>& src_sym,std::vector<LabelSymbol*>&src_label);
+
+    static PhiLLVM* createPhiLLVM(BasicSymbol* dest_sym,std::vector<std::pair<BasicSymbol*,LabelSymbol*>>& val_src);
 
     static Label* createLableLLVM(LabelSymbol* label);
 

@@ -65,12 +65,24 @@ void ArraySymbol::setInitialedData(ArrayInitial* arrayInitial){
 
 void ArraySymbol::setScope(int scope){
     this->scope=scope;
+    if(this->scope==GLOBAL_SCOPE){
+        this->name="@"+this->name;
+    }
+    else{
+        this->name="%"+this->name;
+    }
 }
 
 //LabelSymbol
 symType LabelSymbol::getType(){this->type=symType::sym_label; return this->type;}
 void LabelSymbol::setScope(int scope){
     this->scope=scope;
+    if(this->scope==GLOBAL_SCOPE){
+        this->name="@"+this->name;
+    }
+    else{
+        this->name="%"+this->name;
+    }
 }
 
 //FuncSymbol
@@ -88,6 +100,12 @@ void FuncSymbol::addParam(dataType paramType){
 }
 void FuncSymbol::setScope(int scope){
     this->scope=scope;
+    if(this->scope==GLOBAL_SCOPE){
+        this->name="@"+this->name;
+    }
+    else{
+        this->name="%"+this->name;
+    }
 }
 
 //VarSymbol
@@ -156,5 +174,18 @@ void ConstVarSymbol::setScope(int scope){
     }
     else{
         this->name="%"+this->name;
+    }
+}
+
+std::string getSymOut(BasicSymbol* basicSymbol){
+    switch (basicSymbol->getType())
+    {
+    case symType::constant_var:
+    case symType::variable:
+        return basicSymbol->name;
+    case symType::constant_nonvar:
+        return my_to_string(basicSymbol->data);
+    default:
+        throw std::runtime_error("the type of b is wrong");
     }
 }
