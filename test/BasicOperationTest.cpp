@@ -48,7 +48,7 @@ int main(){
     bs.push_back(a);
     bs.push_back(b);
     bs.push_back(c);
-    BasicSymbol* func_dest=SymbolFactory::createTmpVarSymbolWithScope(dataType::i32,1);
+    BasicSymbol* func_dest=SymbolFactory::createTmpVarSymbolWithScope(dataType::i32,0);
     LLVM* callLLVM=LLVMfactory::createCallLLVM(func_dest,func,bs);
     std::cout<<callLLVM->out_str()<<"\n";
 
@@ -118,9 +118,9 @@ int main(){
 
     //FuncDefination
     std::vector<BasicSymbol*>func_param;
-    func_param.push_back(SymbolFactory::createVarSymbol("func_param1",dataType::i32));
-    func_param.push_back(SymbolFactory::createVarSymbol("func_param2",dataType::f32));
-    func_param.push_back(SymbolFactory::createVarSymbol("func_param3",dataType::i1));
+    func_param.push_back(SymbolFactory::createVarSymbolWithScope("func_param1",dataType::i32,1));
+    func_param.push_back(SymbolFactory::createVarSymbolWithScope("func_param2",dataType::f32,1));
+    func_param.push_back(SymbolFactory::createVarSymbolWithScope("func_param3",dataType::i1,1));
     FuncDefination* funcdefllvm=LLVMfactory::createFuncDefination(func_decl,func_param);
     std::cout<<funcdefllvm->out_str()<<"\n";
 

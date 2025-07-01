@@ -159,8 +159,8 @@ std::string FuncDefination::getParamTypeStr(dataType paramType) const {
         case i16: return "i16";         
         case i32: return "i32";
         case i64: return "i64";
-        case f32: return "f32";
-        case f64: return "f64";
+        case f32: return "float";
+        case f64: return "double";
         default: throw std::invalid_argument("Unknown parameter type");
     }
 }
@@ -183,7 +183,7 @@ std::string FuncDefination::out_str()const{
         res+="}\n";
         return res;
     }
-    
+
     for(LLVM*llvm=this->block->head;llvm!=nullptr;llvm=llvm->next){
         res += llvm->out_str()+ ";\n"; // Assuming params are BasicSymbol with a name
     }
