@@ -45,11 +45,19 @@ ReturnLLVM* LLVMfactory::createReturnLLVM(BasicSymbol* returnValue){
     return switchLLVM;
 }*/
 
-PhiLLVM* LLVMfactory::createPhiLLVM(BasicSymbol* dest_sym,std::vector<BasicSymbol*> src_sym,std::vector<LabelSymbol*>src_label){
+PhiLLVM* LLVMfactory::createPhiLLVM(BasicSymbol* dest_sym,std::vector<BasicSymbol*>& src_sym,std::vector<LabelSymbol*>&src_label){
     PhiLLVM* phiLLVM=new PhiLLVM();
     phiLLVM->llvmType=LLVMtype::phi;
     phiLLVM->dest_sym=dest_sym;
     phiLLVM->addCase(src_sym,src_label);
+    return phiLLVM;
+}
+
+PhiLLVM* LLVMfactory::createPhiLLVM(BasicSymbol* dest_sym,std::vector<std::pair<BasicSymbol*,LabelSymbol*>>& val_src){
+    PhiLLVM* phiLLVM=new PhiLLVM();
+    phiLLVM->llvmType=LLVMtype::phi;
+    phiLLVM->dest_sym=dest_sym;
+    phiLLVM->vals_srcs=val_src;
     return phiLLVM;
 }
 
@@ -117,10 +125,20 @@ StoreLLVM* LLVMfactory::createStoreLLVM(BasicSymbol* src_sym,PointerSymbol* dest
     return storeLLVM;
 }
 
-GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,std::vector<dataType>type,std::vector<BasicSymbol*>idx){
+GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,std::vector<dataType>&type,std::vector<BasicSymbol*>&idx){
     GetElementPtrLLVM* getElementPtrLLVM=new GetElementPtrLLVM();
     getElementPtrLLVM->ptrval=ptrval;
     getElementPtrLLVM->addTyIdx(type,idx);
+    getElementPtrLLVM->llvmType=LLVMtype::getelementptr;
+    getElementPtrLLVM->ptrval=ptrval;
+    getElementPtrLLVM->dest_sym=dest_sym;
+    return getElementPtrLLVM;
+}
+
+GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,std::vector<std::pair<dataType,BasicSymbol*>>&ty_idx){
+    GetElementPtrLLVM* getElementPtrLLVM=new GetElementPtrLLVM();
+    getElementPtrLLVM->ptrval=ptrval;
+    getElementPtrLLVM->ty_idx=ty_idx;
     getElementPtrLLVM->llvmType=LLVMtype::getelementptr;
     getElementPtrLLVM->ptrval=ptrval;
     getElementPtrLLVM->dest_sym=dest_sym;
@@ -141,7 +159,7 @@ GlobalNonArrayVarDefination* LLVMfactory::createGlobalNonArrayVarDefination(Poin
     if(initMode==initializer::undef)
         globalNonArrayVarDefination->dest_sym->pointedData->setIsInitialize(false);
     else if(initMode==initializer::zeroinitializer){
-        globalNonArrayVarDefination->dest_sym->pointedData->setValue(0);
+        //globalNonArrayVarDefination->dest_sym->pointedData->setValue(0);
         globalNonArrayVarDefination->dest_sym->pointedData->setIsInitialize(true);
     }
     return globalNonArrayVarDefination;
@@ -226,14 +244,14 @@ FuncDefination* LLVMfactory::createFuncDefination(FuncSymbol* func,std::vector<d
     return funcDefination;
 }
 
-static GlobalArrayVarDefination* createGlobalArrayVarDefination(ArraySymbol* dest_sym){
+GlobalArrayVarDefination* LLVMfactory::createGlobalArrayVarDefination(ArraySymbol* dest_sym){
     GlobalArrayVarDefination* globalArrayVarDefination=new GlobalArrayVarDefination();
     globalArrayVarDefination->llvmType=LLVMtype::global_array;
     globalArrayVarDefination->dest_sym=dest_sym;
     return globalArrayVarDefination;
 }
 
-static GlobalArrayVarDefination* createGlobalArrayVarDefination(ArraySymbol* dest_sym,initializer initMode){
+GlobalArrayVarDefination* LLVMfactory::createGlobalArrayVarDefination(ArraySymbol* dest_sym,initializer initMode){
     GlobalArrayVarDefination* globalArrayVarDefination=new GlobalArrayVarDefination();
     globalArrayVarDefination->llvmType=LLVMtype::global_array;
     globalArrayVarDefination->dest_sym=dest_sym;
@@ -241,17 +259,23 @@ static GlobalArrayVarDefination* createGlobalArrayVarDefination(ArraySymbol* des
     return globalArrayVarDefination;
 }
 
-static ConstantArrayVarDefination* createConstantArrayVarDefination(ArraySymbol* dest_sym){
+ConstantArrayVarDefination* LLVMfactory::createConstantArrayVarDefination(ArraySymbol* dest_sym){
     ConstantArrayVarDefination* constantArrayVarDefination=new ConstantArrayVarDefination();
     constantArrayVarDefination->llvmType=LLVMtype::global_array;
     constantArrayVarDefination->dest_sym=dest_sym;
     return constantArrayVarDefination;
 }
 
-static ConstantArrayVarDefination* createConstantArrayVarDefination(ArraySymbol* dest_sym,initializer initMode){
+ConstantArrayVarDefination* LLVMfactory::createConstantArrayVarDefination(ArraySymbol* dest_sym,initializer initMode){
     ConstantArrayVarDefination* constantArrayVarDefination=new ConstantArrayVarDefination();
     constantArrayVarDefination->llvmType=LLVMtype::global_array;
     constantArrayVarDefination->dest_sym=dest_sym;
     constantArrayVarDefination->dest_sym->data->setInitMode(initMode);
     return constantArrayVarDefination;
+}
+
+AllocaArrayLLVM* LLVMfactory::createAllocaArrayLLVM(ArraySymbol* sym){
+    AllocaArrayLLVM* allocaArrayLLVM=new AllocaArrayLLVM();
+    allocaArrayLLVM->array=sym;
+    return allocaArrayLLVM;
 }

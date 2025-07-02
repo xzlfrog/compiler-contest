@@ -8,32 +8,20 @@ std::string UnconditionalBranchLLVM::out_str() const {
     if (target == nullptr) {
         throw std::invalid_argument("; <invalid unconditional branch>");
     }
-    return "br label %" + target->name;
+    return "br label " + target->getName();
 } 
 void UnconditionalBranchLLVM::setTarget(LabelSymbol* target){this->target=target;} // Set the target label for the branch
 
 //ReturnLLVM
 BasicSymbol* ReturnLLVM::getReturnValue(){return this->returnValue;}
 dataType ReturnLLVM::getReturnType(){return this->returnValue->getDataType();}
-std::string ReturnLLVM::getTypeStr(dataType type) const {
-    switch (type) {
-        case dataType::i1: return "i1";
-        case dataType::i8: return "i8";
-        case dataType::i16: return "i16";
-        case dataType::i32: return "i32";
-        case dataType::i64: return "i64";
-        case dataType::f32: return "f32";
-        case dataType::f64: return "f64";
-        default: throw std::invalid_argument("Unknown data type");
-    }
-}
 
 std::string ReturnLLVM::out_str() const{
     if (returnValue == nullptr) {
         return "ret void";
-    
-}
-    return "ret " + getTypeStr(returnValue->getDataType()) + " %" + returnValue->name;
+    }
+    std::string return_out=getSymOut(returnValue);
+    return "ret " + Data::getTypeStr(returnValue->getDataType()) + " " + return_out;
 } // Output the LLVM IR string representation
 
 void ReturnLLVM::setReturnValue(BasicSymbol* value){this->returnValue=value;}
@@ -47,8 +35,9 @@ std::string ConditionalBranchLLVM::out_str() const {
     if (condition == nullptr || trueBranch == nullptr || falseBranch == nullptr) {
         throw std::invalid_argument("; <invalid conditional branch>");
     }
+    std::string cond_out=getSymOut(condition);
 
-    return "br i1 %" + condition->name + ", label %" + trueBranch->name + ", label %" + falseBranch->name;
+    return "br i1 " + cond_out + ", label " + trueBranch->getName() + ", label " + falseBranch->getName();
 }// Output the LLVM IR string representation
 
 // Set the condition for the branch
@@ -99,20 +88,8 @@ void SwitchLLVM::setDefaultCase(LabelSymbol* defaultIR){
 
 //PhiLLVM
 BasicSymbol* PhiLLVM::getDestSymbol(){return this->dest_sym;}
-const std::vector<std::pair<BasicSymbol*,LabelSymbol*>>PhiLLVM::getValAndSrc() const{return this->vals_srcs;}
+const std::vector<std::pair<BasicSymbol*,LabelSymbol*>>&PhiLLVM::getValAndSrc() const{return this->vals_srcs;}
 dataType PhiLLVM::getDestType(){return this->dest_sym->getDataType();}
-std::string PhiLLVM::getTypeStr(dataType type) const {
-    switch (type) {
-        case dataType::i1: return "i1";
-        case dataType::i8: return "i8";
-        case dataType::i16: return "i16";
-        case dataType::i32: return "i32";
-        case dataType::i64: return "i64";
-        case dataType::f32: return "f32";
-        case dataType::f64: return "f64";
-        default: throw std::invalid_argument("Unknown data type");
-    }
-}
 
 void PhiLLVM::addCase(BasicSymbol*src_sym,LabelSymbol*src_label){
     this->vals_srcs.push_back({src_sym,src_label});
@@ -130,11 +107,11 @@ std::string PhiLLVM::out_str() const{
         throw std::invalid_argument("; <invalid phi node>");
     }
 
-    std::string result = "%" + dest_sym->name + " = phi " + getTypeStr(dest_sym->getDataType()) + " ";
+    std::string result = dest_sym->getName() + " = phi " + Data::getTypeStr(dest_sym->getDataType()) + " ";
 
     for (size_t i = 0; i < vals_srcs.size(); ++i) {
         if (i > 0) result += ", ";
-        result += "[%" + vals_srcs[i].first->name + ", " + vals_srcs[i].second->name + "]";
+        result += "[" + getSymOut(vals_srcs[i].first) + ", " + vals_srcs[i].second->getName() + "]";
     }
 
     return result;
@@ -146,19 +123,6 @@ FuncSymbol* CallLLVM::getFuncSymbol(){return this->function;}
 const std::vector<BasicSymbol*>& CallLLVM::getArguments() const{return this->arguments;}
 const std::vector<dataType>& CallLLVM::getArgumentsType() const{return this->function->getParamTypes();}
 dataType CallLLVM::getReturnType() {return this->function->getReturnType();}
-std::string CallLLVM::getTypeStr(dataType type) const {
-    switch (type) {
-        case dataType::i1: return "i1";
-        case dataType::i8: return "i8";
-        case dataType::i16: return "i16";
-        case dataType::i32: return "i32";
-        case dataType::i64: return "i64";
-        case dataType::f32: return "float";
-        case dataType::f64: return "double";
-        case dataType::void_: return "void";
-        default: return "<unknown type>";
-    }
-} // Get the string representation of the data type
 
 std::string CallLLVM::out_str() const {
     if (!function) {
@@ -168,16 +132,16 @@ std::string CallLLVM::out_str() const {
     std::string result;
     dataType hasReturn = function->getReturnType();
     if ( hasReturn != dataType::void_) {
-        result += "%" + dest_sym->name + " = ";
+        result += dest_sym->getName() + " = ";
     }
-    std::string funcType = this->getTypeStr(hasReturn);
-    result += "call " + funcType + " @" + function->name + "(";
+    std::string funcType = Data::getTypeStr(hasReturn);
+    result += "call " + funcType + " " + function->getName() + "(";
 
     for (size_t i = 0; i < arguments.size(); ++i) {
         if (i > 0) result += ", ";
-        std::string argType = getTypeStr(arguments[i]->getDataType());
+        std::string argType = Data::getTypeStr(arguments[i]->getDataType());
         if (arguments[i]) {
-            result += argType + " %" + arguments[i]->name;
+            result += argType + " " + getSymOut(arguments[i]);
         }
     }
 
@@ -215,5 +179,5 @@ LabelSymbol* Label::getLabel(){return this->label;}
         if (label == nullptr) {
             throw std::invalid_argument(" <invalid label>");
         }
-        return label->name + ":";
+        return label->getName() + ":";
 }

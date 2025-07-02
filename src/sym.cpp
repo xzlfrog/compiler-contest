@@ -1,12 +1,13 @@
 #include"../include/sym.hpp"
+#include<iostream>
 
 //PointerSymbol
 symType PointerSymbol::getType() {this->type=symType::pointer;return this->type;}
 dataType PointerSymbol::getPointedType() const {return this->PointedType;}
-void PointerSymbol::allocateMemory(dataType elementType,ValueVariant value){
+void PointerSymbol::allocateMemory(dataType elementType){
     this->PointedType = elementType;
     Data_pointer* data_pointer = new Data_pointer();
-    Data* data=createData(elementType,value);
+    Data* data=createNonInitialedData(elementType);
     this->data=new Data_pointer();
     this->data->setValue(data);
     this->pointedData=std::get<Data*>(this->data->getValue());
@@ -34,6 +35,7 @@ void BasicSymbol::setScope(int scope){
     else{
         this->name="%"+this->name;
     }
+    this->ssa_name=name;
 }
 
 //ArraySymbol
@@ -48,7 +50,8 @@ dataType ArraySymbol::getArrayType()const{return this->arrayType;}
 
 const std::vector<std::pair<std::vector<int>,Data*>>& ArraySymbol::getInitializedData(){
     if(this->isInitialed==false){
-        return std::vector<std::pair<std::vector<int>,Data*>>(0);
+        std::vector<std::pair<std::vector<int>,Data*>>ret;
+        return ret;
     }
     return this->initialedData->getInitializedData();
 }
@@ -63,10 +66,26 @@ void ArraySymbol::setInitialedData(ArrayInitial* arrayInitial){
     }
 }
 
+void ArraySymbol::setScope(int scope){
+    this->scope=scope;
+    if(this->scope==GLOBAL_SCOPE){
+        this->name="@"+this->name;
+    }
+    else{
+        this->name="%"+this->name;
+    }
+}
+
 //LabelSymbol
 symType LabelSymbol::getType(){this->type=symType::sym_label; return this->type;}
 void LabelSymbol::setScope(int scope){
     this->scope=scope;
+    if(this->scope==GLOBAL_SCOPE){
+        this->name="@"+this->name;
+    }
+    else{
+        this->name="%"+this->name;
+    }
 }
 
 //FuncSymbol
@@ -84,6 +103,12 @@ void FuncSymbol::addParam(dataType paramType){
 }
 void FuncSymbol::setScope(int scope){
     this->scope=scope;
+    if(this->scope==GLOBAL_SCOPE){
+        this->name="@"+this->name;
+    }
+    else{
+        this->name="%"+this->name;
+    }
 }
 
 //VarSymbol
@@ -107,6 +132,7 @@ void VarSymbol::setScope(int scope){
     else{
         this->name="%"+this->name;
     }
+    this->ssa_name=name;
 }
 
 //ConstSymbol
@@ -130,10 +156,11 @@ void ConstSymbol::setScope(int scope){
     else{
         this->name="%"+this->name;
     }
+    this->ssa_name=name;
 }
 
 //ConstVarSymbol
-symType ConstVarSymbol::getType() {this->type=symType::constant_nonvar; return this->type;}
+symType ConstVarSymbol::getType() {this->type=symType::constant_var; return this->type;}
 dataType ConstVarSymbol::getDataType()const{return this->data->getType();}
 void ConstVarSymbol::setData(dataType dtype,ValueVariant v){
     if(dtype==dataType::data_undefined){
@@ -152,5 +179,19 @@ void ConstVarSymbol::setScope(int scope){
     }
     else{
         this->name="%"+this->name;
+    }
+    this->ssa_name=name;
+}
+
+std::string getSymOut(BasicSymbol* basicSymbol){
+    switch (basicSymbol->getType())
+    {
+    case symType::constant_var:
+    case symType::variable:
+        return basicSymbol->getName();
+    case symType::constant_nonvar:
+        return my_to_string(basicSymbol->data);
+    default:
+        throw std::runtime_error("the type of b is wrong");
     }
 }
