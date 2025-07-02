@@ -304,7 +304,6 @@ void array_def_recursion(std::vector<int>&dim,int i,dataType& type,std::string& 
         int flag=-1;
         for(int j=0;j<dim[i];j++){
             for(k=0;k<init_pos.size();k++){
-                std::cout<<"k= "<<k<<"\n";
                 pos.push_back(j);
                 flag=vector_int_cmp(init_pos[k].first,pos);
                 pos.pop_back();

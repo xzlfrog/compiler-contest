@@ -35,6 +35,7 @@ void BasicSymbol::setScope(int scope){
     else{
         this->name="%"+this->name;
     }
+    this->ssa_name=name;
 }
 
 //ArraySymbol
@@ -131,6 +132,7 @@ void VarSymbol::setScope(int scope){
     else{
         this->name="%"+this->name;
     }
+    this->ssa_name=name;
 }
 
 //ConstSymbol
@@ -154,6 +156,7 @@ void ConstSymbol::setScope(int scope){
     else{
         this->name="%"+this->name;
     }
+    this->ssa_name=name;
 }
 
 //ConstVarSymbol
@@ -177,6 +180,7 @@ void ConstVarSymbol::setScope(int scope){
     else{
         this->name="%"+this->name;
     }
+    this->ssa_name=name;
 }
 
 std::string getSymOut(BasicSymbol* basicSymbol){

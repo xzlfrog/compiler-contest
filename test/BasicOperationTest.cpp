@@ -5,8 +5,7 @@
 
 int main(){
     //算术指令/逻辑运算指令/比较运算指令测试
-    BasicSymbol* a=SymbolFactory::createVarSymbol("a",dataType::f32);
-    a->setScope(1);
+    BasicSymbol* a=SymbolFactory::createVarSymbolWithScope("a",dataType::f32,1);
     BasicSymbol* b=SymbolFactory::createConstVarSymbolWithScope("b",1,createData(dataType::f32,3.0f));
     BasicSymbol* c=SymbolFactory::createConstSymbol(createData(dataType::f32,1.0f));
 
@@ -43,12 +42,12 @@ int main(){
     std::cout<<phiLLVM->out_str()<<"\n";
 
     //call语句测试
-    FuncSymbol* func=SymbolFactory::createFuncSymbolWithScope("myfunction",1,dataType::i32);
+    FuncSymbol* func=SymbolFactory::createFuncSymbolWithScope("myfunction",0,dataType::i32);
     std::vector<BasicSymbol*>bs;
     bs.push_back(a);
     bs.push_back(b);
     bs.push_back(c);
-    BasicSymbol* func_dest=SymbolFactory::createTmpVarSymbolWithScope(dataType::i32,0);
+    BasicSymbol* func_dest=SymbolFactory::createTmpVarSymbolWithScope(dataType::i32,1);
     LLVM* callLLVM=LLVMfactory::createCallLLVM(func_dest,func,bs);
     std::cout<<callLLVM->out_str()<<"\n";
 
@@ -92,7 +91,7 @@ int main(){
     LLVM* getelementptr=LLVMfactory::createGetElementPtrLLVM(getelementptr_dest,local_array,ty_idx);
     std::cout<<getelementptr->out_str()<<"\n";
 
-    //GlobalNonArrayVarDefination
+    //GlobalNonArrayVarDefination语句测试
     PointerSymbol* global_dest_nonarray=SymbolFactory::createPointerSymbolWithScope("global_dest_nonarray",0,dataType::f32);
     BasicSymbol * global_src_nonarray=SymbolFactory::createConstSymbol(createData(dataType::f32,3.0f));
     LLVM* globalnonarraydef=LLVMfactory::createGlobalNonArrayVarDefination(global_dest_nonarray,global_src_nonarray);
@@ -101,13 +100,13 @@ int main(){
     std::cout<<globalnonarraydef->out_str()<<"\n";
 
 
-    //ConstantNonArrayVarDefination
+    //ConstantNonArrayVarDefination语句测试
     ConstVarSymbol* const_dest_nonarray=SymbolFactory::createConstVarSymbolWithScope("const_dest_nonarray",0,createNonInitialedData(dataType::f32));
     BasicSymbol * const_src_nonarray=SymbolFactory::createConstSymbol(createData(dataType::f32,2.0f));
     LLVM* constnonarraydef=LLVMfactory::createConstantNonArrayVarDefination(const_dest_nonarray,const_src_nonarray);
     std::cout<<constnonarraydef->out_str()<<"\n";
 
-    //FuncDeclaration
+    //FuncDeclaration语句测试
     std::vector<dataType> param;
     param.push_back(dataType::i32);
     param.push_back(dataType::f32);
@@ -116,7 +115,7 @@ int main(){
     FuncDeclaration* funcdeclllvm=LLVMfactory::createFuncDeclaration(func_decl);
     std::cout<<funcdeclllvm->out_str()<<"\n";
 
-    //FuncDefination
+    //FuncDefination语句测试
     std::vector<BasicSymbol*>func_param;
     func_param.push_back(SymbolFactory::createVarSymbolWithScope("func_param1",dataType::i32,1));
     func_param.push_back(SymbolFactory::createVarSymbolWithScope("func_param2",dataType::f32,1));
@@ -124,7 +123,7 @@ int main(){
     FuncDefination* funcdefllvm=LLVMfactory::createFuncDefination(func_decl,func_param);
     std::cout<<funcdefllvm->out_str()<<"\n";
 
-    //GlobalArrayVarDefination
+    //GlobalArrayVarDefination语句测试
     ArraySymbol* global_array=SymbolFactory::createArraySymbolWithScope("global_array",dim,0,dataType::f32);
     ArrayInitial* arrayInitial=new ArrayInitial();
     std::vector<int>pos1={1,2,1};
@@ -137,8 +136,8 @@ int main(){
     GlobalArrayVarDefination* globalArray=LLVMfactory::createGlobalArrayVarDefination(global_array);
     std::cout<<globalArray->out_str()<<"\n";
 
-    //ConstantArrayVarDefination
-    ArraySymbol* constant_array=SymbolFactory::createArraySymbolWithScope("global_array",dim,0,dataType::i32);
+    //ConstantArrayVarDefination语句测试
+    ArraySymbol* constant_array=SymbolFactory::createArraySymbolWithScope("constant_array",dim,0,dataType::i32);
     ArrayInitial* arrayInitial2=new ArrayInitial();
     std::vector<int>pos4={0,0,1};
     arrayInitial2->initialize(pos4,createData(dataType::i32,1));
@@ -150,5 +149,9 @@ int main(){
     ConstantArrayVarDefination* constArray=LLVMfactory::createConstantArrayVarDefination(constant_array);
     std::cout<<constArray->out_str()<<"\n";
 
-    //
+    //TypeConversionOperation语句测试
+    BasicSymbol* dest_typeConversion=SymbolFactory::createVarSymbolWithScope("dest_typeConversion",dataType::i64,1);
+    BasicSymbol* src_typeConversion=SymbolFactory::createVarSymbolWithScope("src_typeConversion",dataType::i32,1);
+    TypeConversionOperation* typeConversionOperation=LLVMfactory::createTypeConversionOperation(LLVMtype::sext,src_typeConversion,dest_typeConversion);
+    std::cout<<typeConversionOperation->out_str()<<"\n";
 }
