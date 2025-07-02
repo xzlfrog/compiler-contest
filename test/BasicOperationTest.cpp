@@ -127,10 +127,28 @@ int main(){
     //GlobalArrayVarDefination
     ArraySymbol* global_array=SymbolFactory::createArraySymbolWithScope("global_array",dim,0,dataType::f32);
     ArrayInitial* arrayInitial=new ArrayInitial();
-    std::vector<int>pos={0,0,1};
-    arrayInitial->initialize(pos,createData(dataType::f32,2.0f));
+    std::vector<int>pos1={1,2,1};
+    arrayInitial->initialize(pos1,createData(dataType::f32,2.0f));
+    std::vector<int>pos2={2,2,1};
+    arrayInitial->initialize(pos2,createData(dataType::f32,3.0f));
+    std::vector<int>pos3={2,2,2};
+    arrayInitial->initialize(pos3,createData(dataType::f32,5.0f));
     global_array->setInitialedData(arrayInitial);
     GlobalArrayVarDefination* globalArray=LLVMfactory::createGlobalArrayVarDefination(global_array);
     std::cout<<globalArray->out_str()<<"\n";
+
     //ConstantArrayVarDefination
+    ArraySymbol* constant_array=SymbolFactory::createArraySymbolWithScope("global_array",dim,0,dataType::i32);
+    ArrayInitial* arrayInitial2=new ArrayInitial();
+    std::vector<int>pos4={0,0,1};
+    arrayInitial2->initialize(pos4,createData(dataType::i32,1));
+    std::vector<int>pos5={0,0,0};
+    arrayInitial2->initialize(pos5,createData(dataType::i32,2));
+    std::vector<int>pos6={1,1,2};
+    arrayInitial2->initialize(pos6,createData(dataType::i32,3));
+    constant_array->setInitialedData(arrayInitial2);
+    ConstantArrayVarDefination* constArray=LLVMfactory::createConstantArrayVarDefination(constant_array);
+    std::cout<<constArray->out_str()<<"\n";
+
+    //
 }

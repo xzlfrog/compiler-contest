@@ -259,14 +259,14 @@ GlobalArrayVarDefination* LLVMfactory::createGlobalArrayVarDefination(ArraySymbo
     return globalArrayVarDefination;
 }
 
-static ConstantArrayVarDefination* createConstantArrayVarDefination(ArraySymbol* dest_sym){
+ConstantArrayVarDefination* LLVMfactory::createConstantArrayVarDefination(ArraySymbol* dest_sym){
     ConstantArrayVarDefination* constantArrayVarDefination=new ConstantArrayVarDefination();
     constantArrayVarDefination->llvmType=LLVMtype::global_array;
     constantArrayVarDefination->dest_sym=dest_sym;
     return constantArrayVarDefination;
 }
 
-static ConstantArrayVarDefination* createConstantArrayVarDefination(ArraySymbol* dest_sym,initializer initMode){
+ConstantArrayVarDefination* LLVMfactory::createConstantArrayVarDefination(ArraySymbol* dest_sym,initializer initMode){
     ConstantArrayVarDefination* constantArrayVarDefination=new ConstantArrayVarDefination();
     constantArrayVarDefination->llvmType=LLVMtype::global_array;
     constantArrayVarDefination->dest_sym=dest_sym;

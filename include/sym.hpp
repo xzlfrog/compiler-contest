@@ -61,7 +61,7 @@ public:
     ~BasicSymbol()=default;
     virtual void setScope(int scope);
     virtual std::string getName(){
-        if(this->ssa_name.compare(" "))
+        if(this->ssa_name==" ")
             return this->name;
         return this->ssa_name;
     }
@@ -77,7 +77,7 @@ public:
     ~VarSymbol()=default;
     void setScope(int scope) override;
     std::string getName(){
-        if(this->ssa_name=="")
+        if(this->ssa_name==" ")
             return this->name;
         return this->ssa_name;
     }
@@ -93,7 +93,7 @@ public:
     ~ConstVarSymbol()=default;
     void setScope(int scope) override;
     std::string getName(){
-        if(this->ssa_name.compare(""))
+        if(this->ssa_name==" ")
             return this->name;
         return this->ssa_name;
     }
@@ -110,7 +110,7 @@ public:
     ~ConstSymbol()=default;
     void setScope(int scope) override;
     std::string getName(){
-        if(this->ssa_name.compare(""))
+        if(this->ssa_name==" ")
             return this->name;
         return this->ssa_name;
     }

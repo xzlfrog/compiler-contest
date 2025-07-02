@@ -181,12 +181,12 @@ std::string FuncDefination::out_str()const{
     }
     
     res += ") {\n";
-    if(this->block==nullptr){
+    if(this->block_tail==nullptr){
         res+="}\n";
         return res;
     }
 
-    for(LLVM*llvm=this->block->head;llvm!=nullptr;llvm=llvm->next){
+    for(LLVM*llvm=this->next;llvm!=this->block_tail&&llvm!=nullptr;llvm=llvm->next){
         res += llvm->out_str()+ ";\n"; // Assuming params are BasicSymbol with a name
     }
     
@@ -208,7 +208,6 @@ const std::vector<std::pair<std::vector<int>,Data*>>& GlobalArrayVarDefination::
 }
 
 std::string GlobalArrayVarDefination::out_str()const{
-    //todo
     std::string res;
     res=res+this->dest_sym->getName()+" = global ";
     std::vector<int>dim=this->dest_sym->getDimensions();
@@ -233,8 +232,44 @@ const std::vector<std::pair<std::vector<int>,Data*>>& ConstantArrayVarDefination
 }
 
 std::string ConstantArrayVarDefination::out_str()const{
-    //todo
-    return "";   
+    std::string res;
+    res=res+this->dest_sym->getName()+" = constant ";
+    std::vector<int>dim=this->dest_sym->getDimensions();
+    dataType type=this->dest_sym->getArrayType();
+    ArrayInitial* arrayInit=this->dest_sym->initialedData;
+    std::vector<int>pos;
+    array_def_recursion(dim,0,type,res,false,arrayInit,pos);
+    return res;
+}
+
+int vector_int_cmp(std::vector<int>& a,std::vector<int>& b){
+    if(a.size()!=b.size()){
+        return -1;
+    }
+    for(int i=0;i<a.size();i++){
+        if(a[i]>b[i])
+            return 1;
+        else if(a[i]<b[i])
+            return 2;
+    }
+    return 0;
+}
+
+std::string getZero(dataType type){
+    switch (type)
+    {
+    case dataType::i1:
+    case dataType::i8:
+    case dataType::i16:
+    case dataType::i32:
+    case dataType::i64:
+        return "0";
+    case dataType::f32:
+    case dataType::f64:
+        return "0.000000";
+    default:
+        throw std::runtime_error("the type is wrong");
+    }
 }
 
 void array_def_recursion(std::vector<int>&dim,int i,dataType& type,std::string& s,bool flag,ArrayInitial* arrayInit,std::vector<int>&pos){
@@ -264,33 +299,25 @@ void array_def_recursion(std::vector<int>&dim,int i,dataType& type,std::string& 
         pos.pop_back();
     }
     else{
-        //默认初始化在前端是有序的？
-        std::cout<<"111"<<"\n";
         std::vector<std::pair<std::vector<int>,Data*>> init_pos=arrayInit->getInitializedData();
-        bool flag=true;
-        int k;
-        for(k=0;k<init_pos.size();k++){
-            auto & a=init_pos[k];
-            for(int j=0;j<a.first.size()-1;j++){
-                if(a.first[j]!=pos[j]){
-                    flag=false;
+        int k=0;
+        int flag=-1;
+        for(int j=0;j<dim[i];j++){
+            for(k=0;k<init_pos.size();k++){
+                std::cout<<"k= "<<k<<"\n";
+                pos.push_back(j);
+                flag=vector_int_cmp(init_pos[k].first,pos);
+                pos.pop_back();
+                if(flag==0){
+                    s+=Data::getTypeStr(init_pos[k].second->getType())+" "+getSymOut(SymbolFactory::createConstSymbol(init_pos[k].second));
                     break;
-                } 
-            }
-            if(flag)
-                break;
-        }
-        for(int j=0;j<dim[i]-1;j++){
-            if(!flag)
-                break;
-            for(;k<init_pos.size()&&init_pos[k].first[dim[i]-1]<=j;k++){
-                if(init_pos[k].first[dim[i]-1]==j){
-                    //std::cout<<"111"<<"\n";
-                    s+=Data::getTypeStr(init_pos[k].second->getType())+" "+getSymOut(SymbolFactory::createConstSymbol(init_pos[k].second))+", ";
                 }
             }
-            if(init_pos[k].first[dim[i]-1]>j)
-                s+=Data::getTypeStr(dataType::i32)+" "+getSymOut(SymbolFactory::createConstSymbol(createData(dataType::i32,0)))+", ";
+            if(k>=init_pos.size()||flag==1){
+                s+=Data::getTypeStr(type)+" "+getZero(type);
+            }
+            if(j!=dim[i-1])
+                s+=", ";
         }
     }
 

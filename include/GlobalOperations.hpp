@@ -86,7 +86,7 @@ class FuncDefination:public LLVM{
 public:
     FuncSymbol* func;
     std::vector<BasicSymbol*> params;
-    LLVMList* block=nullptr;
+    LLVM* block_tail=nullptr;
 
 
     void addArguments(dataType ty,BasicSymbol* sym);

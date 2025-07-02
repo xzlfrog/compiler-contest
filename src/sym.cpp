@@ -1,4 +1,5 @@
 #include"../include/sym.hpp"
+#include<iostream>
 
 //PointerSymbol
 symType PointerSymbol::getType() {this->type=symType::pointer;return this->type;}
@@ -48,7 +49,8 @@ dataType ArraySymbol::getArrayType()const{return this->arrayType;}
 
 const std::vector<std::pair<std::vector<int>,Data*>>& ArraySymbol::getInitializedData(){
     if(this->isInitialed==false){
-        return std::vector<std::pair<std::vector<int>,Data*>>(0);
+        std::vector<std::pair<std::vector<int>,Data*>>ret;
+        return ret;
     }
     return this->initialedData->getInitializedData();
 }
