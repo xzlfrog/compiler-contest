@@ -31,6 +31,7 @@ public:
     virtual symType getType(){return this->type;}//返回type成员变量
     virtual ~Symbol() =default;
     virtual void setScope(int scope){this->scope=scope;}
+    virtual std::string getName(){return this->name;}
 };
 
 //只考虑了指针的情况，未考虑指针的指针的情况，如需使用需后续补充
@@ -43,19 +44,27 @@ public:
 
     symType getType() override;
     dataType getPointedType() const;//获得指针指向的元素的数据类型，比如源程序中是int类型，此处就是i32
-    void allocateMemory(dataType elementType,ValueVariant value);
+    void allocateMemory(dataType elementType);
     ~PointerSymbol()=default;
     void setScope(int scope) override;
+    std::string getName(){return this->name;}
 };
 
 //包含常数和变量和常量变量
 class BasicSymbol: public Symbol{
 public:
+    std::string ssa_name;
+    
     virtual symType getType() override;//返回type成员变量
     virtual dataType getDataType()const;//返回这个符号存的数据的类型，比如i32,i1,f32等等
     virtual void setData(dataType dtype,ValueVariant v);//修改符号存的数据
     ~BasicSymbol()=default;
     virtual void setScope(int scope);
+    virtual std::string getName(){
+        if(this->ssa_name==" ")
+            return this->name;
+        return this->ssa_name;
+    }
 };
 
 //变量
@@ -67,6 +76,11 @@ public:
     void setData(dataType dtype,ValueVariant v) override;//修改符号存的数据
     ~VarSymbol()=default;
     void setScope(int scope) override;
+    std::string getName(){
+        if(this->ssa_name==" ")
+            return this->name;
+        return this->ssa_name;
+    }
 };
 
 //常量
@@ -78,6 +92,11 @@ public:
     void setData(dataType dtype,ValueVariant v)override;//修改符号存的数据
     ~ConstVarSymbol()=default;
     void setScope(int scope) override;
+    std::string getName(){
+        if(this->ssa_name==" ")
+            return this->name;
+        return this->ssa_name;
+    }
 };
 
 
@@ -90,6 +109,11 @@ public:
     void setData(dataType dtype,ValueVariant v)override;//修改符号存的数据
     ~ConstSymbol()=default;
     void setScope(int scope) override;
+    std::string getName(){
+        if(this->ssa_name==" ")
+            return this->name;
+        return this->ssa_name;
+    }
 };
 
 //这里只存了初始化的元素，对于作为全局变量定义的数组，都有初始值，这里可以通过scope来判断
@@ -97,10 +121,11 @@ class ArraySymbol: public Symbol{
 private:
     std::vector<int> dimensions; //数组的维度信息 
     dataType arrayType;//比如int a[2][3]，类型就是int，或者用llvm ir中的数据类型 i32
-    ArrayInitial* initialedData;//在数组的初始化阶段需要使用，对于初始化，不考虑在初始化之后再对数组元素修改的情况，只解决了数组初始化的问题
     bool isInitialed=false;//是否被初始化
 
 public:
+    ArrayInitial* initialedData;//在数组的初始化阶段需要使用，对于初始化，不考虑在初始化之后再对数组元素修改的情况，只解决了数组初始化的问题
+    
     ~ArraySymbol()=default;
     symType getType() override;
     void allocateMemory(dataType type,std::vector<int>&dims);
@@ -112,6 +137,7 @@ public:
     //初始化的部分已经先被规约完成了，所以直接设置数组中的已经被初始化的元素(数组越界在这个方法中检查)
     const std::vector<std::pair<std::vector<int>,Data*>>& getInitializedData();//得到初始化的数据的位置和值，与上一个函数的参数的形式差不多
     void setScope(int scope) override;
+    std::string getName(){return this->name;}
 };
 
 
@@ -121,6 +147,7 @@ public:
     symType getType() override;
     ~LabelSymbol()=default;
     void setScope(int scope) override;
+    std::string getName(){return this->name;}
 };
 
 //函数对应的符号
@@ -138,4 +165,7 @@ public:
     dataType getReturnType()const;//返回函数返回值类型
     bool getIsDef();
     void setScope(int scope) override;
+    std::string getName(){return this->name;}
 };
+
+std::string getSymOut(BasicSymbol* basicSymbol);

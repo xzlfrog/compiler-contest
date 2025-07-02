@@ -62,7 +62,7 @@ using ValueVariant = std::variant<bool,char,short,int,long long,float,double,Dat
 class Data {
 private:
     dataType type;//数据类型
-    bool isInitialized;//是否被初始化
+    bool isInitialized=false;//是否被初始化
     initializer initMode;//初始化方式
     
 public:
@@ -220,3 +220,4 @@ Data* constExp_fcmp_ole(Data* data1,Data* data2);//float less than or equal
 Data* constExp_fcmp_one(Data* data1,Data* data2);//float not equal
 Data* constExp_sitofp(Data* data1);//有符号整数转浮点
 
+std::string my_to_string(Data* data);

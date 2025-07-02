@@ -40,7 +40,6 @@ public:
     void setReturnValue(BasicSymbol* value); // Set the return value
     BasicSymbol* getReturnValue();//未检查return的类型是否和函数的返回值类型相匹配
     dataType getReturnType();
-    std::string getTypeStr(dataType type) const;
     ~ReturnLLVM()=default;
 };
 
@@ -52,7 +51,6 @@ public:
     std::vector<BasicSymbol*> arguments; // The arguments to pass to the function
 
     std::string out_str() const override; // Output the LLVM IR string representation
-    std::string getTypeStr(dataType type) const; // Get the string representation of the data type
     void setFunction(FuncSymbol* func); // Set the function to call
     void addArgument(BasicSymbol* arg); // Add an argument to the function call
     void addArguments(std::vector<BasicSymbol*> args);
@@ -92,9 +90,8 @@ public:
     void addCase(std::vector<BasicSymbol*> src_sym,std::vector<LabelSymbol*>src_label);
     std::string out_str() const override;
     BasicSymbol* getDestSymbol();
-    const std::vector<std::pair<BasicSymbol*,LabelSymbol*>>getValAndSrc() const;
+    const std::vector<std::pair<BasicSymbol*,LabelSymbol*>>&getValAndSrc() const;
     dataType getDestType();
-    std::string getTypeStr(dataType type) const;
 
     ~PhiLLVM()=default;
 };

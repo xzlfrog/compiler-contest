@@ -21,12 +21,12 @@ public:
 
 class ArrayInitial{
 private:
-    std::unordered_map<std::vector<int>,Data*,VectorIntHash> initializedData;
+    std::vector<std::pair<std::vector<int>,Data*>> initializedData;
 
 public:
     void initialize(std::vector<int>position,Data* data);//将某一个初始化为非0的值的位置和值
     //传入该函数
-    std::vector<std::pair<std::vector<int>,Data*>> getInitializedData();//得到被初始化的
+    const std::vector<std::pair<std::vector<int>,Data*>>& getInitializedData();//得到被初始化的
     //那些值
 };
 
