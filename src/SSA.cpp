@@ -161,7 +161,7 @@ BasicSymbol* getDestSym(LLVM* llvm){
         case LLVMtype::sitofp:
         case LLVMtype::ptrtoint:
         case LLVMtype::inttoptr:
-        case LLVMtype::addrspacecast:
+        //case LLVMtype::addrspacecast:
         {
             TypeConversionOperation* ir=dynamic_cast<TypeConversionOperation*>(llvm);
             return ir->dest_sym;
@@ -238,7 +238,7 @@ std::vector<BasicSymbol*> getSrcSym(LLVM* llvm){
         case LLVMtype::sitofp:
         case LLVMtype::ptrtoint:
         case LLVMtype::inttoptr:
-        case LLVMtype::addrspacecast:
+       // case LLVMtype::addrspacecast:
         {
             TypeConversionOperation* ir=dynamic_cast<TypeConversionOperation*>(llvm);
             ret.push_back(ir->getSrcSymbol());
