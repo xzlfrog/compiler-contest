@@ -238,7 +238,7 @@ std::vector<BasicSymbol*> getSrcSym(LLVM* llvm){
         case LLVMtype::sitofp:
         case LLVMtype::ptrtoint:
         case LLVMtype::inttoptr:
-       // case LLVMtype::addrspacecast:
+        //case LLVMtype::addrspacecast:
         {
             TypeConversionOperation* ir=dynamic_cast<TypeConversionOperation*>(llvm);
             ret.push_back(ir->getSrcSymbol());
@@ -400,7 +400,9 @@ void rename(std::vector<BasicBlock*>&bbs,int idx){
 }
 
 
-void SSA(std::vector<BasicBlock*>&bbs){
+void SSA(LLVMList* llvmlist){
+    std::vector<BasicBlock*>bbs=divideBasicBlock(llvmlist);
+    connectBasicBlocks(bbs);
     initial_ssa(bbs);
     getDom(bbs);
     std::vector<int>idom=getIdom(bbs);

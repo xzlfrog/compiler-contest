@@ -1,7 +1,6 @@
 #include"../include/BasicBlock.hpp"
 
 
-LLVMList* llvmList;
 std::unordered_map<std::string,BasicBlock*> label_to_basicBlock;
 int function_num;
 
@@ -18,7 +17,7 @@ std::string generate_exit_label(){
     return "exit.label."+std::to_string(function_num);
 }
 
-BasicBlock* BasicBlock::createBasicBlock(LLVM* start,LLVM* end){
+BasicBlock* BasicBlock::createBasicBlock(LLVM* start,LLVM* end, LLVMList* llvmlist){
     BasicBlock* basicBlock=new BasicBlock();
     if(start==nullptr&&end==nullptr){
         return basicBlock;
@@ -30,7 +29,7 @@ BasicBlock* BasicBlock::createBasicBlock(LLVM* start,LLVM* end){
     else{
         LabelSymbol* labelSymbol=SymbolFactory::createTmpLabelSymbolWithScope(1);
         Label* label=LLVMfactory::createLableLLVM(labelSymbol);
-        llvmList->InsertBefore(start,label);
+        llvmlist->InsertBefore(start,label);
         basicBlock->head=label;
     }
     basicBlock->tail=end;
@@ -94,7 +93,7 @@ std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
     llvmlist->InsertHead(LLVMfactory::createLableLLVM(SymbolFactory::createTmpLabelSymbolWithScope(1)));
     std::vector<BasicBlock*> basicBlocks;
     Label* beginLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbolWithScope(generate_begin_label(),1));
-    basicBlocks.push_back(BasicBlock::createBasicBlock(beginLabel,beginLabel)) ;//begin基本块
+    basicBlocks.push_back(BasicBlock::createBasicBlock(beginLabel,beginLabel,llvmlist)) ;//begin基本块
     basicBlocks[0]->idx=cnt;
     cnt++;
 
@@ -111,9 +110,9 @@ std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
         if(llvm->getLLVMType()==LLVMtype::label){
             BasicBlock* bb;
             if(llvm->prev)
-                bb=BasicBlock::createBasicBlock(start,llvm->prev);
+                bb=BasicBlock::createBasicBlock(start,llvm->prev,llvmlist);
             else
-                bb=BasicBlock::createBasicBlock(start,start);
+                bb=BasicBlock::createBasicBlock(start,start,llvmlist);
             bb->idx=cnt;
             cnt++;
             basicBlocks.push_back(bb);
@@ -127,7 +126,7 @@ std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
 
     llvmlist->Remove(exitLabel);
     exitLabel->prev=llvmlist->tail;
-    bb=BasicBlock::createBasicBlock(exitLabel,exitLabel);
+    bb=BasicBlock::createBasicBlock(exitLabel,exitLabel,llvmlist);
     bb->idx=cnt;
     cnt++;
     basicBlocks.push_back(bb);//exit基本块
