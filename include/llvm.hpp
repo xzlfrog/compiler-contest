@@ -84,12 +84,28 @@ class LLVM {
 
 class LLVMList{
 public:
-    LLVM* head;
-    LLVM* tail;
+    LLVM* head=nullptr;
+    LLVM* tail=nullptr;
+    LLVMList* next=nullptr;
+    LLVMList* prev=nullptr;
     
-    void InsertTail(LLVM* llvm);//在头节点插入
-    void InsertHead(LLVM* llvm);//在尾节点插入
+    void InsertTail(LLVM* llvm);//在尾节点插入
+    void InsertHead(LLVM* llvm);//在头节点插入
     void InsertAfter(LLVM* pos,LLVM* llvm);//insert after a specific position
     void InsertBefore(LLVM* pos,LLVM* llvm);//insert before a specific position
     void Remove(LLVM* llvm); //remove a specific LLVM node
+};
+
+typedef LLVMList Module;
+
+class ModuleList{
+public:
+    Module* head=nullptr;
+    Module* tail=nullptr;
+    
+    void InsertTail(Module* module);//在尾节点插入
+    void InsertHead(Module* module);//在头节点插入
+    void InsertAfter(Module* pos,Module* module);//insert after a specific position
+    void InsertBefore(Module* pos,Module* module);//insert before a specific position
+    void Remove(Module* module); //remove a specific LLVM node
 };

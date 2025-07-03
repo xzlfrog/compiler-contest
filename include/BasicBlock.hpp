@@ -28,12 +28,12 @@ public:
     //BasicBlock* next;
     //BasicBlock* prev;
 
-    static BasicBlock* createBasicBlock(LLVM* start,LLVM* end);
+    static BasicBlock* createBasicBlock(LLVM* start,LLVM* end, LLVMList* llvmlist);
     void setGen(basicBlockGen func,std::vector<BasicBlock*> head);
     void setKill(basicBlockKill func,std::vector<BasicBlock*> head);
 
     ~BasicBlock()=default;
 };
 
-std::vector<BasicBlock*> divideBasicBlock(LLVMList llvmlist);//划分基本块
+std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist);//划分基本块
 void connectBasicBlocks(std::vector<BasicBlock*>);//得到数据流图
