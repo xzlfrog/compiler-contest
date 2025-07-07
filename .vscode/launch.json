@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": [],
-      "cwd": "/Users/jiamaroady/Desktop/compiler-contest/src",
-      "program": "/Users/jiamaroady/Desktop/compiler-contest/src/build/Debug/outDebug"
+      "cwd": "/Users/jiamaroady/Desktop/compiler-contest/include",
+      "program": "/Users/jiamaroady/Desktop/compiler-contest/include/build/Debug/outDebug"
     }
   ]
 }

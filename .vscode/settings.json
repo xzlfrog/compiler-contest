@@ -93,6 +93,12 @@
     "memory": "cpp",
     "optional": "cpp",
     "queue": "cpp",
-    "unordered_map": "cpp"
+    "unordered_map": "cpp",
+    "utility": "cpp",
+    "__tree": "cpp",
+    "ratio": "cpp",
+    "complex": "cpp",
+    "type_traits": "cpp",
+    "set": "cpp"
   }
 }

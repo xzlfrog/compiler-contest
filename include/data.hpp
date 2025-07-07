@@ -188,7 +188,7 @@ public:
     /*type表示常数表达式的类型，两个data分别是运算符左右，如果是不需要支持二元运算的常数表达式
     （比如类型转换），则需要给类型转换后转换为的新的数据类型*/
     ConstExp(constExpType type,Data*constData1,Data* constData2=nullptr,dataType newType=dataType::data_undefined):
-    type(type),constData1(constData1),constData2(constData2),newType(newType)
+    type(type),constData1(constData1),constData2(constData2),newType(newType) 
     {
         if(constData2==nullptr&&type<=const_exp_fcmp_one)
             throw std::invalid_argument("the constant expression type not match the data");

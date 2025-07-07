@@ -11,8 +11,8 @@ enum LLVMtype{
     sub,//subtract
     mul,//multiply
     udiv,//unsigned division
-    sdiv,//unsigned division
-    srem,//unsigned remainder
+    sdiv,//signed division
+    srem,//signed remainder
     urem,//unsigned remainder
     logical_and,//logical and
     logical_or,//logical or
@@ -94,6 +94,7 @@ public:
     void InsertAfter(LLVM* pos,LLVM* llvm);//insert after a specific position
     void InsertBefore(LLVM* pos,LLVM* llvm);//insert before a specific position
     void Remove(LLVM* llvm); //remove a specific LLVM node
+    
 };
 
 typedef LLVMList Module;
