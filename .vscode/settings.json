@@ -94,6 +94,7 @@
     "optional": "cpp",
     "queue": "cpp",
     "unordered_map": "cpp",
+<<<<<<< HEAD
     "ostream": "cpp",
     "atomic": "cpp",
     "bit": "cpp",
@@ -133,6 +134,13 @@
     "thread": "cpp",
     "format": "cpp",
     "semaphore": "cpp",
+=======
+    "utility": "cpp",
+    "__tree": "cpp",
+    "ratio": "cpp",
+    "complex": "cpp",
+    "type_traits": "cpp",
+>>>>>>> 7a047eb8832c9ba88011506b09d42f3ffdbbb205
     "set": "cpp"
   }
 }
