@@ -36,11 +36,11 @@ void* create_comp_unit(void* decl_or_func){
 
 }
 
-void* create_const_decl(char* type, std::string name) {
+LLVM* create_const_decl(std::string type, std::string name) {
     dataType const_var_type = getTypeFromString(type);
-    Data *const_data = createInitialedData(const_var_type);
-    
-    
+    Symbol* const_var_sym = symbolMap[name];
+
+    const_var_sym->data->setType(const_var_type);
     return ;
 }
 
@@ -99,8 +99,13 @@ void* create_var_decl(string name, std::vector<int>& dimensions, std::vector<std
 }
 
 
-vector<int>* do_dimensions(int* const_exp, std::vector<int>& dimensions){
-    dimensions.insert(dimensions.begin(), const_exp);
+vector<int>* do_dimensions(Data* const_exp, std::vector<int>& dimensions){
+    dimensions.insert(dimensions.begin(), const_exp->getValue());
+    // 检查维度是否为正整数
+    if (const_exp->getValue() <= 0) {
+        fprintf(stderr, "error in [frontendTool.cpp]\n数组维度必须为正整数哦: %d\n", const_exp->getValue());
+        exit(1);
+    }
     return &dimensions;       
 }
 

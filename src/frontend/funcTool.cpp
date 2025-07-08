@@ -28,7 +28,7 @@ FuncDefination* create_func_def(std::string returnDataTypeString, std::string na
     return funcDef;
 }
 
-std::vector<BasicSymbol*> addToParams(BasicSymbol* param, std::vector<BasicSymbol*> params_table) {
+std::vector<BasicSymbol*> addToParams(BasicSymbol* param) {
     params_table.push_back(param);
     return params_table;
 }

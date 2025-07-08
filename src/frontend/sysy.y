@@ -11,9 +11,13 @@ int yylex(void);
 /* 假设的语义动作函数声明 */
 void* create_comp_unit(void* decl_or_func);
 void* create_decl(void* const_or_var_decl);
-void* create_const_decl(char* type, void* const_def_list);
+
+LLVM* create_const_decl(std::string type, LLVM* const_def_list);
 void* create_var_decl(char* type, void* var_def_list);
-void* create_const_def(char* id, void* dim_list, void* init_val);
+
+LLVM* create_const_def(std::string name,Data* const_exp; std::vector<int>& dimensions, std::vector<std::pair<std::vector<int>,Data*>> initializedData);
+LLVM* create_const_def(std::string name, Data* data);
+
 void* create_var_def(char* id, void* dim_list, void* init_val);
 void* create_block(void* decl_list, void* stmt_list);
 
@@ -138,7 +142,7 @@ var_def : IDENTIFIER dim_list
 ;
 
 dim_list : /* empty */
-    { $$ = std::vector<int>(); }
+    {   $$ = dimensions;}
     | '[' const_exp ']' dim_list
     {  
         $$ = do_dimensions($2,$4);
@@ -162,9 +166,9 @@ func_params : /* empty */
 ;
 
 func_param_list : func_param
-    { $$ = addToParams($1,params_table);}
+    { $$ = addToParams($1);}
     | func_param_list ',' func_param
-    { $$ = addToParams($3,params_table);}
+    { $$ = addToParams($3);}
 ;
 
 func_param : btype IDENTIFIER

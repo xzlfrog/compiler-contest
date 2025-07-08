@@ -9,14 +9,19 @@
 dataType getTypeFromString(const char* typeStr);
 std::unordered_map<std::string, Symbol*> symbolMap;
 int scope = 0;
+std::vector<int> dimensions;
 ModuleList *moduleList;
 LLVMList *llvmList;
 
 void* create_comp_unit(void* decl_or_func);
 void* create_decl(void* const_or_var_decl);
+
 void* create_const_decl(char* type, void* const_def_list);
 void* create_var_decl(char* type, void* var_def_list);
-void* create_const_def(char* id, void* dim_list, void* init_val);
+
+LLVM* create_const_def(std::string name,Data* const_exp; std::vector<int>& dimensions, std::vector<std::pair<std::vector<int>,Data*>> initializedData);
+LLVM* create_const_def(std::string name, Data* data);
+LLVM* create_var_def(std::string name, Data* data, std::vector<int>&
 void* create_var_def(char* id, void* dim_list, void* init_val);
 void* create_func_def(char* ret_type, char* id, void* params, void* block);
 void* create_block(void* decl_list, void* stmt_list);
@@ -27,7 +32,7 @@ void* create_unary_expr(int op, void* expr);
 void* create_func_call(char* id, void* args);
 void* create_array_access(char* id, void* indices);
 
-vector<int>* do_dimensions(int* const_exp, std::vector<int>& dimensions);
+vector<int>* do_dimensions(Data* const_exp, std::vector<int>& dimensions);
 Data* expShorten(Expression* exp);
 
 // 创建基本表达式
