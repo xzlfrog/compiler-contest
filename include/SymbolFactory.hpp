@@ -4,6 +4,10 @@
 
 std::string generate_tmp_var_name();
 std::string generate_tmp_label_name();
+std::string addScopeToName(std::string name);
+
+extern int scope;
+extern std::vector<std::unordered_map<std::string,int>> variable_rename_table;
 
 class SymbolFactory{
 public:
@@ -64,4 +68,6 @@ public:
 
     static FuncSymbol* createFuncSymbol(std::string name,
         dataType returnType=dataType::data_undefined);
+
+    static PointerSymbol* createTmpPointerSymbolWithScope(dataType type,int scope);
 };

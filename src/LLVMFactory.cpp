@@ -28,8 +28,6 @@ ReturnLLVM* LLVMfactory::createReturnLLVM(BasicSymbol* returnValue){
     ReturnLLVM* returnLLVM=new ReturnLLVM();
     returnLLVM->llvmType=LLVMtype::ret;
     returnLLVM->setReturnValue(returnValue);
-    if(returnValue==nullptr||returnValue->data==nullptr)
-        return returnLLVM;
     return returnLLVM;
 }
 
@@ -73,6 +71,7 @@ CallLLVM* LLVMfactory::createCallLLVM(BasicSymbol*dest_sym,FuncSymbol* func,std:
     callLLVM->dest_sym=dest_sym;
     callLLVM->function=func;
     callLLVM->arguments=params;
+    callLLVM->llvmType=LLVMtype::call;
     return callLLVM;
 }
 
@@ -125,7 +124,7 @@ StoreLLVM* LLVMfactory::createStoreLLVM(BasicSymbol* src_sym,PointerSymbol* dest
     return storeLLVM;
 }
 
-GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,std::vector<dataType>&type,std::vector<BasicSymbol*>&idx){
+GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,const std::vector<dataType>&type,const std::vector<BasicSymbol*>&idx){
     GetElementPtrLLVM* getElementPtrLLVM=new GetElementPtrLLVM();
     getElementPtrLLVM->ptrval=ptrval;
     getElementPtrLLVM->addTyIdx(type,idx);
@@ -135,7 +134,7 @@ GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(PointerSymbol*dest_sym,A
     return getElementPtrLLVM;
 }
 
-GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,std::vector<std::pair<dataType,BasicSymbol*>>&ty_idx){
+GetElementPtrLLVM* LLVMfactory::createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,const std::vector<std::pair<dataType,BasicSymbol*>>&ty_idx){
     GetElementPtrLLVM* getElementPtrLLVM=new GetElementPtrLLVM();
     getElementPtrLLVM->ptrval=ptrval;
     getElementPtrLLVM->ty_idx=ty_idx;
@@ -221,7 +220,7 @@ FuncDeclaration* LLVMfactory::createFuncDeclaration(FuncSymbol* func){
     return funcDeclaration;
 }
 
-FuncDefination* LLVMfactory::createFuncDefination(FuncSymbol* func,std::vector<BasicSymbol*>param){
+FuncDefination* LLVMfactory::createFuncDefination(FuncSymbol* func,std::vector<Symbol*>param){
     FuncDefination* funcDefination = new FuncDefination();
     funcDefination->func=func;
     funcDefination->llvmType=LLVMtype::func_def;
@@ -229,7 +228,7 @@ FuncDefination* LLVMfactory::createFuncDefination(FuncSymbol* func,std::vector<B
     return funcDefination;
 }
 
-FuncDefination* LLVMfactory::createFuncDefination(FuncSymbol* func,std::vector<dataType>paramTypes,dataType returnType,std::vector<BasicSymbol*>param){
+FuncDefination* LLVMfactory::createFuncDefination(FuncSymbol* func,std::vector<dataType>paramTypes,dataType returnType,std::vector<Symbol*>param){
     FuncDefination* funcDefination=LLVMfactory::createFuncDefination(func,param);
     funcDefination->func->paramTypes=paramTypes;
     funcDefination->func->returnType=returnType;
@@ -237,7 +236,7 @@ FuncDefination* LLVMfactory::createFuncDefination(FuncSymbol* func,std::vector<d
     return funcDefination;
 }
 
-FuncDefination* LLVMfactory::createFuncDefination(FuncSymbol* func,std::vector<dataType>paramTypes,std::vector<BasicSymbol*>param){
+FuncDefination* LLVMfactory::createFuncDefination(FuncSymbol* func,std::vector<dataType>paramTypes,std::vector<Symbol*>param){
     FuncDefination* funcDefination=LLVMfactory::createFuncDefination(func,param);
     funcDefination->func->paramTypes=paramTypes;
     funcDefination->func->isDef=true;
@@ -278,4 +277,14 @@ AllocaArrayLLVM* LLVMfactory::createAllocaArrayLLVM(ArraySymbol* sym){
     AllocaArrayLLVM* allocaArrayLLVM=new AllocaArrayLLVM();
     allocaArrayLLVM->array=sym;
     return allocaArrayLLVM;
+}
+
+UnaryOperationLLVM* LLVMfactory::createUnaryOperationLLVM(BasicSymbol* dest_sym,BasicSymbol* src_sym,LLVMtype type){
+    UnaryOperationLLVM* unaryOperationLLVM=new UnaryOperationLLVM();
+    unaryOperationLLVM->llvmType=type;
+    unaryOperationLLVM->dest_sym=dest_sym;
+    unaryOperationLLVM->src_sym=src_sym;
+    if(dest_sym->getDataType()!=src_sym->getDataType()||(dest_sym->getDataType()==dataType::i32&&type==LLVMtype::llvm_fneg)||(dest_sym->getDataType()==dataType::f32&&type==LLVMtype::llvm_neg)){
+        throw std::runtime_error("error occurs when trying to create an UnaryOperationLLVM class");
+    }
 }

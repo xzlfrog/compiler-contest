@@ -36,18 +36,22 @@ public:
 
 //只考虑了指针的情况，未考虑指针的指针的情况，如需使用需后续补充
 class PointerSymbol:public Symbol{
-private:
-    dataType PointedType;//当前指针指向的元素类型
-
 public:
     Data* pointedData;//指向的数据
+    std::string ssa_name;
+    volatile dataType PointedType;//当前指针指向的元素类型
 
     symType getType() override;
     dataType getPointedType() const;//获得指针指向的元素的数据类型，比如源程序中是int类型，此处就是i32
     void allocateMemory(dataType elementType);
     ~PointerSymbol()=default;
     void setScope(int scope) override;
-    std::string getName(){return this->name;}
+    std::string getName(){
+        return this->name;
+        if(this->ssa_name==" ")
+            return this->name;
+        return this->ssa_name;
+    }
 };
 
 //包含常数和变量和常量变量
@@ -120,12 +124,12 @@ public:
 class ArraySymbol: public Symbol{
 private:
     std::vector<int> dimensions; //数组的维度信息 
-    dataType arrayType;//比如int a[2][3]，类型就是int，或者用llvm ir中的数据类型 i32
     bool isInitialed=false;//是否被初始化
 
 public:
     ArrayInitial* initialedData;//在数组的初始化阶段需要使用，对于初始化，不考虑在初始化之后再对数组元素修改的情况，只解决了数组初始化的问题
-    
+    dataType arrayType;//比如int a[2][3]，类型就是int，或者用llvm ir中的数据类型 i32
+
     ~ArraySymbol()=default;
     symType getType() override;
     void allocateMemory(dataType type,std::vector<int>&dims);

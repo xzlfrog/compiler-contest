@@ -18,7 +18,8 @@ enum dataType{
     i64,
     f32,
     f64,
-    const_exp_pointer
+    dataType_pointer,
+    array_data
 };
 
 enum constExpType{
@@ -46,6 +47,8 @@ enum constExpType{
     const_exp_fcmp_ole,//float less than or equal
     const_exp_fcmp_one,//float not equal
     const_exp_sitofp,//有符号整数转浮点
+    const_exp_srem,
+    const_exp_frem
 };
 
 //初始化方式
@@ -219,5 +222,9 @@ Data* constExp_fcmp_olt(Data* data1,Data* data2);//float less than
 Data* constExp_fcmp_ole(Data* data1,Data* data2);//float less than or equal
 Data* constExp_fcmp_one(Data* data1,Data* data2);//float not equal
 Data* constExp_sitofp(Data* data1);//有符号整数转浮点
+Data* constExp_srem(Data* data1,Data* data2);
+Data* constExp_frem(Data* data1,Data* data2);
 
 std::string my_to_string(Data* data);
+
+Data* typeConversion(dataType new_type,Data* old_data);

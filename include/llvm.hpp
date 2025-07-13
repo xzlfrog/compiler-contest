@@ -14,6 +14,7 @@ enum LLVMtype{
     sdiv,//signed division
     srem,//signed remainder
     urem,//unsigned remainder
+    frem,
     logical_and,//logical and
     logical_or,//logical or
     logical_xor,//logical xor 非可以用异或来实现，y=x xor 1即可实现异或操作
@@ -66,6 +67,8 @@ enum LLVMtype{
     const_array,
     func_def,//函数定义
     func_decl,//函数声明
+    llvm_neg,
+    llvm_fneg
 };
 
 class LLVM {
@@ -94,7 +97,16 @@ public:
     void InsertAfter(LLVM* pos,LLVM* llvm);//insert after a specific position
     void InsertBefore(LLVM* pos,LLVM* llvm);//insert before a specific position
     void Remove(LLVM* llvm); //remove a specific LLVM node
-    
+
+    void InsertTail(LLVMList* llvmlist);//在尾节点插入
+    void InsertHead(LLVMList* llvmlist);//在头节点插入 
+
+    LLVMList(){
+        this->head=nullptr;
+        this->tail=nullptr;
+        this->next=nullptr;
+        this->prev=nullptr;
+    }
 };
 
 typedef LLVMList Module;
@@ -110,3 +122,5 @@ public:
     void InsertBefore(Module* pos,Module* module);//insert before a specific position
     void Remove(Module* module); //remove a specific LLVM node
 };
+
+Module* LLVM_to_Module(LLVM* llvm);

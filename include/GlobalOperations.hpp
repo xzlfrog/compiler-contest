@@ -85,7 +85,7 @@ public:
 class FuncDefination:public LLVM{
 public:
     FuncSymbol* func;
-    std::vector<BasicSymbol*> params;
+    std::vector<Symbol*> params;
     LLVM* block_tail=nullptr;
 
 
@@ -96,7 +96,7 @@ public:
     std::string getReturnTypeStr(dataType returnType) const;
     std::string getParamTypeStr(dataType paramType) const;
     const std::vector<dataType>getParamTypes()const ;
-    const std::vector<BasicSymbol*>getParams();
+    const std::vector<Symbol*>getParams();
     std::string out_str()const override;
     ~FuncDefination()=default;
 };

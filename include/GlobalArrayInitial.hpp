@@ -19,16 +19,31 @@ public:
     }
 };
 
-class ArrayInitial{
-private:
-    std::vector<std::pair<std::vector<int>,Data*>> initializedData;
-
+class ArrayInitial : public Data{
 public:
+    std::vector<std::pair<std::vector<int>,Data*>> initializedData;
     void initialize(std::vector<int>position,Data* data);//将某一个初始化为非0的值的位置和值
     //传入该函数
     const std::vector<std::pair<std::vector<int>,Data*>>& getInitializedData();//得到被初始化的
     //那些值
+
+    void initialize(int pos);
+
+    void initialize(Data* data);
+
+    dataType getType() const override{
+        return dataType::array_data;
+    };
+
+    //合并两个ArrayInitial类
+    void merge(ArrayInitial* x);
+
+    void reverse();
 };
+
+ArrayInitial* dataToArrayInitial(Data* data);
+
+Data* arrayInitialToData(ArrayInitial* arrayInitial);
 
 
 /*若有对第"0"维初始化(给所有数组中所有元素初始化为0)直接结束初始化部分

@@ -14,6 +14,9 @@ void PointerSymbol::allocateMemory(dataType elementType){
 }
 void PointerSymbol::setScope(int scope){
     this->scope=scope;
+    if(this->name[0]=='%'||this->name[0]=='@'){
+        return ;
+    }
     if(this->scope==GLOBAL_SCOPE){
         this->name="@"+this->name;
     }
@@ -29,6 +32,10 @@ void BasicSymbol::setData(dataType dtype,ValueVariant v){this->data=createData(d
 
 void BasicSymbol::setScope(int scope){
     this->scope=scope;
+    if(this->name[0]=='%'||this->name[0]=='@'){
+        this->ssa_name=name;
+        return ;
+    }
     if(this->scope==GLOBAL_SCOPE){
         this->name="@"+this->name;
     }
@@ -50,15 +57,18 @@ dataType ArraySymbol::getArrayType()const{return this->arrayType;}
 
 const std::vector<std::pair<std::vector<int>,Data*>>& ArraySymbol::getInitializedData(){
     if(this->isInitialed==false){
-        std::vector<std::pair<std::vector<int>,Data*>>ret;
+        static const std::vector<std::pair<std::vector<int>,Data*>>ret;
         return ret;
     }
     return this->initialedData->getInitializedData();
 }
 
 void ArraySymbol::setInitialedData(ArrayInitial* arrayInitial){
+    arrayInitial->reverse();
     this->initialedData=arrayInitial;
-    for(auto a:arrayInitial->getInitializedData()){
+    this->isInitialed=true;
+    for(int j=0;j<arrayInitial->getInitializedData().size();j++){
+        auto a=arrayInitial->getInitializedData()[j];
         for(int i=0;i<a.first.size();i++){
             if(a.first[i]>=this->dimensions[i])
                 throw std::runtime_error("the index is out of the range of the array");
@@ -68,6 +78,9 @@ void ArraySymbol::setInitialedData(ArrayInitial* arrayInitial){
 
 void ArraySymbol::setScope(int scope){
     this->scope=scope;
+    if(this->name[0]=='%'||this->name[0]=='@'){
+        return ;
+    }
     if(this->scope==GLOBAL_SCOPE){
         this->name="@"+this->name;
     }
@@ -80,6 +93,9 @@ void ArraySymbol::setScope(int scope){
 symType LabelSymbol::getType(){this->type=symType::sym_label; return this->type;}
 void LabelSymbol::setScope(int scope){
     this->scope=scope;
+    if(this->name[0]=='%'||this->name[0]=='@'){
+        return ;
+    }
     if(this->scope==GLOBAL_SCOPE){
         this->name="@"+this->name;
     }
@@ -103,6 +119,9 @@ void FuncSymbol::addParam(dataType paramType){
 }
 void FuncSymbol::setScope(int scope){
     this->scope=scope;
+    if(this->name[0]=='%'||this->name[0]=='@'){
+        return ;
+    }
     if(this->scope==GLOBAL_SCOPE){
         this->name="@"+this->name;
     }
@@ -114,6 +133,7 @@ void FuncSymbol::setScope(int scope){
 //VarSymbol
 symType VarSymbol::getType() {this->type=symType::variable; return this->type;}
 dataType VarSymbol::getDataType()const{return this->data->getType();}
+
 void VarSymbol::setData(dataType dtype,ValueVariant v){
     if(dtype==dataType::data_undefined){
         return;
@@ -124,8 +144,13 @@ void VarSymbol::setData(dataType dtype,ValueVariant v){
     else
         this->data=createData(dtype,v);
 }
+
 void VarSymbol::setScope(int scope){
     this->scope=scope;
+    if(this->name[0]=='%'||this->name[0]=='@'){
+        this->ssa_name=name;
+        return ;
+    }
     if(this->scope==GLOBAL_SCOPE){
         this->name="@"+this->name;
     }
@@ -150,6 +175,10 @@ void ConstSymbol::setData(dataType dtype,ValueVariant v){
 }
 void ConstSymbol::setScope(int scope){
     this->scope=scope;
+    if(this->name[0]=='%'||this->name[0]=='@'){
+        this->ssa_name=name;
+        return ;
+    }
     if(this->scope==GLOBAL_SCOPE){
         this->name="@"+this->name;
     }
@@ -174,6 +203,10 @@ void ConstVarSymbol::setData(dataType dtype,ValueVariant v){
 }
 void ConstVarSymbol::setScope(int scope){
     this->scope=scope;
+    if(this->name[0]=='%'||this->name[0]=='@'){
+        this->ssa_name=name;
+        return ;
+    }
     if(this->scope==GLOBAL_SCOPE){
         this->name="@"+this->name;
     }
