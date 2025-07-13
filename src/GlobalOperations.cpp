@@ -168,7 +168,7 @@ std::string FuncDefination::getParamTypeStr(dataType paramType) const {
 }
 // Output the function definition as a string
 std::string FuncDefination::out_str()const{
-    std::string res = "define ";
+    std::string res = "\ndefine ";
     res += this->getReturnTypeStr(this->func->returnType) + " ";
     res += this->func->getName() + "(";
     
@@ -191,7 +191,7 @@ std::string FuncDefination::out_str()const{
     }
     res += this->block_tail->out_str()+ "\n";
     
-    res += "}\n";
+    res += "}\n\n";
     return res;
 }
 

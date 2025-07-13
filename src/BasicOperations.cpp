@@ -74,7 +74,7 @@ std::string ArithmeticOperationLLVM::out_str() const {
         case LLVMtype::icmp_slt: opStr = "icmp slt"; break;
         case LLVMtype::icmp_sgt: opStr = "icmp sgt"; break;
         case LLVMtype::icmp_sge: opStr = "icmp sge"; break;
-        case LLVMtype::icmp_sle: opStr = "icmp sgt"; break;
+        case LLVMtype::icmp_sle: opStr = "icmp sle"; break;
         case LLVMtype::fcmp_oeq:  opStr = "fcmp oeq"; break;
         case LLVMtype::fcmp_one:  opStr = "fcmp one"; break;
         case LLVMtype::fcmp_oge: opStr = "fcmp oge"; break;
