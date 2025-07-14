@@ -62,7 +62,7 @@ class XRegAllocator : public RegisterAllocator {
 
 };
 
-class VRegAllocator : public RegisterAllocator {
+class SRegAllocator : public RegisterAllocator {
     std::string allocateSpace(Symbol* symbol) override ;
     std::string getRegister(Symbol* symbol) const override;;
     std::string getFirstFreeRegister() const override;

@@ -71,16 +71,16 @@ std::string XRegAllocator::getRegister(Symbol* symbol) const {
     return ""; // 如果没有分配寄存器，返回空字符串
 }
 
-std::string VRegAllocator::getFirstFreeRegister() const {
+std::string SRegAllocator::getFirstFreeRegister() const {
     for (size_t i = 0; i < Registers.size(); ++i) {
         if (Registers[i] == nullptr) {
-            return "V" + std::to_string(i); // 返回第一个空闲寄存器的名称
+            return "S" + std::to_string(i); // 返回第一个空闲寄存器的名称
         }
     }
     throw std::runtime_error("No free registers available");
 }
 
-std::string VRegAllocator::allocateSpace(Symbol* symbol) {
+std::string SRegAllocator::allocateSpace(Symbol* symbol) {
     std::string reg = getFirstFreeRegister();
     size_t index = std::stoi(reg.substr(1)); // 获取寄存器索引
     Registers[index] = symbol; // 分配寄存器
@@ -88,17 +88,17 @@ std::string VRegAllocator::allocateSpace(Symbol* symbol) {
     return reg;
 }
 
-std::string VRegAllocator::getRegister(Symbol* symbol) const {
+std::string SRegAllocator::getRegister(Symbol* symbol) const {
     auto it = var_to_reg.find(symbol);
     if (it != var_to_reg.end()) {
         size_t index = it->second;
-        return "V" + std::to_string(index); // 返回寄存器名称
+        return "S" + std::to_string(index); // 返回寄存器名称
     }
     return ""; // 如果没有分配寄存器，返回空字符串
 }
 
 
-std::string VRegAllocator::accessVariable(Symbol* symbol) {
+std::string SRegAllocator::accessVariable(Symbol* symbol) {
     // 如果变量已存在，更新LRU位置
     if (VRegAllocator::isRegisterUsed(symbol)) {
         std::string regName = VRegAllocator::getRegister(symbol);

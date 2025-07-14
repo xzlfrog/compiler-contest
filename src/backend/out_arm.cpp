@@ -39,7 +39,7 @@ std::string OutArm::getIntNumberOfOperands(ConstVarSymbol *constvarsym) const {
     ValueVariant number = constvarsym->data->getValue();
     if (std::holds_alternative<int>(number)) {
         if(std::get<int>(number) == 0) {
-            return "WZR"; // ARM zero register
+            return "XZR"; // ARM zero register
         }
         return "#" + std::to_string(std::get<int>(number));
     }
@@ -153,3 +153,4 @@ void ConditionalBranchLLVM::out_arm_str() const {
 
     OutArm::outString(OutArm::br_conditional + " " + condition_str + ", " + true_branch_str + ", " + false_branch_str);
 }
+
