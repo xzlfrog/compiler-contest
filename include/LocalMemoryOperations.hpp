@@ -12,7 +12,7 @@
 class AllocaNonArrayLLVM:public LLVM{
     public:
         PointerSymbol* sym;//分配内存的变量
-        dataType ty=dataType::const_exp_pointer;//变量的类型
+        dataType ty=dataType::dataType_pointer;//变量的类型
 
         std::string out_str() const override;
         std::string out_arm_str() const override;

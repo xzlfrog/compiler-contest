@@ -1,0 +1,12 @@
+#include"llvm.hpp"
+#include"sym.hpp"
+
+class UnaryOperationLLVM : public LLVM{
+public:
+    BasicSymbol* dest_sym;
+    BasicSymbol* src_sym;
+
+    dataType getType();
+    std::string out_str() const override;
+    ~UnaryOperationLLVM()=default;
+};

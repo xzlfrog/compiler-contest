@@ -5,9 +5,12 @@
 #include"GlobalOperations.hpp"
 #include"LocalMemoryOperations.hpp"
 #include"TypeConversionOperations.hpp"
+#include"UnaryOperation.hpp"
 
 //LLVMfactory类中包含了一系列静态方法，这些静态方法用于得到我们需要的llvm类
 class LLVMfactory{
+private:
+    
 public:
     static ArithmeticOperationLLVM* createBasicOperationLLVM(LLVMtype type,
         BasicSymbol*a,BasicSymbol*b,BasicSymbol*c);
@@ -48,7 +51,7 @@ public:
     static StoreLLVM* createStoreLLVM(BasicSymbol* src_sym,PointerSymbol* dest_sym);
 
     static GetElementPtrLLVM* createGetElementPtrLLVM(PointerSymbol*dest_sym,
-        ArraySymbol* ptrval,std::vector<dataType>&type,std::vector<BasicSymbol*>&idx);
+        ArraySymbol* ptrval,const std::vector<dataType>&type,const std::vector<BasicSymbol*>&idx);
 
     static GlobalNonArrayVarDefination* createGlobalNonArrayVarDefination(
         PointerSymbol* dest_sym,BasicSymbol* src_sym);//如果不初始化，则src_sym为nullptr
@@ -71,21 +74,27 @@ public:
     static FuncDeclaration* createFuncDeclaration(FuncSymbol* func);//如果生成func的时候都存了这些信息就用这个
 
     static FuncDefination* createFuncDefination(FuncSymbol* func,
-        std::vector<BasicSymbol*>param);
+        std::vector<Symbol*>param);
 
     static FuncDefination* createFuncDefination(FuncSymbol* func,
-        std::vector<dataType>paramTypes,dataType returnType,std::vector<BasicSymbol*>param);
+        std::vector<dataType>paramTypes,dataType returnType,std::vector<Symbol*>param);
 
     static FuncDefination* createFuncDefination(FuncSymbol* func,
-        std::vector<dataType>paramTypes,std::vector<BasicSymbol*>param);
+        std::vector<dataType>paramTypes,std::vector<Symbol*>param);
 
     static GlobalArrayVarDefination* createGlobalArrayVarDefination(ArraySymbol* dest_sym);
 
-    static GlobalArrayVarDefination* createGlobalArrayVarDefination(ArraySymbol* dest_sym,initializer initMode);
+    static GlobalArrayVarDefination* createGlobalArrayVarDefination(ArraySymbol* dest_sym,
+        initializer initMode);
 
     static ConstantArrayVarDefination* createConstantArrayVarDefination(ArraySymbol* dest_sym);
 
-    static ConstantArrayVarDefination* createConstantArrayVarDefination(ArraySymbol* dest_sym,initializer initMode);
+    static ConstantArrayVarDefination* createConstantArrayVarDefination(
+        ArraySymbol* dest_sym,initializer initMode);
 
-    static GetElementPtrLLVM* createGetElementPtrLLVM(PointerSymbol*dest_sym,ArraySymbol* ptrval,std::vector<std::pair<dataType,BasicSymbol*>>&ty_idx);
+    static GetElementPtrLLVM* createGetElementPtrLLVM(PointerSymbol*dest_sym,
+        ArraySymbol* ptrval,const std::vector<std::pair<dataType,BasicSymbol*>>&ty_idx);
+
+    static UnaryOperationLLVM* createUnaryOperationLLVM(BasicSymbol* dest_sym,
+    BasicSymbol* src_sym,LLVMtype type);
 };

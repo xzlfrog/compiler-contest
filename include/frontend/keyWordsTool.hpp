@@ -3,7 +3,7 @@
 #include "../../include/exp.hpp"
 #include "../../include/SymbolFactory.hpp"
 
-struct LoopContext {
+/*struct LoopContext {
     LabelSymbol* continueLabel;  // 跳转回循环条件
     LabelSymbol* breakLabel;     // 跳出循环
 };
@@ -16,4 +16,4 @@ LLVM* create_break_stmt();
 LLVM* create_continue_stmt();
 LLVM* create_return_stmt(Expression* expr);
 LLVM* create_return_stmt();
-LLVM* create_assign_stmt(std::string id, Expression* expr);
+LLVM* create_assign_stmt(std::string id, Expression* expr);*/

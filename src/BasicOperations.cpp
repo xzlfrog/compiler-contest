@@ -10,8 +10,6 @@ void ArithmeticOperationLLVM::setOperandA(BasicSymbol* operand)//set the result 
             checkType(operand->data->getType(),dataType::i1);
         else if(this->ty!=dataType::data_undefined)
             checkType(operand->data->getType(),this->ty);
-        else
-            this->ty=operand->data->getType();
         this->a=operand;
     }
 
@@ -70,12 +68,13 @@ void ArithmeticOperationLLVM::out_str() const {
         case LLVMtype::llvm_fdiv:   opStr = "fdiv"; break;
         case LLVMtype::sdiv:   opStr = "sdiv"; break;
         case LLVMtype::udiv:   opStr = "udiv"; break;
+        case LLVMtype::srem:   opStr = "srem"; break;
         case LLVMtype::icmp_eq:  opStr = "icmp eq"; break;
         case LLVMtype::icmp_ne:  opStr = "icmp ne"; break;
         case LLVMtype::icmp_slt: opStr = "icmp slt"; break;
         case LLVMtype::icmp_sgt: opStr = "icmp sgt"; break;
         case LLVMtype::icmp_sge: opStr = "icmp sge"; break;
-        case LLVMtype::icmp_sle: opStr = "icmp sgt"; break;
+        case LLVMtype::icmp_sle: opStr = "icmp sle"; break;
         case LLVMtype::fcmp_oeq:  opStr = "fcmp oeq"; break;
         case LLVMtype::fcmp_one:  opStr = "fcmp one"; break;
         case LLVMtype::fcmp_oge: opStr = "fcmp oge"; break;

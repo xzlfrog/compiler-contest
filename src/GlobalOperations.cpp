@@ -30,7 +30,7 @@ std::string GlobalNonArrayVarDefination::out_str()const{
         throw std::runtime_error("the global variable initializer is wrong");
         break;
     }
-    return res;
+    return res+"\n";
 }
 
 //ConstantNonArrayVarDefination
@@ -60,7 +60,7 @@ std::string ConstantNonArrayVarDefination::out_str()const{
         throw std::runtime_error("the global variable initializer is wrong");
         break;
     }
-    return res;
+    return res+"\n";
 }
 
 //FuncDeclaration
@@ -125,7 +125,7 @@ std::string FuncDeclaration::out_str()const{
 FuncSymbol* FuncDefination::getFuncSymbol(){return this->func;}
 dataType FuncDefination::getReturnType(){return this->func->returnType;}
 const std::vector<dataType>FuncDefination::getParamTypes()const {return this->func->paramTypes;}
-const std::vector<BasicSymbol*>FuncDefination::getParams(){return this->params;}
+const std::vector<Symbol*>FuncDefination::getParams(){return this->params;}
 
 void FuncDefination::addArguments(dataType ty,BasicSymbol* sym){
     this->params.push_back(sym);
@@ -168,7 +168,7 @@ std::string FuncDefination::getParamTypeStr(dataType paramType) const {
 }
 // Output the function definition as a string
 std::string FuncDefination::out_str()const{
-    std::string res = "define ";
+    std::string res = "\ndefine ";
     res += this->getReturnTypeStr(this->func->returnType) + " ";
     res += this->func->getName() + "(";
     
@@ -187,10 +187,11 @@ std::string FuncDefination::out_str()const{
     }
 
     for(LLVM*llvm=this->next;llvm!=this->block_tail&&llvm!=nullptr;llvm=llvm->next){
-        res += llvm->out_str()+ ";\n"; // Assuming params are BasicSymbol with a name
+        res += llvm->out_str()+ "\n";
     }
+    res += this->block_tail->out_str()+ "\n";
     
-    res += "}\n";
+    res += "}\n\n";
     return res;
 }
 
@@ -215,7 +216,7 @@ std::string GlobalArrayVarDefination::out_str()const{
     ArrayInitial* arrayInit=this->dest_sym->initialedData;
     std::vector<int>pos;
     array_def_recursion(dim,0,type,res,false,arrayInit,pos);
-    return res;
+    return res+"\n";
 }
 
 //ConstantArrayVarDefination
@@ -239,7 +240,7 @@ std::string ConstantArrayVarDefination::out_str()const{
     ArrayInitial* arrayInit=this->dest_sym->initialedData;
     std::vector<int>pos;
     array_def_recursion(dim,0,type,res,false,arrayInit,pos);
-    return res;
+    return res+"\n";
 }
 
 int vector_int_cmp(std::vector<int>& a,std::vector<int>& b){

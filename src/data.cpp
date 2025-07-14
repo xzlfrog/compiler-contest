@@ -1,5 +1,6 @@
 #include"../include/data.hpp"
 #include<iostream>
+#include<cmath>
 
 //Data
 bool Data::getIsInitialized(){return this->isInitialized;};
@@ -174,7 +175,7 @@ void Data_f64::setValue(ValueVariant value){
 }
 
 //Data_pointer
-dataType Data_pointer::getType() const {return dataType::const_exp_pointer;}
+dataType Data_pointer::getType() const {return dataType::dataType_pointer;}
 
 ValueVariant Data_pointer::getValue(){
     this->checkIsInitialed();
@@ -335,6 +336,12 @@ Data* ConstExp::constFolding(){
         case constExpType::const_exp_sitofp :
             data=constExp_sitofp(this->constData1);
             break;
+        case constExpType::const_exp_srem :
+            data=constExp_srem(this->constData1,this->constData2);
+            break;
+        case constExpType::const_exp_frem :
+            data=constExp_frem(this->constData1,this->constData2);
+            break;
     }
     return data;
 }
@@ -407,88 +414,100 @@ Data* constExp_fdiv(Data* data1,Data* data2){
 Data* constExp_icmp_eq(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
-    return createData(dataType::i1,a==b);
+    return createData(dataType::i32,int(a==b));
 }
 Data* constExp_icmp_ne(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
-    return createData(dataType::i1,a!=b);
+    return createData(dataType::i32,int(a!=b));
 }
 
 //integer signed greater than
 Data* constExp_icmp_sgt(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
-    return createData(dataType::i1,a>b);
+    return createData(dataType::i32,int(a>b));
 }
 
 //integer signed greater than or equal
 Data* constExp_icmp_sge(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
-    return createData(dataType::i1,a>=b);
+    return createData(dataType::i32,int(a>=b));
 }
 
 //integer signed less than
 Data* constExp_icmp_slt(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
-    return createData(dataType::i1,a<b);
+    return createData(dataType::i32,int(a<b));
 }
 
 // integer signed less than or equal
 Data* constExp_icmp_sle(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
-    return createData(dataType::i1,a<=b);
+    return createData(dataType::i32,int(a<=b));
 }
 
 //float equal
 Data* constExp_fcmp_oeq(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
-    return createData(dataType::i1,a==b);
+    return createData(dataType::i32,int(a==b));
 }
 
 //float greater than
 Data* constExp_fcmp_ogt(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
-    return createData(dataType::i1,a>b);
+    return createData(dataType::i32,int(a>b));
 }
 
 //float greater than or equal
 Data* constExp_fcmp_oge(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
-    return createData(dataType::i1,a>=b);
+    return createData(dataType::i32,int(a>=b));
 }
 
 //float less than
 Data* constExp_fcmp_olt(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
-    return createData(dataType::i1,a<b);
+    return createData(dataType::i32,int(a<b));
 }
 
 //float less than or equal
 Data* constExp_fcmp_ole(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
-    return createData(dataType::i1,a<=b);
+    return createData(dataType::i32,int(a<=b));
 }
 
 //float not equal
 Data* constExp_fcmp_one(Data* data1,Data* data2){
     float a=std::get<float>(data1->getValue());
     float b=std::get<float>(data2->getValue());
-    return createData(dataType::i1,a!=b);
+    return createData(dataType::i32,int(a!=b));
 }
 
 //有符号整数转浮点
 Data* constExp_sitofp(Data* data1){
     int a=std::get<int>(data1->getValue());
     return createData(dataType::f32,(float)a);
+}
+
+Data* constExp_srem(Data* data1,Data* data2){
+    int a=std::get<int>(data1->getValue());
+    int b=std::get<int>(data2->getValue());
+    return createData(dataType::i32,a%b);
+}
+
+Data* constExp_frem(Data* data1,Data* data2){
+    float a=std::get<float>(data1->getValue());
+    float b=std::get<float>(data2->getValue());
+    return createData(dataType::i32,std::fmod(a,b));
 }
 
 std::string my_to_string(Data* data){
@@ -510,4 +529,29 @@ std::string my_to_string(Data* data){
     default:
         throw std::runtime_error("this type is not a constant type");
     }
+}
+
+Data* typeConversion(dataType new_type,Data* old_data){
+    Data* new_data=createInitialedData(new_type);
+    switch(old_data->getType()){
+        case dataType::i32:
+            if(new_type==dataType::f32){
+                new_data->setValue((float)std::get<int>(old_data->getValue()));
+            }
+            else if(new_type==dataType::i32){
+                new_data=old_data;
+            }
+            break;
+        case dataType::f32:
+            if(new_type==dataType::i32){
+                new_data->setValue((int)std::get<float>(old_data->getValue()));
+            }
+            else if(new_type==dataType::f32){
+                new_data=old_data;
+            }
+            break;
+        default:
+            break;
+    }
+    return new_data;
 }
