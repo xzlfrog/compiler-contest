@@ -3,9 +3,6 @@
 #include "../llvm.hpp"
 #include "../sym.hpp"
 
-#ifndef GLOBAL_ALLOCA_HPP
-#define GLOBAL_ALLOCA_HPP
-
 #include "../GlobalOperations.hpp"
 #include <string>
 #include <map>
@@ -32,5 +29,3 @@ public:
     // 输出全局数据段到汇编文件
     void outputGlobals(std::ostream &out);
 };
-
-#endif // GLOBAL_ALLOCA_HPP

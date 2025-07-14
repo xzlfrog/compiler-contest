@@ -25,9 +25,11 @@ class StackAllocator {
         int getOffset(const std::string &varName);
         void emitPrologue(std::ostream &out, int stackSize);
         void emitEpilogue(std::ostream &out, int stackSize);
+        int getCurrentOffset() const;
         
-        // 辅助功能
+        // 辅助功能x
         void reset();
+        std::string getStackPointer(Symbol *symbol) const;
         void printAllocation(std::ostream &out);
         bool hasVariable(const std::string &varName) const;
     };

@@ -78,6 +78,9 @@ class LLVM {
     virtual std::string out_str() const{
         return "";
     };
+
+    //输出成文本
+    virtual void out_arm_str() const = 0 ;
     LLVMtype getLLVMType();//得到llvm指令类型
     virtual ~LLVM() = default;
 };

@@ -40,9 +40,7 @@ void RegisterAllocator::freeRegister(std::string reg_name){
 }
 
 // 保存调用前需要保留的寄存器（calle-saved）
-void RegisterAllocator::saveRegisters(std::ostream &out){
-
-}
+void RegisterAllocator::saveRegisters(std::ostream &out){}
 
 // 恢复调用后需恢复的寄存器
 void RegisterAllocator::restoreRegisters(std::ostream &out){}

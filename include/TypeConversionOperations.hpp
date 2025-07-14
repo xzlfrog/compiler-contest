@@ -10,6 +10,7 @@ public:
     BasicSymbol* dest_sym;
 
     std::string out_str() const override;
+    std::string out_arm_str() const override;
     BasicSymbol* getSrcSymbol();
     BasicSymbol* getDestSymbol();
     dataType getSrcType();

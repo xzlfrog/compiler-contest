@@ -15,6 +15,7 @@ class AllocaNonArrayLLVM:public LLVM{
         dataType ty=dataType::const_exp_pointer;//变量的类型
 
         std::string out_str() const override;
+        std::string out_arm_str() const override;
         dataType getPointedType();//举个例子，虽然我们定义的是int类型的变量，
         //但是由于我们当作是把它分配到内存里，所以我们其实是把源程序中的变量变成了一个int*类型的变量来处理
         PointerSymbol* getSymbol();//返回这个指针
@@ -31,6 +32,7 @@ class AllocaArrayLLVM:public LLVM{
         const std::vector<int>& getDimensions() const;//数组的大小
         ArraySymbol* getArray();//返回这个数组
         std::string out_str() const override;
+        std::string out_arm_str() const override;
         ~AllocaArrayLLVM()=default;
 };
 
@@ -48,6 +50,7 @@ public:
     PointerSymbol* getSrcSymbol();
     BasicSymbol* getDestSymbol();
     std::string out_str() const override;
+    std::string out_arm_str() const override;
     ~LoadLLVM()=default;
 };
 
@@ -64,6 +67,7 @@ public:
     BasicSymbol* getSrcSymbol();
     PointerSymbol* getDestSymbol();
     std::string out_str() const override;
+    std::string out_arm_str() const override;
     ~StoreLLVM()=default;
 };
 
@@ -84,5 +88,6 @@ public:
     void addTyIdx(dataType ty,BasicSymbol* idx);
     void addTyIdx(std::vector<dataType>ty,std::vector<BasicSymbol*>idx);
     std::string out_str() const override;
+    std::string out_arm_str() const override;
     ~GetElementPtrLLVM()=default;
 };
