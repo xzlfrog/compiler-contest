@@ -100,8 +100,8 @@ std::string SRegAllocator::getRegister(Symbol* symbol) const {
 
 std::string SRegAllocator::accessVariable(Symbol* symbol) {
     // 如果变量已存在，更新LRU位置
-    if (VRegAllocator::isRegisterUsed(symbol)) {
-        std::string regName = VRegAllocator::getRegister(symbol);
+    if (SRegAllocator::isRegisterUsed(symbol)) {
+        std::string regName = SRegAllocator::getRegister(symbol);
         lru_list.remove(regName);
         lru_list.push_front(regName);
         return regName;
@@ -117,11 +117,11 @@ std::string SRegAllocator::accessVariable(Symbol* symbol) {
         //spillToStack(lru_var);
         
         // 获取释放的寄存器
-        VRegAllocator::freeRegister(lru_var);
+        SRegAllocator::freeRegister(lru_var);
     }
 
     //有空闲寄存器，直接分配
-    std::string regName = VRegAllocator::allocateSpace(symbol);
+    std::string regName = SRegAllocator::allocateSpace(symbol);
 
     lru_list.push_front(regName);
 
