@@ -1,94 +1,80 @@
-# 编译器设置
-CXX = clang++
-CXXFLAGS = -Wall -Wextra -std=c++17 -I$(INCDIR)
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILDDIR)/dep/$*.d
-CXXFLAGS += $(DEPFLAGS)
+# Compiler and flags
+CXX := g++
+CXXFLAGS := -std=c++17 -O0 -Wall -Wextra -g -Iinclude -Isrc/frontend
+LDFLAGS := -lfl
+LDFLAGS += -static-libstdc++
 
-# 链接器设置
-LDFLAGS =
-LDLIBS =
+# Build directories
+BUILD_DIR := build
+OBJ_DIR := $(BUILD_DIR)/obj
+BIN_DIR := $(BUILD_DIR)/bin
 
-# 目录设置
-SRCDIR = src
-INCDIR = include
-TESTDIR = test
-BUILDDIR = build
-DEPDIR = $(BUILDDIR)/dep
+# Parser files
+YACC_SRC := src/frontend/sysy.y
+LEX_SRC := src/frontend/sysy.l
 
-# 可配置的外部库路径（例如 Homebrew）
-EXT_INCDIR ?= /opt/homebrew/include
-CXXFLAGS += -I$(EXT_INCDIR)
+# Generated parser outputs
+YACC_CPP := src/frontend/sysy.y.cpp
+YACC_HPP := src/frontend/sysy.y.hpp
+LEX_CPP := src/frontend/sysy.l.cpp
 
-# 主程序入口
-MAIN_SOURCE = $(SRCDIR)/main.cpp  # 假设主程序在 src/main.cpp
-MAIN_OBJECT = $(BUILDDIR)/main.o
+# Source files
+SRC_DIR := src
+SRCS := $(shell find $(SRC_DIR) -name '*.cpp' ! -path "$(YACC_CPP)" ! -path "$(LEX_CPP)")
 
-# 测试程序入口
-TEST_MAIN_SOURCE = $(TESTDIR)/BasicOperationTest.cpp
-TEST_MAIN_OBJECT = $(BUILDDIR)/test_BasicOperationTest.o
+# Object files
+OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
+OBJS += $(OBJ_DIR)/frontend/sysy.y.o
+OBJS += $(OBJ_DIR)/frontend/sysy.l.o
 
-# 自动发现源文件（支持子目录）
-SOURCES := $(shell find $(SRCDIR) -name '*.cpp')
-TEST_SOURCES := $(shell find $(TESTDIR) -name '*.cpp')
+# Final executable
+TARGET := $(BIN_DIR)/compiler
 
-# 生成目标文件路径
-OBJECTS := $(SOURCES:$(SRCDIR)/%.cpp=$(BUILDDIR)/%.o)
-TEST_OBJECTS := $(TEST_SOURCES:$(TESTDIR)/%.cpp=$(BUILDDIR)/test_%.o)
-
-# 排除主程序对象文件
-LIB_OBJECTS = $(filter-out $(MAIN_OBJECT), $(OBJECTS))
-
-# 目标程序
-TARGET = $(BUILDDIR)/my_program
-TEST_TARGET = $(BUILDDIR)/run_tests
-
-# 调试/发布配置
-BUILD_TYPE ?= debug
-ifeq ($(BUILD_TYPE),debug)
-    CXXFLAGS += -g -O0
-else ifeq ($(BUILD_TYPE),release)
-    CXXFLAGS += -O2
-endif
-
-# 默认目标
+# Default target
 all: $(TARGET)
 
-# 主程序构建
-$(TARGET): $(OBJECTS) | $(BUILDDIR)
-	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
+# 1. 确保解析器文件首先生成
+parser: $(YACC_CPP) $(LEX_CPP) $(YACC_HPP)
+.PHONY: parser
 
-# 测试程序构建
-$(TEST_TARGET): $(TEST_OBJECTS) $(LIB_OBJECTS) | $(BUILDDIR)
-	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
+# 生成解析器源文件
+$(YACC_CPP) $(YACC_HPP): $(YACC_SRC)
+	bison -d -o $(YACC_CPP) $<
 
-# 从 src 目录编译
-$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp | $(BUILDDIR) $(DEPDIR)
+$(LEX_CPP): $(LEX_SRC) $(YACC_HPP)
+	flex -o $@ $<
+
+# 2. 编译规则
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(YACC_HPP) | parser $(OBJ_DIR)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# 从 test 目录编译
-$(BUILDDIR)/test_%.o: $(TESTDIR)/%.cpp | $(BUILDDIR) $(DEPDIR)
+# 特殊规则处理生成的解析器代码 - 关键修改在这里
+$(OBJ_DIR)/frontend/sysy.y.o: $(YACC_CPP) | parser $(OBJ_DIR)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# 创建 build 和 dep 目录
-$(BUILDDIR):
-	mkdir -p $(BUILDDIR)
+# 特殊处理 Flex 生成的 C 文件 - 添加 -x c++ 选项
+$(OBJ_DIR)/frontend/sysy.l.o: $(LEX_CPP) | parser $(OBJ_DIR)
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -x c++ -c $< -o $@
 
-$(DEPDIR):
-	mkdir -p $(DEPDIR)
+# 3. 链接可执行文件 - 调整链接顺序
+$(TARGET): $(OBJS) | $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
-# 构建并运行测试
-test: $(TEST_TARGET)
-	./$(TEST_TARGET)
+# 创建构建目录
+$(BIN_DIR) $(OBJ_DIR):
+	@mkdir -p $@
 
-# 清理
+# 清理构建文件
 clean:
-	rm -rf $(BUILDDIR)
+	rm -rf $(BUILD_DIR) $(YACC_CPP) $(YACC_HPP) $(LEX_CPP)
 
-# 包含依赖文件
-DEPFILES := $(OBJECTS:$(BUILDDIR)/%.o=$(DEPDIR)/%.d) $(TEST_OBJECTS:$(BUILDDIR)/%.o=$(DEPDIR)/%.d)
--include $(DEPFILES)
+test:
+	./build/bin/compiler ./test/test2.sy
 
-# 声明伪目标
-.PHONY: all test clean
+debug:
+	gdb --args ./build/bin/compiler ./test/test2.sy
+
+.PHONY: all clean parser
