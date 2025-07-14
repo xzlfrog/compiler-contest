@@ -1,7 +1,7 @@
 #include "../../include/frontend/keyWordsTool.hpp"
 #include "../../include/frontend/frontendTool.hpp"
 
-
+/*
 LLVM* create_if_stmt(Expression* cond, LLVM* then_stmt) {
     // Create a new if statement with the given condition and then statement
     LabelSymbol* trueBranch = SymbolFactory::createTmpLabelSymbol();
@@ -109,3 +109,4 @@ LLVM* create_assign_stmt(std::string name, Expression* expr){
     PointerSymbol* pointer_sym = symbolMap[name];
     return ;
 }
+*/

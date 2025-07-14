@@ -1,11 +1,18 @@
 %{
-#include "sysy.tab.h"
+#include "sysy.y.hpp"
 #include <stdlib.h>
 #include <string.h>
 void yyerror(const char *s);
+extern FILE* yyin;
+extern int yyparse();
+#include<stdio.h>
+int yylex();
+
 %}
 
 %option yylineno
+%option nounput 
+%option noinput 
 
 %%
 
@@ -45,17 +52,17 @@ void yyerror(const char *s);
 "]"         { return ']'; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    yylval.string = strdup(yytext);
+    yylval.str = new std::string(yytext);
     return IDENTIFIER;
 }
 
 [0-9]+ {
-    yylval.string = strdup(yytext);
+    yylval.str = new std::string(yytext);
     return INT_CONST;
 }
 
 [0-9]+"."[0-9]* {
-    yylval.string = strdup(yytext);
+    yylval.str = new std::string(yytext);
     return FLOAT_CONST;
 }
 
