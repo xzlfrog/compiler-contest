@@ -5,16 +5,35 @@ int tmp_var_cnt;
 int tmp_label_cnt;
 
 std::string generate_tmp_var_name(){
-    return std::to_string(tmp_var_cnt++);
+    return "tmp_var."+std::to_string(tmp_var_cnt++);
 }
 
 std::string generate_tmp_label_name(){
     return "tmp_label."+std::to_string(tmp_label_cnt++);
 }
 
+std::string addScopeToName(std::string name){
+    std::string rename=name;
+    /*
+    if(variable_rename_table.size()==scope){
+        std::unordered_map<std::string, int> map_tmp;
+        variable_rename_table.push_back(map_tmp);
+    }
+    int idx;
+    if(variable_rename_table[scope].find(name)==variable_rename_table[scope].end()){
+        idx=0;
+        variable_rename_table[scope][name]=0;
+    }
+    else{
+        idx=++variable_rename_table[scope][name];
+    }
+    rename=name+"scope."+std::to_string(scope)+".id"+std::to_string(idx);*/
+    return rename;
+}
+
 VarSymbol* SymbolFactory::createVarSymbolWithScope(std::string name,int scope,Data*data){
     VarSymbol *varSymbol=new VarSymbol();
-    varSymbol->name=name;
+    varSymbol->name=addScopeToName(name);
     if(scope>=0)
         varSymbol->setScope(scope);
     varSymbol->ssa_name=varSymbol->name;
@@ -25,7 +44,7 @@ VarSymbol* SymbolFactory::createVarSymbolWithScope(std::string name,int scope,Da
 
 VarSymbol* SymbolFactory::createVarSymbolWithScope(std::string name,dataType type,int scope){
     VarSymbol *varSymbol=new VarSymbol();
-    varSymbol->name=name;
+    varSymbol->name=addScopeToName(name);
     if(scope>=0)
         varSymbol->setScope(scope);
     varSymbol->ssa_name=varSymbol->name;
@@ -36,7 +55,7 @@ VarSymbol* SymbolFactory::createVarSymbolWithScope(std::string name,dataType typ
 
 ConstVarSymbol* SymbolFactory::createConstVarSymbolWithScope(std::string name,int scope,Data* data){
     ConstVarSymbol *constVarSymbol=new ConstVarSymbol();
-    constVarSymbol->name=name;
+    constVarSymbol->name=addScopeToName(name);
     if(scope>=0)
         constVarSymbol->setScope(scope);
     constVarSymbol->ssa_name=constVarSymbol->name;
@@ -48,13 +67,26 @@ ConstVarSymbol* SymbolFactory::createConstVarSymbolWithScope(std::string name,in
 VarSymbol* SymbolFactory::createTmpVarSymbolWithScope(dataType type,int scope){
     std::string name=generate_tmp_var_name();
     VarSymbol *varSymbol=new VarSymbol();
-    varSymbol->name=name;
+    varSymbol->name=addScopeToName(name);
     if(scope>=0)
         varSymbol->setScope(scope);
     varSymbol->ssa_name=varSymbol->name;
     varSymbol->data=createNonInitialedData(type);
     varSymbol->type=symType::variable;
     return varSymbol;
+}
+
+PointerSymbol* SymbolFactory::createTmpPointerSymbolWithScope(dataType type,int scope){
+    std::string name=generate_tmp_var_name();
+    PointerSymbol *pointerSymbol=new PointerSymbol();
+    pointerSymbol->name=addScopeToName(name);
+    if(scope>=0)
+        pointerSymbol->setScope(scope);
+    pointerSymbol->ssa_name=pointerSymbol->name;
+    pointerSymbol->data=createNonInitialedData(type);
+    pointerSymbol->PointedType=type;
+    pointerSymbol->type=symType::pointer;
+    return pointerSymbol;
 }
 
 ConstSymbol* SymbolFactory::createConstSymbolWithScope(Data*data,int scope){
@@ -68,7 +100,7 @@ ConstSymbol* SymbolFactory::createConstSymbolWithScope(Data*data,int scope){
 
 PointerSymbol* SymbolFactory::createPointerSymbolWithScope(std::string name,int scope,dataType pointedType){
     PointerSymbol* pointerSymbol=new PointerSymbol();
-    pointerSymbol->name=name;
+    pointerSymbol->name=addScopeToName(name);
     if(scope>=0)
         pointerSymbol->setScope(scope);
     pointerSymbol->allocateMemory(pointedType);
@@ -79,7 +111,7 @@ PointerSymbol* SymbolFactory::createPointerSymbolWithScope(std::string name,int 
 
 ArraySymbol* SymbolFactory::createArraySymbolWithScope(std::string name,int scope,dataType type){
     ArraySymbol* arraySymbol=new ArraySymbol();
-    arraySymbol->name=name;
+    arraySymbol->name=addScopeToName(name);
     if(scope>=0)
         arraySymbol->setScope(scope);
     std::vector<int> dim=std::vector<int>(0);
@@ -90,7 +122,7 @@ ArraySymbol* SymbolFactory::createArraySymbolWithScope(std::string name,int scop
 
 ArraySymbol* SymbolFactory::createArraySymbolWithScope(std::string name,std::vector<int>&dimensions,int scope,dataType type){
     ArraySymbol* arraySymbol=new ArraySymbol();
-    arraySymbol->name=name;
+    arraySymbol->name=addScopeToName(name);
     if(scope>=0)
         arraySymbol->setScope(scope);
     arraySymbol->type=symType::array;

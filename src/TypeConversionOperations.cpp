@@ -38,6 +38,9 @@ std::string TypeConversionOperation::out_str() const {
     case LLVMtype::bitcast:
         res+="bitcast "+Data::getTypeStr(this->src_sym->getDataType())+" "+getSymOut(this->src_sym)+" to "+Data::getTypeStr(this->dest_sym->getDataType());
         break;
+    case LLVMtype::llvm_trunc:
+        res+="trunc "+Data::getTypeStr(this->src_sym->getDataType())+" "+getSymOut(this->src_sym)+" to "+Data::getTypeStr(this->dest_sym->getDataType());
+        break;
     //case LLVMtype::addrspacecast:
         //res+="addrspacecast ";
         //break;
