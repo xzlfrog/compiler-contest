@@ -81,6 +81,7 @@ std::string ArithmeticOperationLLVM::out_str() const {
         case LLVMtype::fcmp_ogt: opStr = "fcmp ogt"; break;
         case LLVMtype::fcmp_ole: opStr = "fcmp ole"; break;
         case LLVMtype::fcmp_olt: opStr = "fcmp olt"; break;
+        case LLVMtype::logical_xor: opStr ="xor";break;
         default: throw std::invalid_argument("unknown arithmetic operation");
     }
 

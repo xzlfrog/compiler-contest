@@ -3,6 +3,7 @@
 
 std::unordered_map<std::string,BasicBlock*> label_to_basicBlock;
 int function_num;
+std::unordered_map<std::string,PointerSymbol*>bs_to_ps;
 
 std::string generate_begin_label(){
     return "entry.label."+std::to_string(function_num);
@@ -58,7 +59,8 @@ void connect(BasicBlock* bb1,BasicBlock* bb2){
 
 //得到数据流图
 void connectBasicBlocks(const std::vector<BasicBlock*> bbs){
-    for(auto& l : bbs){
+    for(int i=0;i<bbs.size();i++){
+        auto & l= bbs[i];
         switch(l->tail->getLLVMType()){
             case LLVMtype::br_conditional:{
                 ConditionalBranchLLVM* br_cond=dynamic_cast<ConditionalBranchLLVM*>(l->tail);
@@ -81,7 +83,12 @@ void connectBasicBlocks(const std::vector<BasicBlock*> bbs){
                 break;
             }
             default:{
-                throw std::runtime_error("basic block dividing is wrong");
+                //if(l->tail->next!=nullptr&&l->tail->next->getLLVMType()!=LLVMtype::label){
+                    //throw std::runtime_error("the function do not end with return.");
+                //}
+                if(l->tail->next!=nullptr)
+                    connect(l,label_to_basicBlock[dynamic_cast<Label*>(l->tail->next)->label->name]);
+                break;
             }
         }
     }
@@ -89,8 +96,9 @@ void connectBasicBlocks(const std::vector<BasicBlock*> bbs){
 
 //只划分了基本块，但是没有得到对应的数据流图
 std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
+    label_to_basicBlock.clear();
+    FuncDefination* func_llvm=dynamic_cast<FuncDefination*>(llvmlist->head);
     int cnt=0;
-    llvmlist->InsertHead(LLVMfactory::createLableLLVM(SymbolFactory::createTmpLabelSymbolWithScope(1)));
     std::vector<BasicBlock*> basicBlocks;
     Label* beginLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbolWithScope(generate_begin_label(),1));
     basicBlocks.push_back(BasicBlock::createBasicBlock(beginLabel,beginLabel,llvmlist)) ;//begin基本块
@@ -98,27 +106,27 @@ std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
     cnt++;
 
     Label* entryLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbolWithScope(generate_entry_label(),1));
-    llvmlist->InsertHead(entryLabel);
+    llvmlist->InsertAfter(llvmlist->head,entryLabel);
 
     LLVM* start=entryLabel;
-    LLVM* llvm=llvmlist->head->next;
     BasicBlock* bb;
     Label* exitLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbolWithScope(generate_exit_label(),1));
-    llvmlist->InsertTail(exitLabel);
+    llvmlist->InsertAfter(func_llvm->block_tail,exitLabel);
+    LLVM* llvm=llvmlist->head->next->next;
 
-    while(llvm!=nullptr){
+    while(llvm!=nullptr&&llvm->prev!=exitLabel){
+        if(llvm->getLLVMType()==LLVMtype::load){
+            LoadLLVM* loadLLVM=dynamic_cast<LoadLLVM*>(llvm);
+            bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
+        }
         if(llvm->getLLVMType()==LLVMtype::label){
-            BasicBlock* bb;
-            if(llvm->prev)
-                bb=BasicBlock::createBasicBlock(start,llvm->prev,llvmlist);
-            else
-                bb=BasicBlock::createBasicBlock(start,start,llvmlist);
+            bb=BasicBlock::createBasicBlock(start,llvm->prev,llvmlist);
             bb->idx=cnt;
             cnt++;
             basicBlocks.push_back(bb);
             start=llvm;
-            }
-        else if(needDivide(llvm)&&(llvm->next==nullptr||llvm->next->getLLVMType()!=LLVMtype::label)){
+        }
+        else if(needDivide(llvm)&&llvm->next!=nullptr&&llvm->next->getLLVMType()!=LLVMtype::label){
             llvmlist->InsertAfter(llvm,LLVMfactory::createLableLLVM(SymbolFactory::createTmpLabelSymbolWithScope(1)));
         }
         llvm=llvm->next;
@@ -131,9 +139,17 @@ std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
     cnt++;
     basicBlocks.push_back(bb);//exit基本块
     Label* label_tmp;
-    for(auto l : basicBlocks){
+    for(auto &l : basicBlocks){
         label_tmp=dynamic_cast<Label*>(l->head);
+        if(label_tmp==nullptr){
+            throw std::runtime_error("the label of the basicBlock is nullptr!");
+        }
+        l->label=label_tmp;
         label_to_basicBlock.insert({label_tmp->label->name,l});
+    }
+    FuncDefination* head=dynamic_cast<FuncDefination*>(llvmlist->head);
+    if(llvmlist->tail!=head->block_tail){
+        head->block_tail=llvmlist->tail;
     }
     return basicBlocks;
 }

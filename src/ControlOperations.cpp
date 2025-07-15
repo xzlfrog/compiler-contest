@@ -92,7 +92,7 @@ const std::vector<std::pair<BasicSymbol*,LabelSymbol*>>&PhiLLVM::getValAndSrc() 
 dataType PhiLLVM::getDestType(){return this->dest_sym->getDataType();}
 
 void PhiLLVM::addCase(BasicSymbol*src_sym,LabelSymbol*src_label){
-    this->vals_srcs.push_back({src_sym,src_label});
+    this->vals_srcs.push_back({copy(src_sym),src_label});
 }
 void PhiLLVM::addCase(std::vector<BasicSymbol*> src_sym,std::vector<LabelSymbol*>src_label){
     if(src_sym.size()!=src_label.size()){
