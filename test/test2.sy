@@ -1,0 +1,74 @@
+float global_array[5][2][3]={{{1}},{{5,4,9}}};
+
+const int const_array[5][5][5]={{{1}},{{5,4,9}}};
+
+int global_var=5.9;
+int global1;
+const int const_1=9;
+int max(int x,int y){
+    int x;
+    int a;
+    if(x>y)
+        return x;
+    else
+        return y;
+}
+
+int p=6;
+
+void test_ssa(){
+    int x=5;
+    if(x>=3){
+        x=2;
+    }
+    else{
+        x=4;
+    }
+    int y=x;
+    return;
+}
+
+int main(){
+    1+2;
+    int a=1,b=2,test_uninitial;
+    int c=a+2;
+    c=a+const_array[0][0][3];
+    int test_not=!a;
+    int test_neg=-c;
+    int test_neg1=-const_1+5;
+    int d[2][3][4];
+    d[1][0][2]=5;
+    int e=d[1][0][2]+c;
+    int g[5]={1,2,3};
+    int f[5][2][3]={{{1}},{{5,4,9}}};
+    int h=const_1+7;
+    int test_var=1;
+    test_var=2;
+    test_var=h+g[1];
+    test_var=h+g[2];
+    if(f[0][0][0]==2)
+        if(e==3)
+            return 2;
+        else
+            return 3;
+    else
+        return 4;
+    while(global1<=5){
+        int a=1;
+        while(global_var>=0){
+            int i=1;
+            break;
+        }
+        int j=5;
+    }
+    int i=6;
+    while(global1<=5){
+        while(global_var>=0){
+            int m=1;
+            continue;
+        }
+        int n=5;
+    }
+    int s=max(5,6+1);
+    return 1;
+}
