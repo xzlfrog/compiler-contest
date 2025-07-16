@@ -36,6 +36,7 @@ public:
 
     std::string ArithmeticOpConvert(LLVMtype *op);
     std::string ASMDOperation(LLVM* llvm);
+    std::string ComparisonOperation(ArithmeticOperationLLVM* cmpllvm);
     
     int getNumberOfOperands(ConstVarSymbol *constvarsym) const;
     int getNumberOfOperands(ConstSymbol *constsym) const;

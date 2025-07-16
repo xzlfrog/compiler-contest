@@ -28,6 +28,7 @@
 define i32 @func.max(i32 %x, i32 %y) {
 %y.loader = load i32, i32* %y
 %x.loader = load i32, i32* %x
+
 %tmp_var.1 = icmp sgt i32 %x.loader, %y.loader
 %tmp_var.2 = zext i1 %tmp_var.1 to i32
 %tmp_var.3 = trunc i32 %tmp_var.2 to i1
@@ -165,7 +166,9 @@ store i32 5, i32* %n
 br label %label.tmp_label.15
 %label.tmp_label.17:
 %s = alloca i32, align 8
+
 %tmp_var.63 = call i32 @func.max(i32 5, i32 7)
+
 store i32 %tmp_var.63, i32* %s
 ret i32 1
 }

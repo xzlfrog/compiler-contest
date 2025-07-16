@@ -61,13 +61,22 @@ void ArithmeticOperationLLVM::out_arm_str() const {
         case sdiv:
         case logical_and:
         case logical_or:
-            OutArm::outString(OutArm::ASMDOperation(this));
+            OutArm::outString(OutArm::ASMDOperation(&this));
             break;
         case llvm_frem:
         case urem:
         case srem:
-            OutArm::outString(OutArm::RemOperation(this));
+            OutArm::outString(OutArm::RemOperation(&this));
             break;
+        case icmp_eq:
+        case icmp_ne:
+        case icmp_sgt:
+        case icmp_sge:
+        case icmp_slt:
+        case icmp_sle:
+            OutArm::outString(OutArm::ComparisonOperation(&this));
+            break;
+
         default:
             throw std::invalid_argument("Unsupported LLVM type for ARM conversion");
     }
@@ -97,8 +106,8 @@ std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
         op3 = "SUB";
         break;       
     }
-    a_str = RegisterAllocator::getRegister(REMllvm->a);
-    tmp_str = RegisterAllocator::getRegister(tmp);
+    a_str = RegisterAllocator::accessVariable(REMllvm->a);
+    tmp_str = RegisterAllocator::accessVariable(tmp);
     if(REMllvm->b->symType == symType::constant_var || symType::constant_nonvar) {
         b_str = getIntNumberOfOperands(REMllvm->b);
     }else if(REMllvm->b->Data->getType() == dataType::f32) {
@@ -125,7 +134,7 @@ std::string OutArm::ASMDOperation(ArithmeticOperationLLVM* ASMDllvm){
     std::string a_str, b_str, c_str, op;
 
     op = ArithmeticOpConvert(&ASMDllvm->llvmType);
-    a_str = RegisterAllocator::getRegister(ASMDllvm->a);
+    a_str = RegisterAllocator::accessVariable(ASMDllvm->a);
 
     if(ASMDllvm->b->symType == symType::constant_var || symType::constant_nonvar) {
         b_str = getIntNumberOfOperands(ASMDllvm->b);
@@ -146,11 +155,90 @@ std::string OutArm::ASMDOperation(ArithmeticOperationLLVM* ASMDllvm){
     return op + " " + a_str + ", " + b_str + ", " + c_str;
 }
 
-void ConditionalBranchLLVM::out_arm_str() const {
-    std::string condition_str = RegisterAllocator::getRegister(condition);
-    std::string true_branch_str = RegisterAllocator::getRegister(trueBranch);
-    std::string false_branch_str = RegisterAllocator::getRegister(falseBranch);
+std::string OutArm::ComparisonOperation(ArithmeticOperationLLVM* cmpllvm) {
+    std::string a_str, b_str, c_str, tmp_str, op0, op1, op2;
+    VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
+    op0 = "CMP";
+    op1 = "CSET";
 
-    OutArm::outString(OutArm::br_conditional + " " + condition_str + ", " + true_branch_str + ", " + false_branch_str);
+    switch(cmpllvm->llvmType) {
+        case icmp_eq:
+            op2 = "EQ";
+            break;
+        case icmp_ne:
+            op2 = "NE";
+            break;
+        case icmp_sgt:
+            op2 = "GT";
+            break;
+        case icmp_sge:
+            op2 = "GE";
+            break;
+        case icmp_slt:
+            op2 = "LT";
+            break;
+        case icmp_sle:
+            op2 = "LE";
+            break;
+        default:
+            throw std::invalid_argument("Unsupported comparison type for ARM conversion");
+    }
+
+    a_str = RegisterAllocator::accessVariable(cmpllvm->a);
+    tmp_str = RegisterAllocator::accessVariable(tmp);
+    b_str = RegisterAllocator::accessVariable(cmpllvm->b);
+    c_str = RegisterAllocator::accessVariable(cmpllvm->c);
+
+    return op0 + " " + b_str + ", " + c_str + "\n" +
+           op1 + " " + a_str + ", " + op2 ;
+           
 }
 
+void UnconditionalBranchLLVM::out_arm_str() const {
+    std::string target_str = this->target->getName();
+    OutArm::outString("B " + target_str);
+}
+
+void ConditionalBranchLLVM::out_arm_str() const {
+    std::string condition_str = RegisterAllocator::accessVariable(condition);
+    std::string true_branch_str = this->trueBranch->getName();
+    std::string false_branch_str = this->falseBranch->getName();
+
+    OutArm::outString("CBZ " + condition_str + ", " + true_branch_str);
+    OutArm::outString("CBNZ " + condition_str + ", " + false_branch_str);
+}
+
+void ReturnLLVM::out_arm_str() const {
+    if (this->returnValue) {
+        std::string return_value_str = RegisterAllocator::accessVariable(this->returnValue);
+        OutArm::outString("MOV X0, " + return_value_str); // Assuming X0 is the return register
+    }
+    OutArm::outString("RET");
+}
+
+void CallLLVM::out_arm_str() const {
+    std::string func_name = this->function->getName();
+    std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
+
+    for (const auto& arg : this->arguments) {
+        std::string arg_str = RegisterAllocator::accessVariable(arg);
+        OutArm::outString("MOV " + arg_str + ", X" + std::to_string(&arg - &this->arguments[0] + 1)); // X1, X2, ...
+    }
+
+    std::string call_str = "BL " + func_name;
+    OutArm::outString(call_str);
+    if (this->dest_sym) {
+        OutArm::outString("MOV " + dest_str + ", X0"); // Assuming X0 is the return register
+    }
+
+
+}
+
+void Label::out_arm_str() const {
+    std::string label_name = this->label->getName();
+    OutArm::outString(label_name + ":");
+}
+
+void PhiLLVM::out_arm_str() const {
+    return  ;
+}
