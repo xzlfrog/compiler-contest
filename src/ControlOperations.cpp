@@ -120,7 +120,7 @@ std::string PhiLLVM::out_str() const{
 //CallLLVM
 const std::vector<dataType>& CallLLVM::getArgumentsType(){return this->function->getParamTypes();}
 FuncSymbol* CallLLVM::getFuncSymbol(){return this->function;}
-const std::vector<BasicSymbol*>& CallLLVM::getArguments() const{return this->arguments;}
+const std::vector<Symbol*>& CallLLVM::getArguments() const{return this->arguments;}
 const std::vector<dataType>& CallLLVM::getArgumentsType() const{return this->function->getParamTypes();}
 dataType CallLLVM::getReturnType() {return this->function->getReturnType();}
 
@@ -139,7 +139,7 @@ std::string CallLLVM::out_str() const {
 
     for (size_t i = 0; i < arguments.size(); ++i) {
         if (i > 0) result += ", ";
-        std::string argType = Data::getTypeStr(arguments[i]->getDataType());
+        std::string argType = Data::getTypeStr(arguments[i]->data->getType());
         if (arguments[i]) {
             result += argType + " " + getSymOut(arguments[i]);
         }
@@ -153,22 +153,26 @@ void CallLLVM::setFunction(FuncSymbol* func){
     this->function=func;
 } 
 // Add an argument to the function call
-void CallLLVM::addArgument(BasicSymbol* arg){
+void CallLLVM::addArgument(Symbol* arg){
     int n=this->arguments.size();
     if(function->paramTypes.size()<=n){
         throw std::runtime_error("too much arguments");
     }
-    if(arg->getDataType()!=function->paramTypes[n]){
+    if(arg->type==symType::array){
+        if(dynamic_cast<ArraySymbol*>(arg)->arrayType!=function->paramTypes[n])
+            throw std::invalid_argument("the argument's type do not match the parameter's type");
+    }
+    else if(arg->data->getType()!=function->paramTypes[n]){
         throw std::invalid_argument("the argument's type do not match the parameter's type");
     }
     this->arguments.push_back(arg);
 }
-void CallLLVM::addArguments(std::vector<BasicSymbol*> args){
+void CallLLVM::addArguments(std::vector<Symbol*> args){
     for(auto arg : args){
         this->addArgument(arg);
     }
 }
-void CallLLVM::setArguments(std::vector<BasicSymbol*>& args){
+void CallLLVM::setArguments(std::vector<Symbol*>& args){
     this->arguments=args;
 }
 

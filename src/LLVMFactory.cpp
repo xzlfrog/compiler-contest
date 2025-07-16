@@ -10,6 +10,16 @@ std::vector<BasicSymbol*>& copy(const std::vector<BasicSymbol*>& bs_vector){
     return bs_vector_copy;
 }
 
+std::vector<Symbol*>& copy(const std::vector<Symbol*>& bs_vector){
+    static std::vector<Symbol*> bs_vector_copy;
+    bs_vector_copy=std::vector<Symbol*>(0);
+    for(auto & a :bs_vector){
+        if(a->getType()==symType::variable)
+            bs_vector_copy.push_back(copy(dynamic_cast<BasicSymbol*>(a)));
+    }
+    return bs_vector_copy;
+}
+
 ArithmeticOperationLLVM* LLVMfactory::createBasicOperationLLVM(LLVMtype type,BasicSymbol*a,BasicSymbol*b,BasicSymbol*c){
     ArithmeticOperationLLVM* basicOperationLLVM =new ArithmeticOperationLLVM();
     basicOperationLLVM->setOperand(copy(a),copy(b),copy(c));
@@ -79,9 +89,12 @@ Label* LLVMfactory::createLableLLVM(LabelSymbol* label){
     return labl;
 }
 
-CallLLVM* LLVMfactory::createCallLLVM(BasicSymbol*dest_sym,FuncSymbol* func,std::vector<BasicSymbol*>& params){
+CallLLVM* LLVMfactory::createCallLLVM(BasicSymbol*dest_sym,FuncSymbol* func,std::vector<Symbol*>& params){
     CallLLVM* callLLVM=new CallLLVM();
-    callLLVM->dest_sym=copy(dest_sym);
+    if(dest_sym!=nullptr)
+        callLLVM->dest_sym=copy(dest_sym);
+    else 
+        callLLVM->dest_sym=nullptr;
     callLLVM->function=func;
     callLLVM->arguments=copy(params);
     callLLVM->llvmType=LLVMtype::call;
@@ -182,7 +195,7 @@ GlobalNonArrayVarDefination* LLVMfactory::createGlobalNonArrayVarDefination(Poin
     return globalNonArrayVarDefination;
 }
 
-static CallLLVM* createCallLLVM(FuncSymbol* func,std::vector<BasicSymbol*>& params){
+CallLLVM* LLVMfactory::createCallLLVM(FuncSymbol* func,std::vector<Symbol*>& params){
     CallLLVM* callLLVM=new CallLLVM();
     callLLVM->addArguments(copy(params));
     callLLVM->function=func;

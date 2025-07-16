@@ -40,9 +40,6 @@ BasicSymbol* ConstantNonArrayVarDefination::getSrcSymbol(){return this->src_sym;
 initializer ConstantNonArrayVarDefination::getInitMode(){return this->dest_sym->data->getInitMode();}
 
 std::string ConstantNonArrayVarDefination::out_str()const{
-    if(dest_sym->scope>0){
-        throw std::runtime_error("the variable is not a global variable");
-    }
     std::string res =  dest_sym->getName() + " = constant ";
     res += Data::getTypeStr(this->dest_sym->data->getType()) + " ";
     switch (this->dest_sym->data->getInitMode())
@@ -273,6 +270,15 @@ std::string getZero(dataType type){
     }
 }
 
+bool cmp_vector_prex(std::vector<int>&v1,std::vector<int>&v2){
+    for(int i=0;i<std::min(v1.size(),v2.size());i++){
+        if(v1[i]!=v2[i]){
+            return false;
+        }
+    }
+    return true;
+}
+
 void array_def_recursion(std::vector<int>&dim,int i,dataType& type,std::string& s,bool flag,ArrayInitial* arrayInit,std::vector<int>&pos){
     s += " [" + std::to_string(dim[i]);
     int cnt=1;
@@ -287,9 +293,29 @@ void array_def_recursion(std::vector<int>&dim,int i,dataType& type,std::string& 
         s+="]";
     }
 
-    s+=" [";
+    std::vector<std::pair<std::vector<int>,Data*>> init_pos=arrayInit->getInitializedData();
+    bool prex_flag;//表示是否有初始化的元素在以pos为前缀的位置内
+    prex_flag=false;
+    if(!init_pos.empty()){
+        for(auto & a : init_pos){
+            if(cmp_vector_prex(pos,a.first)){
+                prex_flag=true;
+                break;
+            }
+        }
+    }
+    if(!prex_flag){
+        s+=" zeroinitializer";
+        if(flag)
+            s+=",\n";
+        else
+            s+="\n";
+        return;
+    }
     if(i+1<dim.size()){
+        s+=" [";
         s+="\n";
+        bool prex_flag;//表示是否有初始化的元素在以pos为前缀的位置内
         for(int j=0;j<dim[i]-1;j++){
             pos.push_back(j);
             array_def_recursion(dim,i+1,type,s,true,arrayInit,pos);
@@ -300,7 +326,7 @@ void array_def_recursion(std::vector<int>&dim,int i,dataType& type,std::string& 
         pos.pop_back();
     }
     else{
-        std::vector<std::pair<std::vector<int>,Data*>> init_pos=arrayInit->getInitializedData();
+        s+=" [";
         int k=0;
         int flag=-1;
         for(int j=0;j<dim[i];j++){
@@ -316,7 +342,7 @@ void array_def_recursion(std::vector<int>&dim,int i,dataType& type,std::string& 
             if(k>=init_pos.size()||flag==1){
                 s+=Data::getTypeStr(type)+" "+getZero(type);
             }
-            if(j!=dim[i-1])
+            if(j!=dim[i]-1)
                 s+=", ";
         }
     }

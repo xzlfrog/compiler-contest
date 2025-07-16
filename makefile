@@ -72,9 +72,9 @@ clean:
 	rm -rf $(BUILD_DIR) $(YACC_CPP) $(YACC_HPP) $(LEX_CPP)
 
 test:
-	./build/bin/compiler ./test/test2.sy
+	./build/bin/compiler ./test/test1.sy
 
 debug:
-	gdb --args ./build/bin/compiler ./test/test2.sy
+	gdb --args ./build/bin/compiler ./test/test1.sy
 
 .PHONY: all clean parser

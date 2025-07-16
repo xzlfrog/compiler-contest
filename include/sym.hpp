@@ -166,4 +166,4 @@ public:
     std::string getName(){return this->name;}
 };
 
-std::string getSymOut(BasicSymbol* basicSymbol);
+std::string getSymOut(Symbol* symbol);

@@ -22,6 +22,7 @@ std::string Data::getTypeStr(dataType type){
         case dataType::i64:  return "i64";
         case dataType::f32:  return "float";
         case dataType::f64:  return "double";
+        case dataType::void_:  return "void";
         default: throw std::invalid_argument("Invalid data type for function call");
     }
 }

@@ -48,16 +48,16 @@ class CallLLVM:public LLVM{
 public:
     FuncSymbol* function; // The function to call
     BasicSymbol* dest_sym; // The destination symbol to store the return value
-    std::vector<BasicSymbol*> arguments; // The arguments to pass to the function
+    std::vector<Symbol*> arguments; // The arguments to pass to the function
 
     std::string out_str() const override; // Output the LLVM IR string representation
     void setFunction(FuncSymbol* func); // Set the function to call
-    void addArgument(BasicSymbol* arg); // Add an argument to the function call
-    void addArguments(std::vector<BasicSymbol*> args);
-    void setArguments(std::vector<BasicSymbol*>& args);
+    void addArgument(Symbol* arg); // Add an argument to the function call
+    void addArguments(std::vector<Symbol*> args);
+    void setArguments(std::vector<Symbol*>& args);
     const std::vector<dataType>& getArgumentsType();
     FuncSymbol* getFuncSymbol();
-    const std::vector<BasicSymbol*>& getArguments() const;
+    const std::vector<Symbol*>& getArguments() const;
     const std::vector<dataType>& getArgumentsType() const;
     dataType getReturnType();
     ~CallLLVM()=default;
