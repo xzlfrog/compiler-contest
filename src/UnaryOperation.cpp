@@ -6,17 +6,18 @@ dataType UnaryOperationLLVM::getType(){
 
 std::string UnaryOperationLLVM::out_str() const{
     std::string res;
-    res=this->dest_sym->name;
+    res=this->dest_sym->getName();
     switch (this->llvmType)
     {
         case LLVMtype::llvm_neg:
-            res=" = neg ";
+            res+=" = neg ";
             break;
         case LLVMtype::llvm_fneg:
-            res=" = fneg ";
+            res+=" = fneg ";
             break;
         default:
             break;
     }
     res+=Data::getTypeStr(this->dest_sym->getDataType())+" "+getSymOut(this->src_sym);
+    return res;
 }

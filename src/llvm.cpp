@@ -5,6 +5,8 @@ LLVMtype LLVM::getLLVMType(){return this->llvmType;}
 
 //LLVMList
 void LLVMList::InsertTail(LLVM* llvm){
+    if(llvm==nullptr)
+        return;
     LLVM* llvm_tail=llvm;
     while(llvm_tail->next!=nullptr){
         llvm_tail=llvm_tail->next;
@@ -20,6 +22,8 @@ void LLVMList::InsertTail(LLVM* llvm){
 }
 
 void LLVMList::InsertHead(LLVM* llvm){
+    if(llvm==nullptr)
+        return;
     LLVM* llvm_tail=llvm;
     while(llvm_tail->next!=nullptr){
         llvm_tail=llvm_tail->next;
@@ -37,6 +41,8 @@ void LLVMList::InsertHead(LLVM* llvm){
 
 //insert after a specific position
 void LLVMList::InsertAfter(LLVM* pos,LLVM* llvm){
+    if(llvm==nullptr)
+        return;
     if(this->tail==pos){
         this->InsertTail(llvm);
         return;
@@ -54,6 +60,8 @@ void LLVMList::InsertAfter(LLVM* pos,LLVM* llvm){
 
 //insert before a specific position
 void LLVMList::InsertBefore(LLVM* pos,LLVM* llvm){
+    if(llvm==nullptr)
+        return;
     if(this->head==pos){
         this->InsertHead(llvm);
         return;
@@ -71,18 +79,19 @@ void LLVMList::InsertBefore(LLVM* pos,LLVM* llvm){
 
 //remove a specific LLVM node
 void LLVMList::Remove(LLVM* llvm){
+    if(llvm==nullptr)
+        return;
     LLVM* before=llvm->prev;
     LLVM* after=llvm->next;
 
+    if(llvm==this->head)
+        this->head=after;
     if(before!=nullptr)
         before->next=after;
-    else
-        this->head=after;
-
+    if(llvm==this->tail)
+        this->tail=before;
     if(after!=nullptr)
         after->prev=before;
-    else
-        this->tail=before;
 } 
 
 
@@ -165,6 +174,8 @@ Module* LLVM_to_Module(LLVM* llvm){
 }
 
 void LLVMList::InsertTail(LLVMList* llvmlist){
+    if(llvmlist==nullptr)
+        return;
     if(this->tail==nullptr){
         this->head=llvmlist->head;
         this->tail=llvmlist->tail;
@@ -180,6 +191,8 @@ void LLVMList::InsertTail(LLVMList* llvmlist){
 }
 
 void LLVMList::InsertHead(LLVMList* llvmlist){
+    if(llvmlist==nullptr)
+        return;
     if(this->tail==nullptr){
         this->head=llvmlist->head;
         this->tail=llvmlist->tail;
@@ -192,4 +205,21 @@ void LLVMList::InsertHead(LLVMList* llvmlist){
     llvmlist->tail->next=this->head;
     this->head=llvmlist->head;
     llvmlist->tail=this->tail;
+}
+
+BasicSymbol* copy(BasicSymbol* bs){
+    if(bs==nullptr)
+        return nullptr;
+    BasicSymbol* bs_copy;
+    if(bs->getType()==symType::constant_nonvar)
+        bs_copy=new ConstSymbol();
+    else if(bs->getType()==symType::constant_var)
+        bs_copy=new ConstVarSymbol();
+    else if(bs->getType()==symType::variable)
+        bs_copy=new VarSymbol();
+    bs_copy->name=bs->name;
+    bs_copy->scope=bs->scope;
+    bs_copy->data=bs->data;
+    bs_copy->ssa_name=bs->ssa_name;
+    return bs_copy;
 }

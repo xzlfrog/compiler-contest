@@ -1,5 +1,6 @@
 #pragma once
 #include"data.hpp"
+#include"sym.hpp"
 
 enum LLVMtype{
     llvm_fadd,
@@ -127,3 +128,5 @@ public:
 };
 
 Module* LLVM_to_Module(LLVM* llvm);
+
+BasicSymbol* copy(BasicSymbol* bs);

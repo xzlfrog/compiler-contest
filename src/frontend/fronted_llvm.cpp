@@ -256,20 +256,33 @@ Expression* create_unary_expr(int op, Expression* a){
     if(a->sym->getDataType()!=dataType::i32)
         throw std::runtime_error("unary calculation can only be used in int32 type");
     LLVMList* llvmlist=new LLVMList();
+    Expression* exp;
     switch (op)
     {
         case SINGLE_NOT:
+            exp=constFolding(constExpType::const_exp_add,a->sym,SymbolFactory::createConstSymbol(createData(dataType::i32,-1)));
+            if(exp!=nullptr){
+                return exp;
+            }
             llvmlist->InsertHead(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,res,a->sym,SymbolFactory::createConstSymbol(createData(dataType::i32,-1))));
             break;
         case SINGLE_NEGTIVE:
             if(a->sym->getDataType()==dataType::i32){
-                llvmlist->InsertHead(LLVMfactory::createUnaryOperationLLVM(res,a->sym,LLVMtype::llvm_neg));
+                exp=constFolding(constExpType::const_exp_sub,SymbolFactory::createConstSymbol(createData(dataType::i32,0)),a->sym);
+                if(exp!=nullptr){
+                    return exp;
+                }
+                llvmlist->InsertHead(LLVMfactory::createBasicOperationLLVM(LLVMtype::sub,res,SymbolFactory::createConstSymbol(createData(dataType::i32,0)),a->sym));
             }
             else if(a->sym->getDataType()==dataType::f32){
+                exp=constFolding(constExpType::const_exp_fsub,SymbolFactory::createConstSymbol(createData(dataType::f32,0)),a->sym);
+                if(exp!=nullptr){
+                    return exp;
+                }
                 llvmlist->InsertHead(LLVMfactory::createUnaryOperationLLVM(res,a->sym,LLVMtype::llvm_fneg));
             }
     }
-    Expression* exp=new Expression(llvmlist,res);
+    exp=new Expression(llvmlist,res);
     return exp;
 }
 
@@ -282,32 +295,26 @@ Symbol* findVar(std::string name){
     return nullptr;
 }
 
-BasicSymbol* isInReg(PointerSymbol* ps){
-    if(pointer_to_var.find(ps->name)!=pointer_to_var.end()){
-        return pointer_to_var[ps->name];
-    }
-    else{
-        return nullptr;
-    }
-}
-
 Expression* create_primary_IDENTIFIER(std::string name){
     BasicSymbol* sym;
     Expression* exp;
     LLVMList* llvmlist=new LLVMList();
     Symbol* identifier=findVar(name);
     if(identifier!=nullptr){
-        if(identifier->getType()!=symType::pointer)
-            throw std::runtime_error("error occurs at create_primary_IDENTIFIER."
-                "the identifer is not a pointer symbol.");
-        PointerSymbol* ps=dynamic_cast<PointerSymbol*>(identifier);
-        sym=isInReg(ps);
-        if(sym==nullptr){
-            sym=SymbolFactory::createVarSymbolWithScope(ps->name+".loader",scope);
+        if(identifier->getType()==symType::pointer){
+            PointerSymbol* ps=dynamic_cast<PointerSymbol*>(identifier);
+            sym=SymbolFactory::createVarSymbolWithScope(name+".loader",scope);
             llvmlist->InsertHead(LLVMfactory::createLoadLLVM(ps,sym));
-            pointer_to_var[ps->name]=sym;
+            exp=new Expression(llvmlist,sym);
         }
-        exp=new Expression(llvmlist,sym);
+        else if(identifier->getType()==symType::variable){
+            sym=dynamic_cast<VarSymbol*>(identifier);
+            exp=new Expression(llvmlist,sym);
+        }
+        else{
+            throw std::runtime_error("error occurs at create_primary_IDENTIFIER."
+                "the identifer is neither a pointer symbol nor vairable symbol.");
+        }
     }
     else{
         throw std::runtime_error("error occurs at create_primary_IDENTIFIER."
@@ -381,6 +388,7 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
             ArraySymbol* array=dynamic_cast<ArraySymbol*>(sym);
             bs=SymbolFactory::createTmpVarSymbolWithScope(array->getArrayType(),scope);
             PointerSymbol* ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
+            ps->isConst=array->isConst;
             llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM(ps,array,getIdxFromExp(exps)));
             llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
             for(auto &exp : (*exps)){
@@ -389,12 +397,11 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
         }
         else if(sym->getType()==symType::pointer){
             PointerSymbol* ps=dynamic_cast<PointerSymbol*>(sym);
-            bs=isInReg(ps);
-            if(bs==nullptr){
-                bs=SymbolFactory::createVarSymbolWithScope(ps->name+".loader",scope,createInitialedData(ps->PointedType));
-                llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
-                pointer_to_var[name]=bs;
-            }
+            bs=SymbolFactory::createVarSymbolWithScope(name+".loader",scope,createInitialedData(ps->PointedType));
+            llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
+        }
+        else if(sym->getType()==symType::variable){
+            bs=dynamic_cast<VarSymbol*>(sym);
         }
         else if(sym->getType()==symType::constant_var){
             ConstVarSymbol* cvs=dynamic_cast<ConstVarSymbol*>(sym);
@@ -403,7 +410,7 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
     }
     else{
         throw std::runtime_error("error occurs at get_item."
-            "the array was not defined before!");
+            "the variable was not defined before!");
     }
     return new Expression(llvmlist,bs);
 }
@@ -507,10 +514,12 @@ LLVMList* create_return_stmt(Expression* exp){
 LLVMList* create_const_decl(int btype,std::vector<Symbol*>* syms){
     LLVMList* llvmlist=new LLVMList();
     dataType dtype=btype==INT_TYPE?dataType::i32:dataType::f32;
-    if((btype==INT_TYPE && (*syms)[0]->data->getType()==dataType::i32)||(btype==FLOAT_TYPE && (*syms)[0]->data->getType()==dataType::f32)){
+    dataType ty=assign_queue.front()->sym->getDataType();
+    if((btype==INT_TYPE && ty==dataType::i32)||(btype==FLOAT_TYPE && ty==dataType::f32)){
         for(auto &a : (*syms)){
             if(a->getType()==symType::array){
                 ArraySymbol* array=dynamic_cast<ArraySymbol*>(a);
+                array->arrayType=dtype;
                 llvmlist->InsertTail(LLVMfactory::createConstantArrayVarDefination(array));
             }
             else if(a->getType()==symType::constant_var){
@@ -523,18 +532,20 @@ LLVMList* create_const_decl(int btype,std::vector<Symbol*>* syms){
         for(auto &a : (*syms)){
             if(a->getType()==symType::array){
                 ArraySymbol* array=dynamic_cast<ArraySymbol*>(a);
+                array->arrayType=dtype;
                 for(auto &b : array->initialedData->initializedData){
                     b={b.first,typeConversion(dtype,b.second)};
                 }
                 llvmlist->InsertTail(LLVMfactory::createConstantArrayVarDefination(array));
             }
             else{
-                ConstSymbol* constSymbol=dynamic_cast<ConstSymbol*>(a);
+                ConstVarSymbol* constSymbol=dynamic_cast<ConstVarSymbol*>(a);
                 constSymbol->data=typeConversion(dtype,constSymbol->data);
                 llvmlist->InsertTail(LLVMfactory::createConstantNonArrayVarDefination(constSymbol,SymbolFactory::createConstSymbol(constSymbol->data)));
             }
         }
     }
+    assign_queue.pop();
     return llvmlist;
 }
 
@@ -544,6 +555,7 @@ Symbol* create_array_const_def(std::string name,std::vector<int>* idxs,Expressio
     array->setInitialedData(arrayInitial);
     std::stack<int> empty_stack;
     std::swap(empty_stack,array_initial);
+    assign_queue.push(exp);
     array_init_idx=0;
     variable_table[scope][name]=array;
     return array;
@@ -553,6 +565,7 @@ Symbol* create_const_def(std::string name,Expression* exp){
     std::stack<int> empty_stack;
     std::swap(empty_stack,array_initial);
     array_init_idx=0;
+    assign_queue.push(exp);
     ConstVarSymbol* constVarSymbol=SymbolFactory::createConstVarSymbolWithScope(name,scope,exp->sym->data);
     variable_table[scope][name]=constVarSymbol;
     return constVarSymbol;
@@ -563,6 +576,8 @@ Symbol* create_var_def(std::string name,std::vector<int>* idxs){
     std::swap(empty_stack,array_initial);
     assign_queue.push(nullptr);
     array_init_idx=0;
+    if(variable_table[scope].find(name)!=variable_table[scope].end())
+        throw std::runtime_error("the identifier was defined before!");
     if(idxs->size()==0){
         PointerSymbol* ps=SymbolFactory::createPointerSymbolWithScope(name,scope);
         variable_table[scope][name]=ps;
@@ -581,6 +596,8 @@ Symbol* create_var_def(std::string name,std::vector<int>* idxs,Expression* exp){
     std::swap(empty_stack,array_initial);
     array_init_idx=0;
     assign_queue.push(exp);
+    if(variable_table[scope].find(name)!=variable_table[scope].end())
+        throw std::runtime_error("the identifier was defined before!");
     if(idxs->size()==0){
         PointerSymbol* pointerSymbol= SymbolFactory::createPointerSymbolWithScope(name,scope);
         if(isConst(exp->sym)){
@@ -620,7 +637,7 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
             if(a->getType()==symType::array){
                 ArraySymbol* array=dynamic_cast<ArraySymbol*>(a);
                 array->arrayType=dtype;
-                if(a->scope==GLOBAL_SCOPE){
+                if(a->scope==GLOBAL_SCOPE||array->isConst==true){
                     llvmlist->InsertHead(LLVMfactory::createGlobalArrayVarDefination(array));
                 }
                 else{
@@ -669,7 +686,7 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
                 for(auto &b : array->initialedData->initializedData){
                     b={b.first,typeConversion(dtype,b.second)};
                 }
-                if(a->scope==GLOBAL_SCOPE){
+                if(a->scope==GLOBAL_SCOPE||array->isConst==true){
                     llvmlist->InsertHead(LLVMfactory::createGlobalArrayVarDefination(array));
                 }
                 else{
@@ -730,8 +747,8 @@ LLVMList* create_func_def(int btype,std::string name,std::vector<Symbol*>* syms,
     dataType dtype=intToDataType(btype);
     std::vector<dataType> param_types;
     for(auto &a : (*syms)){
-        if(a->getType()==symType::pointer)
-            param_types.push_back(dynamic_cast<PointerSymbol*>(a)->getPointedType());
+        if(a->getType()==symType::variable)
+            param_types.push_back(dynamic_cast<VarSymbol*>(a)->getDataType());
         else if(a->getType()==symType::array)
             param_types.push_back(dynamic_cast<ArraySymbol*>(a)->getArrayType());
     }
@@ -745,14 +762,27 @@ LLVMList* create_func_def(int btype,std::string name,std::vector<Symbol*>* syms,
     return res;
 }
 
+void create_null_param(){
+    scope=1;
+    if(variable_table.size()<2){
+        variable_table.push_back(std::unordered_map<std::string,Symbol*>());
+    }
+    if(variable_rename_table.size()<2){
+        variable_rename_table.push_back(std::unordered_map<std::string,int>());
+    }
+}
+
 Symbol* create_param_nonarray(int btype,std::string name){
     scope=1;
     if(variable_table.size()<2){
         variable_table.push_back(std::unordered_map<std::string,Symbol*>());
     }
-    PointerSymbol* ps=SymbolFactory::createPointerSymbolWithScope(name,scope,intToDataType(btype));
-    variable_table[1][name]=ps;
-    return ps;
+    if(variable_rename_table.size()<2){
+        variable_rename_table.push_back(std::unordered_map<std::string,int>());
+    }
+    VarSymbol* param=SymbolFactory::createVarSymbolWithScope(name,intToDataType(btype),scope);
+    variable_table[1][name]=param;
+    return param;
 }
 
 Symbol* create_param_array(int btype,std::string name,std::vector<int>* dims){
@@ -760,6 +790,9 @@ Symbol* create_param_array(int btype,std::string name,std::vector<int>* dims){
     scope=1;
     if(variable_table.size()<2){
         variable_table.push_back(std::unordered_map<std::string,Symbol*>());
+    }
+    if(variable_rename_table.size()<2){
+        variable_rename_table.push_back(std::unordered_map<std::string,int>());
     }
     dimension.push_back(-1);
     for(auto & dim : (*dims)){
@@ -777,6 +810,9 @@ void end_parser(){
     if(outfile.is_open()){
         for(;llvmlist!=nullptr;llvmlist=llvmlist->next){
             llvm=llvmlist->head;
+            if(llvm->getLLVMType()==LLVMtype::func_def){
+                SSA(llvmlist);
+            }
             outfile<<llvm->out_str();
         }
         outfile.close();
@@ -791,12 +827,18 @@ void begin_parser(){
 }
 
 LLVMList* assign_array_item(Expression* LVal,Expression* exp){
-    LoadLLVM* llvm=dynamic_cast<LoadLLVM*>(LVal->llvmlist->tail);
-    PointerSymbol* ps=llvm->src_sym;
+    LLVM* tail_llvm=LVal->llvmlist->tail;
+    LoadLLVM* llvm=dynamic_cast<LoadLLVM*>(tail_llvm);
     LLVMList* llvmlist=new LLVMList();
     llvmlist->InsertHead(LVal->llvmlist);
     llvmlist->InsertTail(exp->llvmlist);
-    llvmlist->InsertTail(LLVMfactory::createStoreLLVM(exp->sym,ps));
+    if(llvm!=nullptr){
+        PointerSymbol* ps=llvm->src_sym;
+        if(ps->isConst==false)
+            llvmlist->InsertTail(LLVMfactory::createStoreLLVM(exp->sym,ps));
+        else
+            throw std::runtime_error("trying to assign to a constant varible");
+    }
     return llvmlist;
 }
 
@@ -831,3 +873,24 @@ void reduce_var_init_list(Expression* exp){
     array_init_idx=array_initial.top();
     ArrayInitial* arrayInitial=dynamic_cast<ArrayInitial*>(exp->sym->data);
 }
+
+/*bool cmp_eq_vector_int(std::vector<int>v1,std::vector<int>v2){
+    if(v1.size()!=v2.size()){
+        return false;
+    }
+    for(int i=0;i<v1.size();i++){
+        if(v1[i]!=v2[i])
+            return false;
+    }
+    return true;
+}
+
+Data* get_const_array_element(std::vector<int>&pos,ArraySymbol* array){
+    std::vector<std::pair<std::vector<int>,Data*>> arrayInitial=array->getInitializedData();
+    for(auto & a : arrayInitial){
+        if(cmp_eq_vector_int(a.first,pos)){
+            return a.second;
+        }
+    }
+    return createData(array->getArrayType(),zeroinitializer);
+}*/

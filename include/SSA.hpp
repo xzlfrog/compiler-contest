@@ -15,4 +15,4 @@ void initial_phi_w(std::vector<BasicBlock*>&bbs,std::unordered_map<std::string,s
 void insertPhi(std::vector<BasicBlock*>&bbs,std::vector<std::vector<int>>&df);
 std::vector<BasicSymbol*> getSrcSym(LLVM* llvm);
 void rename(std::vector<BasicBlock*>&bbs,int idx);
-void SSA(std::vector<BasicBlock*>&bbs);//主要是这个函数，这个函数调用了前面的函数，把语句的变量转化为SSA形式
+void SSA(LLVMList* llvmlist);//主要是这个函数，这个函数调用了前面的函数，把语句的变量转化为SSA形式

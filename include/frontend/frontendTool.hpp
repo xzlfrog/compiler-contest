@@ -38,7 +38,6 @@ extern ModuleList* module_list;
 extern std::vector<std::unordered_map<std::string,int>> variable_rename_table;
 extern std::vector<std::unordered_map<std::string,Symbol*>> variable_table;
 extern std::unordered_map<std::string,FuncSymbol*>func_table;
-extern std::unordered_map<std::string,BasicSymbol*> pointer_to_var;
 extern std::stack<LabelSymbol*> break_st,continue_st;
 extern std::queue<Expression*>assign_queue;
 extern std::stack<int>array_initial;//在面对数组变量初始化时，维护一个大小为当前嵌套大括号数量的栈，
@@ -48,7 +47,6 @@ extern std::stack<int>array_initial;//在面对数组变量初始化时，维护
 /* 假设的语义动作函数声明 */
 //dataType getTypeFromString(const char* typeStr);
 
-BasicSymbol* isInReg(PointerSymbol* ps);
 Expression* create_binary_expr(int op, Expression* a, Expression* b);//双元运算
 Expression* create_unary_expr(int op, Expression* a);//单元运算
 Expression* create_primary_IDENTIFIER(std::string name);//通过变量名称，将对应的变量加载到寄存器中
@@ -82,3 +80,4 @@ void begin_parser();
 void create_var_init_list(Expression* exp);
 void create_var_init_list(Expression* exp1,Expression* exp2);
 void reduce_var_init_list(Expression* exp);
+void create_null_param();

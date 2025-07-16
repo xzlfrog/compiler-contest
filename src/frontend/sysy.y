@@ -163,12 +163,15 @@ dim_list : /* empty */
 func_def : btype IDENTIFIER '(' func_params ')' block
     {
         scope=GLOBAL_SCOPE;
+        while(variable_table.size()>1){
+            variable_table.pop_back();
+        }
         $$ = create_func_def($1, *($2), $4, $6);
     }
 ;
 
 func_params : /* empty */
-    {   $$=new std::vector<Symbol*>(0); }
+    {   $$=new std::vector<Symbol*>(0); create_null_param();}
     | func_param_list{   
         $$=$1;  
     }
@@ -202,11 +205,16 @@ block : '{'
     {
         scope+=1;
         variable_table.push_back(std::unordered_map<std::string,Symbol*>());
+        while(variable_rename_table.size()<=scope)
+            variable_rename_table.push_back(std::unordered_map<std::string,int>());
+        $<llvm>$=new LLVMList();
     }
     block_items '}'{ 
-        $$=$3;
+        $$=$<llvm>2;
+        $$->InsertTail($3);
+        while(variable_table.size()>scope)
+            variable_table.pop_back();
         scope-=1;
-        variable_table.pop_back();
     }
 ;
 
@@ -361,8 +369,13 @@ const_init_val : const_exp
     {   
         $$=$1;
     }
-    | '{' const_init_list '}'{
-        $$ = $2; 
+    | '{' 
+    {
+        array_initial.push(array_init_idx);
+    }
+    const_init_list '}'{
+        reduce_var_init_list($3);
+        $$=$3;
     }
 ;
 

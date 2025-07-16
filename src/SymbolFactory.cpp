@@ -14,7 +14,6 @@ std::string generate_tmp_label_name(){
 
 std::string addScopeToName(std::string name){
     std::string rename=name;
-    /*
     if(variable_rename_table.size()==scope){
         std::unordered_map<std::string, int> map_tmp;
         variable_rename_table.push_back(map_tmp);
@@ -27,7 +26,7 @@ std::string addScopeToName(std::string name){
     else{
         idx=++variable_rename_table[scope][name];
     }
-    rename=name+"scope."+std::to_string(scope)+".id"+std::to_string(idx);*/
+    rename=name+".scope"+std::to_string(scope)+".id"+std::to_string(idx);
     return rename;
 }
 
