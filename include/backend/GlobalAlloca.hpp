@@ -2,30 +2,50 @@
 
 #include "../llvm.hpp"
 #include "../sym.hpp"
+#include "../data.hpp"
+#include "../sym.hpp"
 
 #include "../GlobalOperations.hpp"
 #include <string>
-#include <map>
+#include <unordered_map>
+#include <vector>
+#include <memory>
+#include <iostream>
+
+// 假设这些类型/类已经在其他头文件中定义
+enum class symbolType;
+
+class BasicSymbol;
+class ArraySymbol;
 
 class GlobalAllocator {
 public:
-    // 初始化全局变量存储段（.data/.bss/.rodata）
-    void initGlobalSection();
+    // 构造与重置
+    GlobalAllocator();
+    void reset();
 
-    //获取全局变量或常量的名称
-    std::string getSymbolName(Symbol* symbol);
+    // 全局变量分配
+    void allocateGlobal(BasicSymbol* symbol);
+    void allocateArray(ArraySymbol* arraySymbol);
 
-    // 获取未定义的全局变量的偏移
-    // 返回值为偏移量，单位为字节
-    int getGlobalOffset(Symbol* symbol);
+    // 段与数据处理
+    std::string determineSection(BasicSymbol* symbol) const;
+    size_t getTypeSize(BasicSymbol* symbol) const;
+    size_t getTypeSize(ArraySymbol* symbol) const;
+    std::string getAssemblyDirective(BasicSymbol* symbol) const;
+    std::string getInitialValue(BasicSymbol* symbol) const;
 
-    //浮点数转换为IEEE 754格式
-    std::string float_to_ieee754(float f);
-    
-    // 分配一个全局变量或常量
-    void allocateGlobal(Symbol* symbol);
-    /* 涵姐这里可以写三个函数 初始化的全局 未初始化的全局 常量*/
+    // 输出汇编代码
+    void emitAssembly(std::ostream& out) const;
+    void emitArrayInitialization(std::ostream& out, ArraySymbol* array) const;
 
-    // 输出全局数据段到汇编文件
-    void outputGlobals(std::ostream &out);
+    // 打印调试信息
+    void printAllocation(std::ostream& out = std::cerr) const;
+
+private:
+    // 存储全局变量，按段分类
+    std::unordered_map<std::string, std::vector<BasicSymbol*>> globalVariables;
+
+    // 存储全局数组
+    std::vector<ArraySymbol*> globalArrays;
 };

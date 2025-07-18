@@ -1,4 +1,5 @@
 #include "../../include/backend/out_arm.hpp"
+#include "../../include/backend/StaAlloca.hpp"
 #include "../../include/llvm.hpp"
 
 void outputModule(Module *module) {
@@ -29,6 +30,7 @@ std::string ArithmeticOpConvert(LLVMtype *op) {
 
         case logical_and: return "AND";
         case logical_or: return "OR";
+        case logical_xor: return "EOR"; // 异或在ARM中用EOR指令实现
         
         default: throw std::invalid_argument("Unsupported LLVM type for ARM conversion");
     }
@@ -241,4 +243,159 @@ void Label::out_arm_str() const {
 
 void PhiLLVM::out_arm_str() const {
     return  ;
+    //phi语句没有直接翻译捏。。。
 }
+
+//全局变量将会统一在文件顶部输出
+
+void GlobalNonArrayVarDefination::out_arm_str() const {
+    void GlobalAllocator::allocateGlobal(dest_sym);
+}
+
+void ConstantNonArrayVarDefination::out_arm_str() const {
+    void GlobalAllocator::allocateGlobal(dest_sym);
+}
+
+void GlobalArrayVarDefination::out_arm_str() const {
+    void GlobalAllocator::allocateArray(dest_sym);
+}
+
+void ConstantArrayVarDefination::out_arm_str() const {
+    void GlobalAllocator::allocateArray(dest_sym);
+}
+
+//函数声明暂时不翻译？
+void FuncDeclaration::out_arm_str() const {
+    // 函数声明不需要输出 ARM 汇编代码
+}
+
+//没有写出函数的emit
+void FuncDefination::out_arm_str() const {
+    // 函数定义需要输出 ARM 汇编代码
+    std::string func_name = this->func->getName();
+    OutArm::outString(func_name + ":");
+    
+    int stack_size = StackAllocator::calculateStackSize(&this);
+    OutArm::outString(StackAllocator::emitPrologue(stack_size));
+
+    // 输出函数参数
+    for (const auto& param : this->params) {
+        std::string param_str = RegisterAllocator::accessVariable(param);
+        OutArm::outString("MOV " + param_str + ", X" + std::to_string(&param - &this->params[0] + 1)); // X1, X2, ...
+    }
+
+    // 输出函数体的 LLVM 指令
+    //for (LLVM* llvm = this->block_tail; llvm != nullptr; llvm = llvm->next) {
+    //
+        llvm->out_arm_str();
+}
+
+
+void AllocaNonArrayLLVM::out_arm_str() const {
+    std::string var_str = RegisterAllocator::accessVariable(this->dest_sym);
+    int size = StackAllocator::allocateLocal(this->dest_sym);
+    OutArm::outString("SUB SP, SP, #" + std::to_string(size));
+    OutArm::outString("MOV " + var_str + ", SP");
+}
+
+void AllocaArrayLLVM::out_arm_str() const {
+    std::string array_str = RegisterAllocator::accessVariable(this->array);
+    int size = StackAllocator::allocateLocal(this->array);
+    OutArm::outString("SUB SP, SP, #" + std::to_string(size));
+    OutArm::outString("MOV " + array_str + ", SP");
+}
+
+void LoadLLVM::out_arm_str() const {
+    std::string src_str = RegisterAllocator::accessVariable(this->src_sym);
+    int offset = StackAllocator::getOffset(this->src_sym);
+    std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
+    OutArm::outString("LDR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
+}
+
+void StoreLLVM::out_arm_str() const {
+    std::string src_str = RegisterAllocator::accessVariable(this->src_sym);
+    int offset = StackAllocator::getOffset(this->dest_sym);
+    std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
+    
+    OutArm::outString("STR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
+}
+
+//未对齐 可能有隐患
+void GetElementPtrLLVM::out_arm_str() const {
+    std::string base_ptr = RegisterAllocator::accessVariable(this->ptrval);
+
+    int offset = StackAllocator::getOffset(this->ptrval);
+    for (auto dim : ty_idx) {
+        if (dim.first == dataType::i32) {
+            offset += dim.second->data->getValue<int>() * StackAllocator::getTypeSize(dim.first);
+        } else {
+            throw std::invalid_argument("Unsupported dimension type for ARM conversion");
+        }
+    }
+
+    StackAllocator::addPtr(this->dest_sym, offset);
+}
+
+void TypeConversionOperation::out_arm_str() const {
+    std::string src_str = RegisterAllocator::accessVariable(this->src_sym);
+    std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
+
+    switch (this->llvmType) {
+        case llvm_trunc:
+            OutArm::outString("TRUNC " + dest_str + ", " + src_str);
+            break;
+        case zext:
+            OutArm::outString("ZEXT " + dest_str + ", " + src_str);
+            break;
+        case sext:
+            OutArm::outString("SEXT " + dest_str + ", " + src_str);
+            break;
+        case bitcast:
+            OutArm::outString("BITCAST " + dest_str + ", " + src_str);
+            break;
+        case fptrunc:
+            OutArm::outString("FPTRUNC " + dest_str + ", " + src_str);
+            break;
+        case fpext:
+            OutArm::outString("FPEXT " + dest_str + ", " + src_str);
+            break;
+        case fptoui:
+            OutArm::outString("FPTUOI " + dest_str + ", " + src_str);
+            break;
+        case fptosi:
+            OutArm::outString("FPTOSI " + dest_str + ", " + src_str);
+            break;
+        case uitofp:
+            OutArm::outString("UITOFP " + dest_str + ", " + src_str);
+            break;
+        case sitofp:
+            OutArm::outString("SITOFP " + dest_str + ", " + src_str);
+            break;
+        case ptrtoint:
+            OutArm::outString("PTRTOINT " + dest_str + ", " + src_str);
+            break;
+        case inttoptr:
+            OutArm::outString("INTTOPTR " + dest_str + ", " + src_str);
+            break;
+        default:
+            throw std::invalid_argument("Unsupported type conversion for ARM conversion");
+    }
+}
+
+void UnaryOperationLLVM::out_arm_str() const {
+    std::string src_str = RegisterAllocator::accessVariable(this->src_sym);
+    std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
+
+    switch (this->llvmType) {
+        case llvm_neg:
+            OutArm::outString("NEG " + dest_str + ", " + src_str);
+            break;
+        case llvm_fneg:
+            OutArm::outString("FNEG " + dest_str + ", " + src_str);
+            break;
+        default:
+            throw std::invalid_argument("Unsupported unary operation for ARM conversion");
+    }
+}
+
+

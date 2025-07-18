@@ -82,7 +82,7 @@ public:
     std::string out_str()const override;
     std::string getReturnTypeStr(dataType returnType) const;
     std::string getParamTypeStr(dataType paramType) const;
-    voidg out_arm_str() const override;
+    void out_arm_str() const override;
     ~FuncDeclaration()=default;
 };
 

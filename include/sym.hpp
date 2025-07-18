@@ -136,6 +136,8 @@ public:
     const std::vector<std::pair<std::vector<int>,Data*>>& getInitializedData();//得到初始化的数据的位置和值，与上一个函数的参数的形式差不多
     void setScope(int scope) override;
     std::string getName(){return this->name;}
+    bool isInitialized() const { return isInitialed; }
+    
 };
 
 
