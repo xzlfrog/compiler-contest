@@ -155,18 +155,26 @@ dim_list : /* empty */
     { $$ = new std::vector<int>(0); }
     | dim_list '[' const_exp ']'{  
         $$ = $1;
-        ConstSymbol* constSym=dynamic_cast<ConstSymbol*>($3->sym);
+        BasicSymbol* constSym;
+        if($3->sym->getType()==symType::constant_nonvar)
+            constSym=dynamic_cast<ConstSymbol*>($3->sym);
+        else if($3->sym->getType()==symType::constant_var)
+            constSym=dynamic_cast<ConstVarSymbol*>($3->sym);
         $$->push_back(std::get<int>(constSym->data->getValue()));
     }
 ;
 
-func_def : btype IDENTIFIER '(' func_params ')' block
+func_def : btype IDENTIFIER '(' func_params ')'
+    {
+        $<llvm>$ = create_func_def($1, *($2), $4);
+    }
+    block
     {
         scope=GLOBAL_SCOPE;
         while(variable_table.size()>1){
             variable_table.pop_back();
         }
-        $$ = create_func_def($1, *($2), $4, $6);
+        $$=create_func_blk($<llvm>6,$7);
     }
 ;
 
@@ -357,7 +365,10 @@ expr_list : expr
     {   $$ = $1; }
     | expr_list ',' expr{   
         $$ = $1; 
-        $$->next=$3;
+        Expression* exp=$$;
+        while(exp->next!=nullptr)
+            exp=exp->next;
+        exp->next=$3;
     }
 ;
 
@@ -365,7 +376,9 @@ const_exp : add_expr
     { $$ = $1; }
 ;
 
-const_init_val : const_exp
+const_init_val : 
+    {   $$=new Expression(new LLVMList(),nullptr); }
+    |const_exp
     {   
         $$=$1;
     }
@@ -389,7 +402,9 @@ const_init_list : const_init_val{
     }
 ;
 
-var_init_val : expr
+var_init_val : 
+    {   $$=new Expression(new LLVMList(),nullptr); }
+    |expr
     {   
         $$=$1;
     }

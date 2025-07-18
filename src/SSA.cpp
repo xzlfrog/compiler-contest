@@ -207,8 +207,8 @@ BasicSymbol* getDestSym(LLVM* llvm){
     }
 }
 
-std::vector<BasicSymbol*> getSrcSym(LLVM* llvm){
-    std::vector<BasicSymbol*> ret;
+std::vector<Symbol*> getSrcSym(LLVM* llvm){
+    std::vector<Symbol*> ret;
     switch (llvm->getLLVMType())
     {
         case LLVMtype::add:
@@ -279,7 +279,12 @@ std::vector<BasicSymbol*> getSrcSym(LLVM* llvm){
         case LLVMtype::call:
         {
             CallLLVM* ir=dynamic_cast<CallLLVM*>(llvm);
-            return ir->getArguments();
+            for(auto & a : ir->getArguments()){
+                if(a->getType()!=symType::constant_nonvar&&a->getType()!=symType::array){
+                    ret.push_back(a);
+                }
+            }
+            return ret;
         }
         case LLVMtype::phi:
         {
@@ -306,12 +311,12 @@ std::vector<BasicSymbol*> getSrcSym(LLVM* llvm){
         {
             FuncDefination* ir=dynamic_cast<FuncDefination*>(llvm);
             for(auto & a : ir->params){
-                ret.push_back(dynamic_cast<VarSymbol*>(a));
+                ret.push_back(a);
             }
             return ret;
         }
         default:
-            return std::vector<BasicSymbol*>(0);
+            return std::vector<Symbol*>(0);
             break;
     }
 }
@@ -360,14 +365,25 @@ void insertPhi(std::vector<BasicBlock*>&bbs,std::vector<std::vector<int>>&df){
                     vals=std::vector<BasicSymbol*>(0);
                     srcs=std::vector<LabelSymbol*>(0);
                     PhiLLVM* phiLLVM=LLVMfactory::createPhiLLVM(basicSymbol,vals,srcs);
-                    StoreLLVM* storeLLVM=LLVMfactory::createStoreLLVM(a.second.first,bs_to_ps[a.second.first->name]);
-                    phiLLVM->next=storeLLVM;
-                    storeLLVM->prev=phiLLVM;
-                    storeLLVM->next=bbs[dfn]->head->next;
-                    if(bbs[dfn]->head->next==nullptr)
-                        bbs[dfn]->tail=storeLLVM;
-                    else
-                        bbs[dfn]->head->next->prev=storeLLVM;
+                    StoreLLVM* storeLLVM=nullptr;
+                    if(bs_to_ps.find(a.second.first->name)!=bs_to_ps.end())
+                        storeLLVM=LLVMfactory::createStoreLLVM(a.second.first,bs_to_ps[a.second.first->name]);
+                    if(storeLLVM!=nullptr){
+                        phiLLVM->next=storeLLVM;
+                        storeLLVM->prev=phiLLVM;
+                        storeLLVM->next=bbs[dfn]->head->next;
+                        if(bbs[dfn]->head->next==nullptr)
+                            bbs[dfn]->tail=storeLLVM;
+                        else
+                            bbs[dfn]->head->next->prev=storeLLVM;
+                    }
+                    else{
+                        phiLLVM->next=bbs[dfn]->head->next;
+                        if(bbs[dfn]->head->next==nullptr)
+                            bbs[dfn]->tail=phiLLVM;
+                        else
+                            bbs[dfn]->head->next->prev=phiLLVM;
+                    }
                     bbs[dfn]->head->next=phiLLVM;
                     phiLLVM->prev=bbs[dfn]->head;
                     for(int j=0;j<bbs[dfn]->prevNode.size();j++){
@@ -409,12 +425,15 @@ void rename(std::vector<BasicBlock*>&bbs,int idx){
     for(LLVM* llvm=bb->head;llvm!=nullptr&&llvm->prev!=bb->tail;llvm=llvm->next){
         if(llvm->getLLVMType()!=LLVMtype::phi){
             //先修改表达式右值
-            std::vector<BasicSymbol*> bs=getSrcSym(llvm);
+            std::vector<Symbol*> bs=getSrcSym(llvm);
             for(auto& b : bs){
                 if(b!=nullptr&&b->getType()==symType::variable){
                     if(st[b->name].empty())
                         throw std::runtime_error("the name is not in the unordered map");
-                    b->ssa_name=b->name+"."+std::to_string(st[b->name].top());
+                    if(b->getType()!=symType::array){
+                        BasicSymbol* src_bs=dynamic_cast<BasicSymbol*>(b);
+                        src_bs->ssa_name=src_bs->name+"."+std::to_string(st[src_bs->name].top());
+                    }
                 }
             }
             //再先修改表达式左值
@@ -457,10 +476,19 @@ void rename(std::vector<BasicBlock*>&bbs,int idx){
     }
 }
 
-void dead_code_eliminate(std::vector<BasicBlock*>& bbs,LLVMList* llvmlist){
-
+void dead_code_eliminate(std::vector<BasicBlock*>& bbs,LLVMList* llvmlist,std::vector<int>&idom){
+    for(int i=0;i<bbs.size();i++){
+        if(idom[i]==-1){
+            LLVM* next_llvm;
+            for(LLVM*llvm=bbs[i]->head;llvm!=bbs[i]->tail;llvm=next_llvm){
+                next_llvm=llvm->next;
+                llvmlist->Remove(llvm);
+            }
+            if(bbs[i]->head!=bbs[i]->tail)
+                llvmlist->Remove(bbs[i]->tail);
+        }
+    }
 }
-
 
 void SSA(LLVMList* llvmlist){
     count.clear();
@@ -468,16 +496,18 @@ void SSA(LLVMList* llvmlist){
     bs_to_ps.clear();
     int count_sz=count.size();
     int st_sz=st.size();
-    std::vector<BasicSymbol*>params=getSrcSym(llvmlist->head);
+    std::vector<Symbol*>params=getSrcSym(llvmlist->head);
     for(auto & a : params){
-        a->ssa_name=a->ssa_name+".0";
+        if(a->getType()!=symType::array){
+            BasicSymbol* func_param_bs=dynamic_cast<BasicSymbol*>(a);
+            func_param_bs->ssa_name=func_param_bs->ssa_name+".0";
+        }
     }
     std::vector<BasicBlock*>bbs=divideBasicBlock(llvmlist);
     connectBasicBlocks(bbs);
     initial_ssa(bbs);
     getDom(bbs);
     std::vector<int>idom=getIdom(bbs);
-    //dead_code_eliminate(bbs,llvmlist);
     std::vector<std::vector<int>> df=getDF(bbs,idom);
     insertPhi(bbs,df);
     idom_reverse=std::vector<std::vector<int>>(idom.size(),std::vector<int>(0));
@@ -492,8 +522,8 @@ void SSA(LLVMList* llvmlist){
     for(auto& bb : bbs){
         for(LLVM* llvm=bb->head;llvm!=nullptr&&llvm->prev!=bb->tail;llvm=llvm->next){
             BasicSymbol* basicSymbol=getDestSym(llvm);
-            std::vector<BasicSymbol*> basicSymbol_vector=getSrcSym(llvm);
-            for(auto & a : basicSymbol_vector){
+            std::vector<Symbol*> symbol_vector=getSrcSym(llvm);
+            for(auto & a : symbol_vector){
                 if(a==nullptr||a->getType()==symType::constant_var||a->getType()==symType::constant_nonvar)
                     continue;
                 count[a->name]=0;
@@ -508,5 +538,6 @@ void SSA(LLVMList* llvmlist){
         }
     }
     rename(bbs,0);
+    //dead_code_eliminate(bbs,llvmlist,idom);
     std::cout<<"ssa is done!"<<"\n";
 }

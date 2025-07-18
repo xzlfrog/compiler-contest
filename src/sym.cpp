@@ -216,14 +216,15 @@ void ConstVarSymbol::setScope(int scope){
     this->ssa_name=name;
 }
 
-std::string getSymOut(BasicSymbol* basicSymbol){
-    switch (basicSymbol->getType())
+std::string getSymOut(Symbol* symbol){
+    switch (symbol->getType())
     {
     case symType::constant_var:
     case symType::variable:
-        return basicSymbol->getName();
+    case symType::array:
+        return symbol->getName();
     case symType::constant_nonvar:
-        return my_to_string(basicSymbol->data);
+        return my_to_string(symbol->data);
     default:
         throw std::runtime_error("the type of b is wrong");
     }

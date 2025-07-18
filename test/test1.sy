@@ -1,68 +1,106 @@
-int set(int a[], int pos, int d){
-    const int bitcount = 30;
-    int x[bitcount + 1] = {};
+const int base = 16;
 
-    x[0] = 1;
-    x[1] = x[0] * 2;
-    x[2] = x[1] * 2;
-    x[3] = x[2] * 2;
-    x[4] = x[3] * 2;
-    x[5] = x[4] * 2;
-    x[6] = x[5] * 2;
-    x[7] = x[6] * 2;
-    x[8] = x[7] * 2;
-    x[9] = x[8] * 2;
-    x[10] = x[9] * 2;
-    
-    int i = 10;
-    while (i < bitcount){
+int getMaxNum(int n, int arr[]){
+    int ret = 0;
+    int i = 0;
+    while (i < n){
+        if (arr[i] > ret) ret = arr[i];
         i = i + 1;
-        x[i] = x[i - 1] * 2;
     }
+    return ret;
+}
 
-    int v = 0;
+int getNumPos(int num, int pos){
+    int tmp = 1;
+    int i = 0;
+    while (i < pos){
+        num = num / base;
+        i = i + 1;
+    }
+    return num % base;
+}
 
-    if (pos / bitcount >= 10000) return 0;
-    
-    if (a[pos / bitcount] / (x[pos % bitcount]) % 2 != d){
-        if (a[pos / bitcount] / (x[pos % bitcount]) % 2 == 0)
-            if (d == 1)
-                v = x[pos % bitcount];
+void radixSort(int bitround, int a[], int l, int r){
+    int head[base] = {};
+    int tail[base] = {};
+    int cnt[base] = {};
+
+    if (bitround == -1 || l + 1 >= r) return;
+
+    {    
+        int i = l;
         
-        if (a[pos / bitcount] / x[pos % bitcount] % 2 == 1)
-            if (d == 0)
-                v = v - x[pos % bitcount];
+        while (i < r){
+            cnt[getNumPos(a[i], bitround)]
+                = cnt[getNumPos(a[i], bitround)] + 1;
+            i = i + 1;
+        }        
+        head[0] = l;
+        tail[0] = l + cnt[0];
+
+        i = 1;
+        while (i < base){
+            head[i] = tail[i - 1];
+            tail[i] = head[i] + cnt[i];
+            i = i + 1;
+        }
+        i = 0;
+        while (i < base){
+            while (head[i] < tail[i]){
+                int v = a[head[i]];
+                while (getNumPos(v, bitround) != i){
+                    int t = v;
+                    v = a[head[getNumPos(t, bitround)]];
+                    a[head[getNumPos(t, bitround)]] = t;
+                    head[getNumPos(t, bitround)] = head[getNumPos(t, bitround)] + 1;
+                }
+                a[head[i]] = v;
+                head[i] = head[i] + 1;
+            }
+            i = i + 1;
+        }
     }
 
-    a[pos / bitcount] = a[pos / bitcount] + v;
-    return 0;
+    {
+        int i = l;
+        
+        head[0] = l;
+        tail[0] = l + cnt[0];
+
+        i = 0;
+        while (i < base){
+            if (i > 0){
+                head[i] = tail[i - 1];
+                tail[i] = head[i] + cnt[i];
+            }
+            radixSort(bitround - 1, a, head[i], tail[i]);
+            i = i + 1;
+        }
+    }
+
+    return;
 }
 
-int seed[3] = {19971231, 19981013, 1000000000 + 7};
-int staticvalue = 0;
+int a[30000010];
+int ans;
 
-int rand(){
-    staticvalue = staticvalue * seed[0] + seed[1];
-    staticvalue = staticvalue % seed[2];
-    if (staticvalue < 0) staticvalue = seed[2] + staticvalue;
-    return staticvalue;
-}
-
-int a[10000] = {};
 int main(){
-    
-    int n = getint();
-    staticvalue = getint();
-    starttime();
-    int x, y;
-    while (n > 0){
-        n = n - 1;
-        x = rand() % 300000;
-        y = rand() % 2;
-        set(a, x, y);
+    int n = 30000010;
+
+    //starttime();
+
+    radixSort(8, a, 0, n);
+
+    int i = 0;
+    while (i < n){
+        ans = ans + i * (a[i] % (2 + i));
+        i = i + 1;
     }
-    stoptime();
-    putarray(10000, a);
+
+    if (ans < 0)
+        ans = -ans;
+    //stoptime();
+    //putint(ans);
+    //putch(10);
     return 0;
 }
-
