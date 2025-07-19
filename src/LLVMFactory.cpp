@@ -326,3 +326,13 @@ UnaryOperationLLVM* LLVMfactory::createUnaryOperationLLVM(BasicSymbol* dest_sym,
     }
     return unaryOperationLLVM;
 }
+
+GetElementPtrLLVM_PointerToVar* LLVMfactory::createGetElementPtrLLVM_PointerToVar(ArraySymbol* src_sym,BasicSymbol* 
+    dest_sym,BasicSymbol* idx){
+        GetElementPtrLLVM_PointerToVar* res=new GetElementPtrLLVM_PointerToVar();
+        res->src_sym=src_sym;
+        res->dest_sym=copy(dest_sym);
+        res->idx=copy(idx);
+        res->llvmType=getelementptr_pointer_to_var;
+        return res;
+}

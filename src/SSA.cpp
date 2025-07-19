@@ -47,6 +47,14 @@ void initial_ssa(std::vector<BasicBlock*>&bbs){
     }
 }
 
+void print_dynamic_bitset(boost::dynamic_bitset<>a){
+    int n=a.size();
+    for(int i=0;i<n;i++){
+        std::cout<<a[i]<<" ";
+    }
+    std::cout<<"\n";
+}
+
 void getDom(std::vector<BasicBlock*>&bbs){
     bool flag=false;
     int n=bbs.size();
@@ -57,20 +65,28 @@ void getDom(std::vector<BasicBlock*>&bbs){
         for(int i=1;i<n;i++){
             old=bbs[i]->out;
             bbs[i]->in.set();
-            if(bbs[i]->prevNode.empty()){
-                bbs[i]->in.reset();
-            }
             for(auto bb:bbs[i]->prevNode){
                 meet_and(bbs[i]->in,bb->out);
             }
-            bbs[i]->out=bbs[i]->gen;
-            join_or(bbs[i]->out,bbs[i]->in);
+            bbs[i]->out=bbs[i]->in;
+            bbs[i]->out.set(i);
             if(bbs[i]->out!=old){
                 flag=true;
             }
         }
     }while(flag);
-    std::cout<<"getDom is done\n";
+    /*for(int i=0;i<n;i++){
+        std::vector<int>dom;
+        std::cout<<"dom["<<i<<"] = ";
+        for(int j=0;j<n;j++){
+            if(bbs[i]->out[j]==1){
+                dom.push_back(j);
+                std::cout<<j<<" , ";
+            }
+        }
+        std::cout<<"\n";
+    }
+    std::cout<<"getDom is done\n";*/
 }
 
 std::vector<int> getIdom(std::vector<BasicBlock*>&bbs){
@@ -81,6 +97,23 @@ std::vector<int> getIdom(std::vector<BasicBlock*>&bbs){
     int max;
     for(int i=1;i<n;i++){
         max=-1;
+        if(bbs[i]->out.count()==n){
+            if(i!=n-1){
+                ret.push_back(-1);
+            }
+            else{
+                for(int j=1;j<n-1;j++){
+                    if(ret[j]!=j-1){
+                        ret.push_back(-1);
+                        break;
+                    }
+                }
+                if(ret.size()!=n){
+                    ret.push_back(n-2);
+                }
+            }
+            continue;
+        }
         for(int j=0;j<n;j++){
             if(j==i)
                 continue;
@@ -103,7 +136,10 @@ std::vector<int> getIdom(std::vector<BasicBlock*>&bbs){
         if(runner==-1)
             ret[i]=-1;
     }
-    std::cout<<"getIdom is done!\n";
+    /*for(int i=0;i<n;i++){
+        std::cout<<"idom["<<i<<"] = "<<ret[i]<<"\n";
+    }
+    std::cout<<"getIdom is done!\n";*/
     return ret;
 }
 
@@ -115,14 +151,14 @@ std::vector<std::vector<int>> getDF(std::vector<BasicBlock*>&bbs,std::vector<int
         if(idom[i]!=-1&&bbs[i]->prevNode.size()>=2){
             for(auto& p : bbs[i]->prevNode){
                 runner=p->idx;
-                while(runner!=idom[i]){
+                while(runner!=-1&&runner!=idom[i]){
                     df[runner].push_back(i);
                     runner=idom[runner];
                 }
             }
         }
     }
-    std::cout<<"getDF is done"<<"\n";
+    //std::cout<<"getDF is done"<<"\n";
     return df;
 }
 
@@ -199,6 +235,11 @@ BasicSymbol* getDestSym(LLVM* llvm){
         case LLVMtype::llvm_fneg:
         {
             UnaryOperationLLVM* ir=dynamic_cast<UnaryOperationLLVM*>(llvm);
+            return ir->dest_sym;
+        }
+        case LLVMtype::getelementptr_pointer_to_var:
+        {
+            GetElementPtrLLVM_PointerToVar* ir=dynamic_cast<GetElementPtrLLVM_PointerToVar*>(llvm);
             return ir->dest_sym;
         }
         default:
@@ -403,7 +444,7 @@ void insertPhi(std::vector<BasicBlock*>&bbs,std::vector<std::vector<int>>&df){
             i++;
         }
     }
-    std::cout<<"insert Phi is done"<<"\n";
+    //std::cout<<"insert Phi is done"<<"\n";
 }
 
 void rename(std::vector<BasicBlock*>&bbs,int idx){
@@ -538,6 +579,6 @@ void SSA(LLVMList* llvmlist){
         }
     }
     rename(bbs,0);
-    //dead_code_eliminate(bbs,llvmlist,idom);
-    std::cout<<"ssa is done!"<<"\n";
+    dead_code_eliminate(bbs,llvmlist,idom);
+    //std::cout<<"ssa is done!"<<"\n";
 }

@@ -92,39 +92,56 @@ std::string GetElementPtrLLVM::out_str() const {
         throw std::invalid_argument("; <invalid getelementptr instruction>");
     }
     std::string result = dest_sym->getName() + " = getelementptr ";
-    result += "[" + std::to_string(ptrval->getDimensions()[0]);
-    int cnt=1;
-    for (size_t i = 1; i < ptrval->getDimensions().size(); ++i) {
-        result += " x [" + std::to_string(ptrval->getDimensions()[i]);
-        cnt++;
-    }
-    result+=" x ";
+    if(ptrval->getDimensions().size()!=0){
+        result += "[" + std::to_string(ptrval->getDimensions()[0]);
+        int cnt=1;
+        for (size_t i = 1; i < ptrval->getDimensions().size(); ++i) {
+            result += " x [" + std::to_string(ptrval->getDimensions()[i]);
+            cnt++;
+        }
+        result+=" x ";
     
-    result += Data::getTypeStr(ptrval->getArrayType()) ;
-    for(int i=0;i<cnt;i++){
-        result+="]";
-    }
+        result += Data::getTypeStr(ptrval->getArrayType()) ;
+        for(int i=0;i<cnt;i++){
+            result+="]";
+        }
 
-    result += ", [" + std::to_string(ptrval->getDimensions()[0]);
-    cnt=1;
-    for (size_t i = 1; i < ptrval->getDimensions().size(); ++i) {
-        result += " x [" + std::to_string(ptrval->getDimensions()[i]);
-        cnt++;
-    }
-    result+=" x ";
+        result += ", [" + std::to_string(ptrval->getDimensions()[0]);
+        cnt=1;
+        for (size_t i = 1; i < ptrval->getDimensions().size(); ++i) {
+            result += " x [" + std::to_string(ptrval->getDimensions()[i]);
+            cnt++;
+        }
+        result+=" x ";
     
-    result += Data::getTypeStr(ptrval->getArrayType()) ;
-    for(int i=0;i<cnt;i++){
-        result+="]";
-    }
+        result += Data::getTypeStr(ptrval->getArrayType()) ;
+        for(int i=0;i<cnt;i++){
+            result+="]";
+        }
 
-    result+="*";
+        result+="*";
     
-    result += " "+ptrval->getName();
-    result += ", " + Data::getTypeStr(dataType::i32) + " " + getSymOut(SymbolFactory::createConstSymbol(createData(dataType::i32,0)));
-    for (const auto& pair : ty_idx) {
-        result += ", " + Data::getTypeStr(pair.first) + " " + getSymOut(pair.second);
+        result += " "+ptrval->getName();
+        //result += ", " + Data::getTypeStr(dataType::i32) + " " + getSymOut(SymbolFactory::createConstSymbol(createData(dataType::i32,0)));
+        for (const auto& pair : ty_idx) {
+            result += ", " + Data::getTypeStr(pair.first) + " " + getSymOut(pair.second);
+        }
     }
-    
+    else{
+        throw std::runtime_error("the src_sym's dimension is 0");
+    }
+    return result;
+}
+
+dataType GetElementPtrLLVM_PointerToVar::getArrayType(){return this->src_sym->getArrayType();}
+std::string GetElementPtrLLVM_PointerToVar::out_str() const{
+    std::string result;
+    if(this->src_sym->getDimensions().size()==0){
+        result+=dest_sym->getName()+" = getelementptr "+Data::getTypeStr(this->src_sym->getArrayType())+" "+Data::getTypeStr(this->src_sym->getArrayType());
+        result+="* "+this->src_sym->getName()+", i32 "+getSymOut(this->idx);
+    }
+    else{
+        throw std::runtime_error("the src_sym's dimension is not 0");
+    }
     return result;
 }

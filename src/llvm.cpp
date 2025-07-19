@@ -221,5 +221,6 @@ BasicSymbol* copy(BasicSymbol* bs){
     bs_copy->scope=bs->scope;
     bs_copy->data=bs->data;
     bs_copy->ssa_name=bs->ssa_name;
+    bs_copy->type=bs->type;
     return bs_copy;
 }
