@@ -51,7 +51,7 @@ class RegisterAllocator {
         void freeRegister(std::string reg_name);
 
         // 获取第一个空闲寄存器
-        virtual std::string getFirstFreeRegister() const = 0;
+        //virtual std::string getFirstFreeRegister() const = 0;
     
         // 保存调用前需要保留的寄存器（calle-saved）
        //void saveRegisters(std::ostream &out);

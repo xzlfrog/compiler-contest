@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <string>
 #include <iostream>
+#include <sstream>
 
 std::string GlobalAllocator::determineSection(BasicSymbol* symbol) const {
     if (symbol->getType() == constant_var || symbol->getType() == constant_nonvar) {
@@ -138,6 +139,12 @@ void GlobalAllocator::emitAssembly(std::ostream& out) const {
             emitArrayInitialization(out, array);
         }
     }
+}
+
+std::string GlobalAllocator::emitAssemblyToString() const {
+    std::ostringstream oss;
+    emitAssembly(oss); // 原来的函数，只是现在输出到ostringstream
+    return oss.str();
 }
 
 void GlobalAllocator::reset() {

@@ -37,6 +37,7 @@ public:
 
     // 输出汇编代码
     void emitAssembly(std::ostream& out) const;
+    std::string emitAssemblyToString() const;
     void emitArrayInitialization(std::ostream& out, ArraySymbol* array) const;
 
     // 打印调试信息
