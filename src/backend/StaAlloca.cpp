@@ -66,7 +66,7 @@ int StackAllocator::getOffset(const std::string &varName) {
     throw std::runtime_error("Variable not found: " + varName);
 }   
 
-int StackAllocator::allocateLocal(BasicSymbol* symbol) {
+int StackAllocator::allocateLocal(Symbol* symbol) {
     const std::string& name = symbol->getName();
     if (hasVariable(name)) {
         throw std::runtime_error("Duplicate variable: " + name);
