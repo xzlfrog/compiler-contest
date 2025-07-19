@@ -11,6 +11,7 @@ public:
     LabelSymbol* falseBranch; // The LLVM IR for the false branch
 
     std::string out_str() const override; // Output the LLVM IR string representation
+    void out_arm_str() const override;
     void setCondition(BasicSymbol* cond); // Set the condition for the branch
     void setTrueBranch(LabelSymbol* trueBranch); // Set the true branch LLVM IR
     void setFalseBranch(LabelSymbol* falseBranch); // Set the false branch LLVM IR
@@ -26,6 +27,7 @@ public:
     LabelSymbol* target; // The target label for the branch
 
     std::string out_str() const override; // Output the LLVM IR string representation
+    void out_arm_str() const override;
     void setTarget(LabelSymbol* target); // Set the target label for the branch
     LabelSymbol* getTarget();
     ~UnconditionalBranchLLVM()=default;
@@ -37,6 +39,7 @@ public:
     BasicSymbol* returnValue; // The value to return
 
     std::string out_str() const override; // Output the LLVM IR string representation
+    void out_arm_str() const override;
     void setReturnValue(BasicSymbol* value); // Set the return value
     BasicSymbol* getReturnValue();//未检查return的类型是否和函数的返回值类型相匹配
     dataType getReturnType();
@@ -51,6 +54,7 @@ public:
     std::vector<Symbol*> arguments; // The arguments to pass to the function
 
     std::string out_str() const override; // Output the LLVM IR string representation
+    void out_arm_str() const override;
     void setFunction(FuncSymbol* func); // Set the function to call
     void addArgument(Symbol* arg); // Add an argument to the function call
     void addArguments(std::vector<Symbol*> args);
@@ -89,6 +93,7 @@ public:
     void addCase(BasicSymbol*src_sym,LabelSymbol*src_label);
     void addCase(std::vector<BasicSymbol*> src_sym,std::vector<LabelSymbol*>src_label);
     std::string out_str() const override;
+    void out_arm_str() const override;
     BasicSymbol* getDestSymbol();
     const std::vector<std::pair<BasicSymbol*,LabelSymbol*>>&getValAndSrc() const;
     dataType getDestType();
@@ -102,6 +107,7 @@ public:
     LabelSymbol* label;
 
     std::string out_str() const override;
+    void out_arm_str() const override;
     LabelSymbol* getLabel();
     ~Label()=default;
 };

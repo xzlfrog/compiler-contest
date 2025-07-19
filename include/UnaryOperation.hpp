@@ -8,5 +8,6 @@ public:
 
     dataType getType();
     std::string out_str() const override;
+    void out_arm_str() const override;
     ~UnaryOperationLLVM()=default;
 };

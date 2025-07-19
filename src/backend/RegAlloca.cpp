@@ -40,9 +40,7 @@ void RegisterAllocator::freeRegister(std::string reg_name){
 }
 
 // 保存调用前需要保留的寄存器（calle-saved）
-void RegisterAllocator::saveRegisters(std::ostream &out){
-
-}
+void RegisterAllocator::saveRegisters(std::ostream &out){}
 
 // 恢复调用后需恢复的寄存器
 void RegisterAllocator::restoreRegisters(std::ostream &out){}
@@ -73,16 +71,16 @@ std::string XRegAllocator::getRegister(Symbol* symbol) const {
     return ""; // 如果没有分配寄存器，返回空字符串
 }
 
-std::string VRegAllocator::getFirstFreeRegister() const {
+std::string SRegAllocator::getFirstFreeRegister() const {
     for (size_t i = 0; i < Registers.size(); ++i) {
         if (Registers[i] == nullptr) {
-            return "V" + std::to_string(i); // 返回第一个空闲寄存器的名称
+            return "S" + std::to_string(i); // 返回第一个空闲寄存器的名称
         }
     }
     throw std::runtime_error("No free registers available");
 }
 
-std::string VRegAllocator::allocateSpace(Symbol* symbol) {
+std::string SRegAllocator::allocateSpace(Symbol* symbol) {
     std::string reg = getFirstFreeRegister();
     size_t index = std::stoi(reg.substr(1)); // 获取寄存器索引
     Registers[index] = symbol; // 分配寄存器
@@ -90,20 +88,20 @@ std::string VRegAllocator::allocateSpace(Symbol* symbol) {
     return reg;
 }
 
-std::string VRegAllocator::getRegister(Symbol* symbol) const {
+std::string SRegAllocator::getRegister(Symbol* symbol) const {
     auto it = var_to_reg.find(symbol);
     if (it != var_to_reg.end()) {
         size_t index = it->second;
-        return "V" + std::to_string(index); // 返回寄存器名称
+        return "S" + std::to_string(index); // 返回寄存器名称
     }
     return ""; // 如果没有分配寄存器，返回空字符串
 }
 
 
-std::string VRegAllocator::accessVariable(Symbol* symbol) {
+std::string SRegAllocator::accessVariable(Symbol* symbol) {
     // 如果变量已存在，更新LRU位置
-    if (VRegAllocator::isRegisterUsed(symbol)) {
-        std::string regName = VRegAllocator::getRegister(symbol);
+    if (SRegAllocator::isRegisterUsed(symbol)) {
+        std::string regName = SRegAllocator::getRegister(symbol);
         lru_list.remove(regName);
         lru_list.push_front(regName);
         return regName;
@@ -119,11 +117,11 @@ std::string VRegAllocator::accessVariable(Symbol* symbol) {
         //spillToStack(lru_var);
         
         // 获取释放的寄存器
-        VRegAllocator::freeRegister(lru_var);
+        SRegAllocator::freeRegister(lru_var);
     }
 
     //有空闲寄存器，直接分配
-    std::string regName = VRegAllocator::allocateSpace(symbol);
+    std::string regName = SRegAllocator::allocateSpace(symbol);
 
     lru_list.push_front(regName);
 
