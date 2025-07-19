@@ -1,17 +1,16 @@
 #include "../../include/backend/out_arm.hpp"
 #include "../../include/backend/StaAlloca.hpp"
+
 #include "../../include/llvm.hpp"
 
-void outputModule(Module *module) {
-    OutArm out("output.s");
-    out.outputModule(module);
-}
+extern FILE* outputArmFile;
 
-void OutArm::outString(FILE* file, const std::string &str) const {
-    if (file) {
-        fprintf(file, "%s\n", str.c_str());
+void OutArm::outString(const std::string &str) const {
+    if (outputArmFile) {
+        fprintf(outputArmFile, "%s\n", str.c_str());
     }
 }
+
 std::string LLVM::out_arm_str() const {
 }
 
@@ -63,6 +62,7 @@ void ArithmeticOperationLLVM::out_arm_str() const {
         case sdiv:
         case logical_and:
         case logical_or:
+        case logical_xor:
             OutArm::outString(OutArm::ASMDOperation(&this));
             break;
         case llvm_frem:
