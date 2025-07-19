@@ -91,3 +91,14 @@ public:
     void out_arm_str() const override;
     ~GetElementPtrLLVM()=default;
 };
+
+class GetElementPtrLLVM_PointerToVar:public LLVM{
+public:
+    ArraySymbol* src_sym;
+    BasicSymbol* dest_sym;
+    BasicSymbol* idx;
+
+    dataType getArrayType();
+    std::string out_str() const override;
+    ~GetElementPtrLLVM_PointerToVar()=default;
+};

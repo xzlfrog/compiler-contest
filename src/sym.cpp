@@ -131,7 +131,7 @@ void FuncSymbol::setScope(int scope){
 }
 
 //VarSymbol
-symType VarSymbol::getType() {this->type=symType::variable; return this->type;}
+symType VarSymbol::getType() {this->type=symType::variable; return symType::variable;}
 dataType VarSymbol::getDataType()const{return this->data->getType();}
 
 void VarSymbol::setData(dataType dtype,ValueVariant v){

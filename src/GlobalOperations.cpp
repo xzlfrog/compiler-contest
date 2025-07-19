@@ -170,7 +170,22 @@ std::string FuncDefination::out_str()const{
     res += this->func->getName() + "(";
     
     for(size_t i = 0; i < this->func->paramTypes.size(); ++i){
-        res += this->getParamTypeStr(this->func->paramTypes[i]);
+        if(this->params[i]->getType()!=symType::array){
+            res += this->getParamTypeStr(this->func->paramTypes[i]);
+        }
+        else{
+            ArraySymbol* array=dynamic_cast<ArraySymbol*>(this->params[i]);
+            int i=0;
+            for(;i<array->getDimensions().size();i++){
+                const auto & dim = array->getDimensions()[i];
+                res+="["+std::to_string(dim)+" x ";
+            }
+            res+= Data::getTypeStr(array->getArrayType());
+            for(;i>0;i--){
+                res+="]";
+            }
+            res+="*";
+        }
         res += " "+this->params[i]->getName();
         if(i < this->func->paramTypes.size() - 1){
             res += ", ";

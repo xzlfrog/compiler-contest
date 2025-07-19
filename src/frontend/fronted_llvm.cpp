@@ -398,8 +398,17 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
             bs=SymbolFactory::createTmpVarSymbolWithScope(array->getArrayType(),scope);
             PointerSymbol* ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
             ps->isConst=array->isConst;
-            llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM(ps,array,getIdxFromExp(exps)));
-            llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
+            if(array->getDimensions().size()!=0){
+                llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM(ps,array,getIdxFromExp(exps)));
+                llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
+            }
+            else{
+                BasicSymbol* idx=dynamic_cast<BasicSymbol*>((*exps)[0]->sym);
+                if(idx==nullptr){
+                    throw std::runtime_error("the idx is not a basicSymbol type");
+                }
+                llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM_PointerToVar(array,bs,idx));
+            }
             for(auto &exp : (*exps)){
                 llvmlist->InsertHead(exp->llvmlist);
             }
@@ -536,6 +545,9 @@ LLVMList* create_const_decl(int btype,std::vector<Symbol*>* syms){
             }
             else if(a->getType()==symType::constant_var){
                 ConstVarSymbol* constVarSymbol=dynamic_cast<ConstVarSymbol*>(a);
+                if(constVarSymbol->getDataType()==dataType::data_undefined){
+                    throw std::runtime_error("the constVarSymbol is defined by a undefined dataType");
+                }
                 llvmlist->InsertTail(LLVMfactory::createConstantNonArrayVarDefination(constVarSymbol,SymbolFactory::createConstSymbol(constVarSymbol->data)));
             }
         }
@@ -607,6 +619,9 @@ Symbol* create_var_def(std::string name,std::vector<int>* idxs,Expression* exp){
     std::stack<int> empty_stack;
     std::swap(empty_stack,array_initial);
     array_init_idx=0;
+    if(name=="i"){
+        int x=1;
+    }
     assign_queue.push(exp);
     if(variable_table[scope].find(name)!=variable_table[scope].end())
         throw std::runtime_error("the identifier was defined before!");
@@ -665,7 +680,10 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
                     for(auto & element :array->getInitializedData()){
                         ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
                         llvmlist->InsertTail(LLVMfactory::createGetElementPtrLLVM(ps,array,intVectorToBasicSymbolVector(element.first)));
-                        llvmlist->InsertTail(LLVMfactory::createStoreLLVM(SymbolFactory::createConstSymbol(element.second),ps));
+                        if(element.second!=nullptr&&element.second->getType()!=dataType::data_undefined)
+                            llvmlist->InsertTail(LLVMfactory::createStoreLLVM(SymbolFactory::createConstSymbol(element.second),ps));
+                        else
+                            throw std::runtime_error("the constant do not have a value");
                     }
                 }
             }
@@ -678,8 +696,10 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
                     }
                     else{
                         llvmlist->InsertTail(LLVMfactory::createAllocaNonArrayLLVM(pointerSymbol));
-                        if(assign_queue.front()->llvmlist->head==nullptr)
-                            llvmlist->InsertTail(LLVMfactory::createStoreLLVM(SymbolFactory::createConstSymbol(pointerSymbol->data),pointerSymbol));
+                        if(assign_queue.front()->llvmlist->head==nullptr){
+                            if(pointerSymbol->data!=nullptr&&pointerSymbol->getType()!=dataType::data_undefined)
+                                llvmlist->InsertTail(LLVMfactory::createStoreLLVM(dynamic_cast<BasicSymbol*>(assign_queue.front()->sym),pointerSymbol));
+                            }
                         else{
                             llvmlist->InsertTail(assign_queue.front()->llvmlist);
                             llvmlist->InsertTail(LLVMfactory::createStoreLLVM(dynamic_cast<BasicSymbol*>(assign_queue.front()->sym),pointerSymbol));
@@ -714,7 +734,10 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
                     for(auto & element :array->getInitializedData()){
                         ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
                         llvmlist->InsertTail(LLVMfactory::createGetElementPtrLLVM(ps,array,intVectorToBasicSymbolVector(element.first)));
-                        llvmlist->InsertTail(LLVMfactory::createStoreLLVM(SymbolFactory::createConstSymbol(element.second),ps));
+                        if(element.second!=nullptr&&element.second->getType()!=dataType::data_undefined)
+                            llvmlist->InsertTail(LLVMfactory::createStoreLLVM(SymbolFactory::createConstSymbol(element.second),ps));
+                        else
+                            throw std::runtime_error("the constant do not have a value");
                     }
                 }
             }
@@ -727,7 +750,10 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
                     }
                     else{
                         llvmlist->InsertTail(LLVMfactory::createAllocaNonArrayLLVM(pointerSymbol));
-                        llvmlist->InsertTail(LLVMfactory::createStoreLLVM(SymbolFactory::createConstSymbol(pointerSymbol->data),pointerSymbol));
+                        if(pointerSymbol->data!=nullptr&&pointerSymbol->getType()!=dataType::data_undefined)
+                            llvmlist->InsertTail(LLVMfactory::createStoreLLVM(SymbolFactory::createConstSymbol(pointerSymbol->data),pointerSymbol));
+                        else
+                            throw std::runtime_error("the constant do not have a value");
                     }
                 }
                 else{
@@ -822,7 +848,6 @@ Symbol* create_param_array(int btype,std::string name,std::vector<int>* dims){
     if(variable_rename_table.size()<2){
         variable_rename_table.push_back(std::unordered_map<std::string,int>());
     }
-    dimension.push_back(-1);
     for(auto & dim : (*dims)){
         dimension.push_back(dim);
     }

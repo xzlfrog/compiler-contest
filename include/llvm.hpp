@@ -69,7 +69,8 @@ enum LLVMtype{
     func_def,//函数定义
     func_decl,//函数声明
     llvm_neg,
-    llvm_fneg
+    llvm_fneg,
+    getelementptr_pointer_to_var
 };
 
 class LLVM {

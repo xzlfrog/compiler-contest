@@ -98,4 +98,7 @@ public:
 
     static UnaryOperationLLVM* createUnaryOperationLLVM(BasicSymbol* dest_sym,
     BasicSymbol* src_sym,LLVMtype type);
+
+    static GetElementPtrLLVM_PointerToVar* createGetElementPtrLLVM_PointerToVar(ArraySymbol* src_sym,BasicSymbol* 
+    dest_sym,BasicSymbol* idx);
 };
