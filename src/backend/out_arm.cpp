@@ -398,4 +398,26 @@ void UnaryOperationLLVM::out_arm_str() const {
     }
 }
 
+void insertContentToFileFront(const std::string& filename, const std::string& contentToInsert) {
+    std::ifstream inFile(filename);
+    if (!inFile) {
+        std::cerr << "无法打开文件：" << filename << std::endl;
+        return;
+    }
+
+    // 读取原文件内容
+    std::ostringstream buffer;
+    buffer << inFile.rdbuf();
+    std::string originalContent = buffer.str();
+    inFile.close();
+
+    // 写回文件，先写入要插入的内容，再写原来的
+    std::ofstream outFile(filename);
+    if (!outFile) {
+        std::cerr << "无法写入文件：" << filename << std::endl;
+        return;
+    }
+
+    outFile << contentToInsert << originalContent;
+}
 

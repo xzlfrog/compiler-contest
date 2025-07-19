@@ -58,7 +58,10 @@ void out_arm(FILE* outputFile, ModuleList* module_list) {
             llvm->out_arm_str();
         }
         
+        insertContentToFileFront(outputFile, out.emitAssemblyToString());
+
         out.outString(outputFile, ".endmodule");
     }
 }
 
+void insertContentToFileFront(const std::string& filename, const std::string& contentToInsert);
