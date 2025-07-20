@@ -215,6 +215,7 @@ void ReturnLLVM::out_arm_str() const {
         std::string return_value_str = RegisterAllocator::accessVariable(this->returnValue);
         OutArm::outString("MOV X0, " + return_value_str); // Assuming X0 is the return register
     }
+    OutArm::outString(StackAllocator::emitEpilogue());
     OutArm::outString("RET");
 }
 
