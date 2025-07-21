@@ -54,7 +54,7 @@ BasicSymbol* ArithmeticOperationLLVM::getB(){return this->b;}
 BasicSymbol* ArithmeticOperationLLVM::getC(){return this->c;}
 dataType ArithmeticOperationLLVM::getType(){return this->ty;}
 
-void ArithmeticOperationLLVM::out_str() const {
+std::string ArithmeticOperationLLVM::out_str() const {
     std::string opStr;
 
     switch (llvmType) {

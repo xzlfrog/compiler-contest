@@ -58,14 +58,14 @@ std::string GlobalAllocator::getInitialValue(BasicSymbol* symbol) const {
     if (symbol->data == nullptr) return "0";
     
     switch(symbol->getDataType()) {
-        case i32: return std::to_string(symbol->data->getValue());
-        case i64: return std::to_string(symbol->data->getValue());
+        case i32: return my_to_string(symbol->data);
+        case i64: return my_to_string(symbol->data);
         case f32: 
             // 将float转换为IEEE754表示的整数
-            return std::to_string(*reinterpret_cast<int*>(symbol->data->getValue()));
+            return my_to_string(symbol->data);
         case f64:
             // 将double转换为IEEE754表示的整数
-            return std::to_string(*reinterpret_cast<long*>(symbol->data->getValue()));
+            return my_to_string(symbol->data);
         default: return "0";
     }
 }
@@ -86,7 +86,7 @@ void GlobalAllocator::emitArrayInitialization(std::ostream& out, ArraySymbol* ar
     
     if (array->isInitialized() && array->initialedData != nullptr) {
         for (const auto& elem : array->initialedData->initializedData) {
-            out << "\t.word " << std::to_string(elem.second->getValue()) << "\n";
+            out << "\t.word " << my_to_string(elem.second) << "\n";
         }
     } else {
         size_t totalSize = 1;

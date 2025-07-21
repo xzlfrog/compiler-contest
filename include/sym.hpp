@@ -28,6 +28,7 @@ public:
     Symbol* next;//下一个symbol，用于符号表的连接
 
     Symbol(){}
+    virtual dataType getDataType(){return this->data->getType();}
     virtual symType getType(){return this->type;}//返回type成员变量
     virtual ~Symbol() =default;
     virtual void setScope(int scope){this->scope=scope;}

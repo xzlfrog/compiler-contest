@@ -1,14 +1,14 @@
 #include "../../include/backend/StaAlloca.hpp"
 #include <stdexcept>
 
-int StackAllocator::align(int value, int alignment) const {
+int StackAllocator::align(int value, int alignment) {
     if (alignment <= 0 || (alignment & (alignment - 1))) {
         throw std::invalid_argument("Alignment must be a power of 2");
     }
     return (value + alignment - 1) & ~(alignment - 1);
 }
 
-int StackAllocator::getTypeSize(BasicSymbol* symbol) const {
+int StackAllocator::getTypeSize(Symbol* symbol) {
     dataType dtype = symbol->getDataType();
     switch(dtype) {
         case i32: case f32: return 4;
@@ -19,7 +19,7 @@ int StackAllocator::getTypeSize(BasicSymbol* symbol) const {
     }
 }
 
-void StackAllocator::addUsedRegister(const std::string& reg) {
+void StackAllocator::addUsedRegister(std::string& reg) {
     if (reg.size() < 2 || reg[0] != 'X') return;
     
     try {
@@ -32,7 +32,7 @@ void StackAllocator::addUsedRegister(const std::string& reg) {
     }
 }
 
-void StackAllocator::addUsedFloatRegister(const std::string& reg) {
+void StackAllocator::addUsedFloatRegister(std::string& reg) {
     if (reg.size() < 2 || reg[0] != 'D') return;
     
     try {
@@ -45,7 +45,7 @@ void StackAllocator::addUsedFloatRegister(const std::string& reg) {
     }
 }
 
-int StackAllocator::calculateRegisterSaveAreaSize() const {
+int StackAllocator::calculateRegisterSaveAreaSize() {
     int size = 16; // FP(x29)和LR(x30)必须保存
     
     // 被调用者保存的通用寄存器 (x19-x28)
@@ -67,7 +67,7 @@ int StackAllocator::getOffset(const std::string &varName) {
 }   
 
 int StackAllocator::allocateLocal(Symbol* symbol) {
-    const std::string& name = symbol->getName();
+    std::string name = symbol->getName();
     if (hasVariable(name)) {
         throw std::runtime_error("Duplicate variable: " + name);
     }
@@ -131,7 +131,7 @@ void StackAllocator::emitRegisterRestore(std::ostream& out, int offset) const {
         offset += 8;
     }
 }
-std::string StackAllocator::emitPrologue(int stackSize) const {
+std::string StackAllocator::emitPrologue(int stackSize) {
     std::ostringstream out;
     int registerSaveSize = calculateRegisterSaveAreaSize();
     int variableAreaSize = stackSize - registerSaveSize;
@@ -152,7 +152,7 @@ std::string StackAllocator::emitPrologue(int stackSize) const {
     return out.str();
 }
 
-std::string StackAllocator::emitEpilogue(int stackSize) const {
+std::string StackAllocator::emitEpilogue(int stackSize) {
     std::ostringstream out;
     int registerSaveSize = calculateRegisterSaveAreaSize();
     int variableAreaSize = stackSize - registerSaveSize;
