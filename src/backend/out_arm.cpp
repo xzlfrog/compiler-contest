@@ -194,12 +194,12 @@ std::string OutArm::ComparisonOperation(ArithmeticOperationLLVM* cmpllvm) {
            
 }
 
-void UnconditionalBranchLLVM::out_arm_str() const {
+void UnconditionalBranchLLVM::out_arm_str() {
     std::string target_str = this->target->getName();
     OutArm::outString("B " + target_str);
 }
 
-void ConditionalBranchLLVM::out_arm_str() const {
+void ConditionalBranchLLVM::out_arm_str()  {
     std::string condition_str = RegisterAllocator::accessVariable(condition);
     std::string true_branch_str = this->trueBranch->getName();
     std::string false_branch_str = this->falseBranch->getName();
@@ -208,7 +208,7 @@ void ConditionalBranchLLVM::out_arm_str() const {
     OutArm::outString("CBNZ " + condition_str + ", " + false_branch_str);
 }
 
-void ReturnLLVM::out_arm_str() const {
+void ReturnLLVM::out_arm_str()  {
     if (this->returnValue) {
         std::string return_value_str = RegisterAllocator::accessVariable(this->returnValue);
         OutArm::outString("MOV X0, " + return_value_str); // Assuming X0 is the return register
@@ -217,7 +217,7 @@ void ReturnLLVM::out_arm_str() const {
     OutArm::outString("RET");
 }
 
-void CallLLVM::out_arm_str() const {
+void CallLLVM::out_arm_str()  {
     std::string func_name = this->function->getName();
     std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
 
@@ -235,41 +235,41 @@ void CallLLVM::out_arm_str() const {
 
 }
 
-void Label::out_arm_str() const {
+void Label::out_arm_str()  {
     std::string label_name = this->label->getName();
     OutArm::outString(label_name + ":");
 }
 
-void PhiLLVM::out_arm_str() const {
+void PhiLLVM::out_arm_str()  {
     return  ;
     //phi语句没有直接翻译捏。。。
 }
 
 //全局变量将会统一在文件顶部输出
 
-void GlobalNonArrayVarDefination::out_arm_str() const {
+void GlobalNonArrayVarDefination::out_arm_str()  {
     void GlobalAllocator::allocateGlobal(dest_sym);
 }
 
-void ConstantNonArrayVarDefination::out_arm_str() const {
+void ConstantNonArrayVarDefination::out_arm_str()  {
     void GlobalAllocator::allocateGlobal(dest_sym);
 }
 
-void GlobalArrayVarDefination::out_arm_str() const {
+void GlobalArrayVarDefination::out_arm_str()  {
     void GlobalAllocator::allocateArray(dest_sym);
 }
 
-void ConstantArrayVarDefination::out_arm_str() const {
+void ConstantArrayVarDefination::out_arm_str()  {
     void GlobalAllocator::allocateArray(dest_sym);
 }
 
 //函数声明暂时不翻译？
-void FuncDeclaration::out_arm_str() const {
+void FuncDeclaration::out_arm_str()  {
     // 函数声明不需要输出 ARM 汇编代码
 }
 
 //没有写出函数的emit
-void FuncDefination::out_arm_str() const {
+void FuncDefination::out_arm_str()  {
     // 函数定义需要输出 ARM 汇编代码
     std::string func_name = this->func->getName();
     OutArm::outString(func_name + ":");
@@ -290,28 +290,28 @@ void FuncDefination::out_arm_str() const {
 }
 
 
-void AllocaNonArrayLLVM::out_arm_str() const {
+void AllocaNonArrayLLVM::out_arm_str()  {
     std::string var_str = RegisterAllocator::accessVariable(this->dest_sym);
     int size = StackAllocator::allocateLocal(this->dest_sym);
     OutArm::outString("SUB SP, SP, #" + std::to_string(size));
     OutArm::outString("MOV " + var_str + ", SP");
 }
 
-void AllocaArrayLLVM::out_arm_str() const {
+void AllocaArrayLLVM::out_arm_str()  {
     std::string array_str = RegisterAllocator::accessVariable(this->array);
     int size = StackAllocator::allocateLocal(this->array);
     OutArm::outString("SUB SP, SP, #" + std::to_string(size));
     OutArm::outString("MOV " + array_str + ", SP");
 }
 
-void LoadLLVM::out_arm_str() const {
+void LoadLLVM::out_arm_str()  {
     std::string src_str = RegisterAllocator::accessVariable(this->src_sym);
     int offset = StackAllocator::getOffset(this->src_sym);
     std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
     OutArm::outString("LDR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
 }
 
-void StoreLLVM::out_arm_str() const {
+void StoreLLVM::out_arm_str()  {
     std::string src_str = RegisterAllocator::accessVariable(this->src_sym);
     int offset = StackAllocator::getOffset(this->dest_sym);
     std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
@@ -320,7 +320,7 @@ void StoreLLVM::out_arm_str() const {
 }
 
 //未对齐 可能有隐患
-void GetElementPtrLLVM::out_arm_str() const {
+void GetElementPtrLLVM::out_arm_str()  {
     std::string base_ptr = RegisterAllocator::accessVariable(this->ptrval);
 
     int offset = StackAllocator::getOffset(this->ptrval);
@@ -335,7 +335,7 @@ void GetElementPtrLLVM::out_arm_str() const {
     StackAllocator::addPtr(this->dest_sym, offset);
 }
 
-void TypeConversionOperation::out_arm_str() const {
+void TypeConversionOperation::out_arm_str()  {
     std::string src_str = RegisterAllocator::accessVariable(this->src_sym);
     std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
 
@@ -381,7 +381,7 @@ void TypeConversionOperation::out_arm_str() const {
     }
 }
 
-void UnaryOperationLLVM::out_arm_str() const {
+void UnaryOperationLLVM::out_arm_str()  {
     std::string src_str = RegisterAllocator::accessVariable(this->src_sym);
     std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
 
