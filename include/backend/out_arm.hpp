@@ -14,20 +14,37 @@
 
 std::ofstream outputArmFile;
 class  OutArm {
+private:
+    static OutArm* instance;
+    std::string outputFileName;
+    // 禁止直接创建实例
+
+    // 禁止拷贝和赋值
+    OutArm(const OutArm&) = delete;
+    OutArm& operator=(const OutArm&) = delete;
+    // 私有构造，外面不能直接创建
+    OutArm() = default;
+
+
 public:
+
+    static OutArm& getInstance() {
+        if (!instance) {
+            instance = new OutArm();
+        }
+        return *instance;
+    }
+
+    static void setName(std::string name) {
+        outputFileName = name;
+    }
+    
     std::ofstream out;
     GlobalAllocator globalAllocator;
     StackAllocator stackAllocator;
     XRegAllocator xRegAllocator;
     DRegAllocator dRegAllocator;
     // 构造函数打开输出文件
-    OutArm(std::string outputFile){
-        out.open(outputFile, std::ios::out | std::ios::trunc);
-        if (!out.is_open()) {
-            std::cerr << "Error: Unable to create output file " << outputFile << std::endl;
-            throw std::runtime_error("Unable to create output file");
-        }
-    }
     
     static void outString(const std::string &str);
 
@@ -36,8 +53,8 @@ public:
     static std::string ComparisonOperation(ArithmeticOperationLLVM* cmpllvm);
     static std::string RemOperation(ArithmeticOperationLLVM* REMllvm);
     
-    static std::string getIntNumberOfOperands(ConstVarSymbol *sym) ;
-    static std::string getIntNumberOfOperands(ConstSymbol *sym) ;
+    static std::string getIntNumberOfOperands(Symbol *sym) ;
+   //static std::string getIntNumberOfOperands(ConstSymbol *sym) ;
 
     static std::string DispatchReg(Symbol* symbol);
     
@@ -60,7 +77,11 @@ public:
 void insertContentToFileFront(std::ofstream& outputFile, const std::string& contentToInsert);
 
 void out_arm(std::string outputFileName, ModuleList* module_list) {
-    OutArm Out_Arm(outputFileName);
+    std::string name = outputFileName;
+    OutArm::setName(name);
+    
+    // 创建OutArm实例
+    OutArm& Out_Arm = OutArm::getInstance();
     
     // 遍历模块列表
     for (Module* module = module_list->head; module != nullptr; module = module->next) {

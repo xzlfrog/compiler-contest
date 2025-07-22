@@ -5,6 +5,8 @@
 // extern std:ofstream outputArmFile;
 
 void OutArm::outString(const std::string &str) {
+    OutArm& out_Arm = OutArm::getInstance();
+    out_Arm.out.open(out_Arm.outputFileName, std::ios::out | std::ios::app);
     if (!outputArmFile.is_open()) {
         std::cerr << "无法打开输出文件" << std::endl;
         throw std::runtime_error("无法打开输出文件");
@@ -35,7 +37,7 @@ std::string OutArm::ArithmeticOpConvert(LLVMtype op) {
 
 }
 
-std::string OutArm::getIntNumberOfOperands(ConstVarSymbol *constvarsym){
+std::string OutArm::getIntNumberOfOperands(Symbol *constvarsym){
     ValueVariant number = constvarsym->data->getValue();
     if (std::holds_alternative<int>(number)) {
         if(std::get<int>(number) == 0) {
@@ -47,27 +49,28 @@ std::string OutArm::getIntNumberOfOperands(ConstVarSymbol *constvarsym){
     }
 }
 
-std::string getIntNumberOfOperands(ConstSymbol *sym){
-    ValueVariant number = sym->data->getValue();
-    if (std::holds_alternative<int>(number)) {
-        if(std::get<int>(number) == 0) {
-            return "XZR"; // ARM zero register
-        }
-        return "#" + std::to_string(std::get<int>(number));
-    }else if(std::holds_alternative<float>(number)) {
-        return std::to_string(std::get<float>(number));
-    }
-    throw std::invalid_argument("Unsupported type for getIntNumberOfOperands");
-}
+// std::string getIntNumberOfOperands(ConstSymbol *sym){
+//     ValueVariant number = sym->data->getValue();
+//     if (std::holds_alternative<int>(number)) {
+//         if(std::get<int>(number) == 0) {
+//             return "XZR"; // ARM zero register
+//         }
+//         return "#" + std::to_string(std::get<int>(number));
+//     }else if(std::holds_alternative<float>(number)) {
+//         return std::to_string(std::get<float>(number));
+//     }
+//     throw std::invalid_argument("Unsupported type for getIntNumberOfOperands");
+// }
 
 std::string OutArm::DispatchReg(Symbol* symbol) {
+    OutArm& out_Arm = OutArm::getInstance();
     std::string reg_name;
-    if(symbol->symType == symType::constant_var || symType::constant_nonvar) {
-        reg_name = OutArm::getIntNumberOfOperandss(symbol);
-    }else if(symbol->Data->getType() == dataType::f32) {
-        reg_name = dRegAllocator.accessVariable(symbol);
-    }else if(Rsymbol->Data->getType() == dataType::i32) {
-        reg_name = xRegAllocator.accessVariable(symbol);
+    if(symbol->type == symType::constant_var || symType::constant_nonvar) {
+        reg_name = OutArm::getIntNumberOfOperands(symbol);
+    }else if(symbol->data->getType() == (dataType::f32) || (dataType::f64)) {
+        reg_name = out_Arm.dRegAllocator.accessVariable(symbol);
+    }else if(symbol->data->getType() == (dataType::i32) || (dataType::i64) || (dataType::i16) || (dataType::i8) || (dataType::i1)) {
+        reg_name = out_Arm.xRegAllocator.accessVariable(symbol);
     }
     return reg_name;
 }
