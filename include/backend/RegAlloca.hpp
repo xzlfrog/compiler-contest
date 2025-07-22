@@ -63,8 +63,8 @@ class RegisterAllocator {
         void reset();
 
         // 内部方法
-    virtual void promoteToRegister(const Symbol* symbol) = 0;
-    virtual void spillToStack(const Symbol* symbol) = 0;
+    virtual void promoteToRegister( Symbol* symbol) = 0;
+    virtual void spillToStack(Symbol* symbol) = 0;
         
     };
 
@@ -89,8 +89,8 @@ class XRegAllocator : public RegisterAllocator {
         std::string accessVariable(Symbol* symbol) override ;
         std::string accessParam(Symbol* symbol) override;
         
-        void promoteToRegister(const Symbol* symbol) override ;
-        void spillToStack(const Symbol* symbol) override ;
+        void promoteToRegister(Symbol* symbol) override ;
+        void spillToStack(Symbol* symbol) override ;
 };
 
 class DRegAllocator : public RegisterAllocator {
@@ -112,8 +112,8 @@ class DRegAllocator : public RegisterAllocator {
         std::string accessVariable(Symbol* symbol) override ;
         std::string accessParam(Symbol* symbol) override;
 
-        void promoteToRegister(const Symbol* symbol) override ;
-        void spillToStack(const Symbol* symbol) override ;
+        void promoteToRegister(Symbol* symbol) override ;
+        void spillToStack(Symbol* symbol) override ;
 };
 
 class ZERORegAllocator : public RegisterAllocator {

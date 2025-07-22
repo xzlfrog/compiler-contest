@@ -197,7 +197,7 @@ void StackAllocator::printAllocation(std::ostream& out) const {
     }
 }
 
-bool StackAllocator::hasVariable(const std::string& varName) const {
+bool StackAllocator::hasVariable(const std::string& varName) {
     return localVarOffsets.find(varName) != localVarOffsets.end();
 }
 

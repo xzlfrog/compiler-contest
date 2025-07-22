@@ -41,7 +41,7 @@ public:
     
     std::ofstream out;
     GlobalAllocator globalAllocator;
-    StackAllocator stackAllocator;
+    StackAllocator& stackAllocator = StackAllocator::getInstance();
     XRegAllocator xRegAllocator;
     DRegAllocator dRegAllocator;
     // 构造函数打开输出文件

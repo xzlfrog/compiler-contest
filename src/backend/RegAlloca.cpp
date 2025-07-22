@@ -82,10 +82,11 @@ std::string XRegAllocator::getRegister(Symbol* symbol) const {
     return ""; // 如果没有分配寄存器，返回空字符串
 }
 
-void XRegAllocator::promoteToRegister(const Symbol* symbol) {
-    bool is_in_stack = StackAllocator::hasVariable(symbol->getName());
+void XRegAllocator::promoteToRegister(Symbol* symbol) {
+    StackAllocator& stackAllocator = StackAllocator::getInstance();
+    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
     if (is_in_stack) {
-        int stack_offset = StackAllocator::getOffset(symbol->getName());
+        int stack_offset = stackAllocator.getOffset(symbol->getName());
         std::string reg_name = this->getRegister(symbol);
         if (reg_name.empty()) {
             throw std::runtime_error("No free registers available for promotion");
@@ -101,7 +102,7 @@ void XRegAllocator::promoteToRegister(const Symbol* symbol) {
     }   
 }
 
-void XRegAllocator::spillToStack(const Symbol* symbol) {
+void XRegAllocator::spillToStack(Symbol* symbol) {
     std::string reg_name = this->getRegister(symbol);
     if (reg_name.empty()) {
         throw std::runtime_error("No register allocated for spilling");
@@ -192,7 +193,7 @@ std::string DRegAllocator::getRegister(Symbol* symbol) const {
     return ""; // 如果没有分配寄存器，返回空字符串
 }
 
-void DRegAllocator::promoteToRegister(const Symbol* symbol) {
+void DRegAllocator::promoteToRegister(Symbol* symbol) {
     bool is_in_stack = StackAllocator::hasVariable(symbol->getName());
     if (is_in_stack) {
         int stack_offset = StackAllocator::getOffset(symbol->getName());
@@ -211,7 +212,7 @@ void DRegAllocator::promoteToRegister(const Symbol* symbol) {
     }   
 }
 
-void DRegAllocator::spillToStack(const Symbol* symbol) {
+void DRegAllocator::spillToStack(Symbol* symbol) {
     std::string reg_name = this->getRegister(symbol);
     if (reg_name.empty()) {
         throw std::runtime_error("No register allocated for spilling");

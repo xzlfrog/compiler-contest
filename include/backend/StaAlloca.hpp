@@ -9,19 +9,28 @@
 
 class StackAllocator {
     private:
+        static StackAllocator* stackInstance; // 单例模式
         std::map<std::string, int> localVarOffsets; // 变量名 -> 栈偏移
         int currentOffset = 0;                      // 当前栈指针偏移值
         
         // 辅助函数
         int align(int value, int alignment);
         int getTypeSize(Symbol* symbol) ;
+
+        // 构造函数
+        StackAllocator() = default;
         
     public:
         std::set<std::string> usedFloatRegisters;
         std::set<std::string> usedRegisters;
-        // 构造函数
-        StackAllocator() = default;
         
+        static StackAllocator& getInstance() {
+            if (!stackInstance) {
+                stackInstance = new StackAllocator();
+            }
+            return *stackInstance;
+        }
+
         // 核心功能函数
         int allocateLocal(Symbol *symbol);
         int allocateArray(ArraySymbol* arraySymbol);
@@ -45,6 +54,6 @@ class StackAllocator {
         void reset();
         std::string getStackPointer(Symbol *symbol) const;
         void printAllocation(std::ostream &out);
-        bool hasVariable(const std::string &varName) const;
+        bool hasVariable(const std::string &varName) ;
         
     };
