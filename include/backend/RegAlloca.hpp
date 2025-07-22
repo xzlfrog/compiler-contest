@@ -3,7 +3,6 @@
 #include <map>
 #include "../../include/sym.hpp"
 #include "../../include/backend/StaAlloca.hpp"
-#include "../../include/backend/out_arm.hpp"
 
 #include <list>
 #include <unordered_map>
