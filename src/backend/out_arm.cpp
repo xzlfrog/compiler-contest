@@ -11,10 +11,8 @@ void OutArm::outString(const std::string &str) const {
     }
 }
 
-std::string LLVM::out_arm_str() const {
-}
 
-std::string ArithmeticOpConvert(LLVMtype *op) {
+std::string OutArm::ArithmeticOpConvert(LLVMtype *op) {
     switch (*op) {
         case llvm_fadd: return "FADD";
         case llvm_fsub: return "FSUB";
@@ -50,7 +48,7 @@ std::string OutArm::getIntNumberOfOperands(ConstVarSymbol *constvarsym) const {
 void ArithmeticOperationLLVM::out_arm_str() const {
     std::string op_str = ArithmeticOpConvert(&this->llvmType);
 
-    switch(&this->llvmType){
+    switch(this->getType()){
         case llvm_fadd:
         case llvm_fsub:
         case llvm_fmul:
@@ -63,12 +61,12 @@ void ArithmeticOperationLLVM::out_arm_str() const {
         case logical_and:
         case logical_or:
         case logical_xor:
-            OutArm::outString(OutArm::ASMDOperation(&this));
+            OutArm::outString(OutArm::ASMDOperation(this));
             break;
         case llvm_frem:
         case urem:
         case srem:
-            OutArm::outString(OutArm::RemOperation(&this));
+            OutArm::outString(OutArm::RemOperation(this));
             break;
         case icmp_eq:
         case icmp_ne:
@@ -76,7 +74,7 @@ void ArithmeticOperationLLVM::out_arm_str() const {
         case icmp_sge:
         case icmp_slt:
         case icmp_sle:
-            OutArm::outString(OutArm::ComparisonOperation(&this));
+            OutArm::outString(OutArm::ComparisonOperation(this));
             break;
 
         default:

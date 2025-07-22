@@ -61,7 +61,7 @@ class RegisterAllocator {
         // 恢复调用后需恢复的寄存器
         //void restoreRegisters(std::ostream &out);
 
-        void reset() = 0;
+        void reset();
 
         // 内部方法
     virtual void promoteToRegister(const Symbol* symbol) = 0;

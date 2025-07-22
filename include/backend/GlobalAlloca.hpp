@@ -36,8 +36,8 @@ public:
     std::string getInitialValue(BasicSymbol* symbol) const;
 
     // 输出汇编代码
-    void emitAssembly(std::ostream& out) const;
-    std::string emitAssemblyToString() const;
+    void emitAssembly(std::ostream& out);
+    std::string emitAssemblyToString();
     void emitArrayInitialization(std::ostream& out, ArraySymbol* array) const;
 
     // 打印调试信息

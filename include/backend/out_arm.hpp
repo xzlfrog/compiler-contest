@@ -1,3 +1,4 @@
+#pragma once
 #include "GlobalAlloca.hpp"
 #include "RegAlloca.hpp"
 #include "StaAlloca.hpp"
@@ -12,12 +13,15 @@
 FILE* outputArmFile;
 class OutArm {
     std::ofstream out;
+    GlobalAllocator globalAllocator;
+    StackAllocator stackAllocator;
+    RegisterAllocator registerAllocator;
 
 public:
     // 构造函数打开输出文件
     OutArm(const std::string &filename);
     
-    void outString(FILE* file, const std::string &str) const;
+    static void outString(const std::string &str);
 
     // 输出整个模块
    // void outputModule(Module *module);
@@ -51,14 +55,14 @@ void out_arm(FILE* outputFile, ModuleList* module_list) {
     // 遍历模块列表
     for (Module* module = module_list->head; module != nullptr; module = module->next) {
         // 输出模块名称
-        out.outString(outputFile, ".module " + module->name);
+        out.outString(outputFile, ".module start");
         
         // 遍历每个llvm语句
-        for (LLVM* llvm = module->llvm_head; llvm != nullptr; llvm = llvm->next) {
+        for (LLVM* llvm = module->head; llvm != nullptr; llvm = llvm->next) {
             llvm->out_arm_str();
         }
         
-        insertContentToFileFront(outputFile, out.emitAssemblyToString());
+        insertContentToFileFront(outputFile, GlobalAllocator::emitAssemblyToString());
 
         out.outString(outputFile, ".endmodule");
     }

@@ -46,6 +46,7 @@ void RegisterAllocator::freeRegister(std::string reg_name){
 void RegisterAllocator::reset() {
     Registers.clear();
     var_to_reg.clear();
+    
 }
 
 void XRegAllocator::allocateParamSpace(Symbol* symbol) {

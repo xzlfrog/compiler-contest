@@ -98,7 +98,7 @@ void GlobalAllocator::emitArrayInitialization(std::ostream& out, ArraySymbol* ar
     }
 }
 
-void GlobalAllocator::emitAssembly(std::ostream& out) const {
+void GlobalAllocator::emitAssembly(std::ostream& out) {
     // .data段
     if (globalVariables.count(".data")) {
         out << "\t.section .data\n";
@@ -141,9 +141,9 @@ void GlobalAllocator::emitAssembly(std::ostream& out) const {
     }
 }
 
-std::string GlobalAllocator::emitAssemblyToString() const {
+std::string GlobalAllocator::emitAssemblyToString() {
     std::ostringstream oss;
-    emitAssembly(oss); // 原来的函数，只是现在输出到ostringstream
+    GlobalAllocator::emitAssembly(oss); // 原来的函数，只是现在输出到ostringstream
     return oss.str();
 }
 
