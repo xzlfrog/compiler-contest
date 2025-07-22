@@ -22,7 +22,7 @@
 #define DREG_SIZE_START2 8
 #define DREG_SIZE_END2   31 // D8-D31 被调用者保存浮点寄存器
 
-extern FILE* outputArmFile;
+extern std::ofstream outputArmFile;
 class RegisterAllocator {
     public:
         RegisterAllocator(const std::vector<std::string>& available_registers){}

@@ -93,6 +93,7 @@
     "deque": "cpp",
     "memory": "cpp",
     "optional": "cpp",
-    "queue": "cpp"
+    "queue": "cpp",
+    "fstream": "cpp"
   }
 }

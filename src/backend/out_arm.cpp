@@ -5,7 +5,7 @@
 
 extern FILE* outputArmFile;
 
-void OutArm::outString(const std::string &str) const {
+void OutArm::outString(const std::string &str) {
     if (outputArmFile) {
         fprintf(outputArmFile, "%s\n", str.c_str());
     }
@@ -45,8 +45,8 @@ std::string OutArm::getIntNumberOfOperands(ConstVarSymbol *constvarsym) const {
 }
 
 
-void ArithmeticOperationLLVM::out_arm_str() const {
-    std::string op_str = ArithmeticOpConvert(&this->llvmType);
+void ArithmeticOperationLLVM::out_arm_str(){
+    std::string op_str = OutArm::ArithmeticOpConvert(llvmType);
 
     switch(this->getType()){
         case llvm_fadd:

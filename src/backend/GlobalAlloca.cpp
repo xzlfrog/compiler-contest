@@ -98,7 +98,7 @@ void GlobalAllocator::emitArrayInitialization(std::ostream& out, ArraySymbol* ar
     }
 }
 
-void GlobalAllocator::emitAssembly(std::ostream& out) {
+void GlobalAllocator::emitAssembly(std::ostream& out){
     // .data段
     if (globalVariables.count(".data")) {
         out << "\t.section .data\n";
