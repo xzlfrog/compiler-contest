@@ -14,6 +14,16 @@ std::string GlobalAllocator::determineSection(BasicSymbol* symbol) const {
     }
 }
 
+std::string GlobalAllocator::determineSection(PointerSymbol* symbol) const {
+    if (symbol->getType() == constant_var || symbol->getType() == constant_nonvar) {
+        return ".rodata";
+    } else if (symbol->getType() == variable && symbol->data != nullptr) {
+        return ".data";
+    } else {
+        return ".bss";
+    }
+}
+
 size_t GlobalAllocator::getTypeSize(BasicSymbol* symbol) const{
     dataType dtype = symbol->getDataType();
     switch(dtype) {
@@ -73,6 +83,11 @@ std::string GlobalAllocator::getInitialValue(BasicSymbol* symbol) const {
 void GlobalAllocator::allocateGlobal(BasicSymbol* symbol) {
     std::string section = determineSection(symbol);
     globalVariables[section].push_back(symbol);
+}
+
+void GlobalAllocator::allocateGlobal(PointerSymbol* symbol){
+    std::string section = determineSection(symbol);
+    globalVariables2[section].push_back(symbol);
 }
 
 void GlobalAllocator::allocateArray(ArraySymbol* arraySymbol) {

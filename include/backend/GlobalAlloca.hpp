@@ -26,10 +26,12 @@ public:
 
     // 全局变量分配
     void allocateGlobal(BasicSymbol* symbol);
+    void allocateGlobal(PointerSymbol* symbol);
     void allocateArray(ArraySymbol* arraySymbol);
 
     // 段与数据处理
     std::string determineSection(BasicSymbol* symbol) const;
+    std::string determineSection(PointerSymbol* symbol) const;
     size_t getTypeSize(BasicSymbol* symbol) const;
     size_t getTypeSize(ArraySymbol* arraySymbol) const;
     std::string getAssemblyDirective(BasicSymbol* symbol) const;
@@ -46,7 +48,7 @@ public:
 private:
     // 存储全局变量，按段分类
     std::unordered_map<std::string, std::vector<BasicSymbol*>> globalVariables;
-
+    std::unordered_map<std::string, std::vector<PointerSymbol*>> globalVariables2;
     // 存储全局数组
     std::vector<ArraySymbol*> globalArrays;
 };
