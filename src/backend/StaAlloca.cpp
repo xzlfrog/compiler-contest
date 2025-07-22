@@ -2,7 +2,7 @@
 #include <stdexcept>
 
 // 静态成员定义（唯一一份）
-StackAllocator StackAllocator::stackInstance;
+StackAllocator* StackAllocator::stackInstance = nullptr;
 
 int StackAllocator::align(int value, int alignment) {
     if (alignment <= 0 || (alignment & (alignment - 1))) {

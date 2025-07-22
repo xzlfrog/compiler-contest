@@ -92,13 +92,13 @@ public:
     ~GetElementPtrLLVM()=default;
 };
 
-class GetElementPtrLLVM_PointerToVar:public LLVM{
-public:
-    ArraySymbol* src_sym;
-    BasicSymbol* dest_sym;
-    BasicSymbol* idx;
+// class GetElementPtrLLVM_PointerToVar:public LLVM{
+// public:
+//     ArraySymbol* src_sym;
+//     BasicSymbol* dest_sym;
+//     BasicSymbol* idx;
 
-    dataType getArrayType();
-    std::string out_str() const override;
-    ~GetElementPtrLLVM_PointerToVar()=default;
-};
+//     dataType getArrayType();
+//     std::string out_str() const override;
+//     ~GetElementPtrLLVM_PointerToVar()=default;
+// };

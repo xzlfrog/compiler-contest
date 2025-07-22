@@ -133,15 +133,15 @@ std::string GetElementPtrLLVM::out_str() const {
     return result;
 }
 
-dataType GetElementPtrLLVM_PointerToVar::getArrayType(){return this->src_sym->getArrayType();}
-std::string GetElementPtrLLVM_PointerToVar::out_str() const{
-    std::string result;
-    if(this->src_sym->getDimensions().size()==0){
-        result+=dest_sym->getName()+" = getelementptr "+Data::getTypeStr(this->src_sym->getArrayType())+" "+Data::getTypeStr(this->src_sym->getArrayType());
-        result+="* "+this->src_sym->getName()+", i32 "+getSymOut(this->idx);
-    }
-    else{
-        throw std::runtime_error("the src_sym's dimension is not 0");
-    }
-    return result;
-}
+// dataType GetElementPtrLLVM_PointerToVar::getArrayType(){return this->src_sym->getArrayType();}
+// std::string GetElementPtrLLVM_PointerToVar::out_str() const{
+//     std::string result;
+//     if(this->src_sym->getDimensions().size()==0){
+//         result+=dest_sym->getName()+" = getelementptr "+Data::getTypeStr(this->src_sym->getArrayType())+" "+Data::getTypeStr(this->src_sym->getArrayType());
+//         result+="* "+this->src_sym->getName()+", i32 "+getSymOut(this->idx);
+//     }
+//     else{
+//         throw std::runtime_error("the src_sym's dimension is not 0");
+//     }
+//     return result;
+// }

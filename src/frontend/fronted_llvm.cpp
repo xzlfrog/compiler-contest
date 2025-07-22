@@ -402,13 +402,13 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
                 llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM(ps,array,getIdxFromExp(exps)));
                 llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
             }
-            else{
-                BasicSymbol* idx=dynamic_cast<BasicSymbol*>((*exps)[0]->sym);
-                if(idx==nullptr){
-                    throw std::runtime_error("the idx is not a basicSymbol type");
-                }
-                llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM_PointerToVar(array,bs,idx));
-            }
+            // else{
+            //     BasicSymbol* idx=dynamic_cast<BasicSymbol*>((*exps)[0]->sym);
+            //     if(idx==nullptr){
+            //         throw std::runtime_error("the idx is not a basicSymbol type");
+            //     }
+            //     llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM_PointerToVar(array,bs,idx));
+            // }
             for(auto &exp : (*exps)){
                 llvmlist->InsertHead(exp->llvmlist);
             }

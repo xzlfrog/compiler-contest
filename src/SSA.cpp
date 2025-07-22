@@ -237,11 +237,11 @@ BasicSymbol* getDestSym(LLVM* llvm){
             UnaryOperationLLVM* ir=dynamic_cast<UnaryOperationLLVM*>(llvm);
             return ir->dest_sym;
         }
-        case LLVMtype::getelementptr_pointer_to_var:
-        {
-            GetElementPtrLLVM_PointerToVar* ir=dynamic_cast<GetElementPtrLLVM_PointerToVar*>(llvm);
-            return ir->dest_sym;
-        }
+        // case LLVMtype::getelementptr_pointer_to_var:
+        // {
+        //     GetElementPtrLLVM_PointerToVar* ir=dynamic_cast<GetElementPtrLLVM_PointerToVar*>(llvm);
+        //     return ir->dest_sym;
+        // }
         default:
             return nullptr;
             break;
