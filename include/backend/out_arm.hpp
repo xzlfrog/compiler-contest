@@ -35,7 +35,7 @@ public:
         return *instance;
     }
 
-    static void setName(std::string name) {
+    void setName(std::string name) {
         outputFileName = name;
     }
     
@@ -49,7 +49,7 @@ public:
     static void outString(const std::string &str);
 
     static std::string ArithmeticOpConvert(LLVMtype op);
-    static std::string ASMDOperation(LLVM* llvm);
+    static std::string ASMDOperation(ArithmeticOperationLLVM* ASMDllvm);
     static std::string ComparisonOperation(ArithmeticOperationLLVM* cmpllvm);
     static std::string RemOperation(ArithmeticOperationLLVM* REMllvm);
     
@@ -57,6 +57,7 @@ public:
    //static std::string getIntNumberOfOperands(ConstSymbol *sym) ;
 
     static std::string DispatchReg(Symbol* symbol);
+    static std::string DispatchRegParam(Symbol* symbol);
     
         // 输出整个模块
    // void outputModule(Module *module);
@@ -78,10 +79,10 @@ void insertContentToFileFront(std::ofstream& outputFile, const std::string& cont
 
 void out_arm(std::string outputFileName, ModuleList* module_list) {
     std::string name = outputFileName;
-    OutArm::setName(name);
     
     // 创建OutArm实例
     OutArm& Out_Arm = OutArm::getInstance();
+    Out_Arm.setName(name);
     
     // 遍历模块列表
     for (Module* module = module_list->head; module != nullptr; module = module->next) {

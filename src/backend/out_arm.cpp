@@ -69,8 +69,21 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
         reg_name = OutArm::getIntNumberOfOperands(symbol);
     }else if(symbol->data->getType() == (dataType::f32) || (dataType::f64)) {
         reg_name = out_Arm.dRegAllocator.accessVariable(symbol);
-    }else if(symbol->data->getType() == (dataType::i32) || (dataType::i64) || (dataType::i16) || (dataType::i8) || (dataType::i1)) {
+    }else if(symbol->data->getType() == (dataType::i32) || (dataType::i64) || (dataType::i16) || (dataType::i8) || (dataType::i1)||(dataType::array_data)) {
         reg_name = out_Arm.xRegAllocator.accessVariable(symbol);
+    }
+    return reg_name;
+}
+
+std::string OutArm::DispatchRegParam(Symbol* symbol) {
+    OutArm& out_Arm = OutArm::getInstance();
+    std::string reg_name;
+    if(symbol->type == symType::constant_var || symType::constant_nonvar) {
+        reg_name = OutArm::getIntNumberOfOperands(symbol);
+    }else if(symbol->data->getType() == (dataType::f32) || (dataType::f64)) {
+        reg_name = out_Arm.dRegAllocator.accessParam(symbol);
+    }else if(symbol->data->getType() == (dataType::i32) || (dataType::i64) || (dataType::i16) || (dataType::i8) || (dataType::i1)) {
+        reg_name = out_Arm.xRegAllocator.accessParam(symbol);
     }
     return reg_name;
 }
@@ -114,6 +127,7 @@ void ArithmeticOperationLLVM::out_arm_str(){
 }
 
 std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
+    OutArm& out_Arm = OutArm::getInstance();
     std::string a_str, b_str, c_str, tmp_str, op1, op2, op3;
     VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
 
@@ -136,22 +150,10 @@ std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
         op3 = "SUB";
         break;       
     }
-    a_str = RegisterAllocator::accessVariable(REMllvm->a);
-    tmp_str = RegisterAllocator::accessVariable(tmp);
-    if(REMllvm->b->symType == symType::constant_var || symType::constant_nonvar) {
-        b_str = getIntNumberOfOperands(REMllvm->b);
-    }else if(REMllvm->b->Data->getType() == dataType::f32) {
-        b_str = VRegAllocator::accessVariable(REMllvm->b);
-    }else if(REMllvm->b->Data->getType() == dataType::i32) {
-        b_str = XRegAllocator::accessVariable(REMllvm->b);
-    }
-    if(ASMDllvm->c->symType == symType::constant_var || symType::constant_nonvar) {
-        c_str = getIntNumberOfOperands(ASMDllvm->c);
-    }else if(ASMDllvm->c->Data->getType() == dataType::f32) {
-        c_str = VRegAllocator::accessVariable(ASMDllvm->c);
-    }else if(ASMDllvm->c->Data->getType() == dataType::i32) {
-        c_str = XRegAllocator::accessVariable(ASMDllvm->c);
-    }
+    a_str = out_Arm.DispatchReg(REMllvm->a);
+    tmp_str = out_Arm.DispatchReg(tmp);
+    b_str = out_Arm.DispatchReg(REMllvm->b);
+    c_str = out_Arm.DispatchReg(REMllvm->c);
 
     return op1 + " " + tmp_str + ", " + b_str + ", " + c_str + "\n" +
            op2 + " " + tmp_str + ", " + tmp_str + ", " + c_str + "\n" +
@@ -160,32 +162,20 @@ std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
 }
 
 std::string OutArm::ASMDOperation(ArithmeticOperationLLVM* ASMDllvm){
-    
+    OutArm& out_Arm = OutArm::getInstance();
     std::string a_str, b_str, c_str, op;
 
-    op = ArithmeticOpConvert(&ASMDllvm->llvmType);
-    a_str = RegisterAllocator::accessVariable(ASMDllvm->a);
-
-    if(ASMDllvm->b->symType == symType::constant_var || symType::constant_nonvar) {
-        b_str = getIntNumberOfOperands(ASMDllvm->b);
-    }else if(ASMDllvm->b->Data->getType() == dataType::f32) {
-        b_str = VRegAllocator::accessVariable(ASMDllvm->b);
-    }else if(ASMDllvm->b->Data->getType() == dataType::i32) {
-        b_str = XRegAllocator::accessVariable(ASMDllvm->b);
-    }
-
-    if(ASMDllvm->c->symType == symType::constant_var || symType::constant_nonvar) {
-        c_str = getIntNumberOfOperands(ASMDllvm->c);
-    }else if(ASMDllvm->c->Data->getType() == dataType::f32) {
-        c_str = VRegAllocator::accessVariable(ASMDllvm->c);
-    }else if(ASMDllvm->c->Data->getType() == dataType::i32) {
-        c_str = XRegAllocator::accessVariable(ASMDllvm->c);
-    }
+    op = ArithmeticOpConvert(ASMDllvm->llvmType);
+    
+    a_str = out_Arm.DispatchReg(ASMDllvm->a);
+    b_str = out_Arm.DispatchReg(ASMDllvm->b);
+    c_str = out_Arm.DispatchReg(ASMDllvm->c);
 
     return op + " " + a_str + ", " + b_str + ", " + c_str;
 }
 
 std::string OutArm::ComparisonOperation(ArithmeticOperationLLVM* cmpllvm) {
+    OutArm& out_Arm = OutArm::getInstance();
     std::string a_str, b_str, c_str, tmp_str, op0, op1, op2;
     VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
     op0 = "CMP";
@@ -214,10 +204,10 @@ std::string OutArm::ComparisonOperation(ArithmeticOperationLLVM* cmpllvm) {
             throw std::invalid_argument("Unsupported comparison type for ARM conversion");
     }
 
-    a_str = RegisterAllocator::accessVariable(cmpllvm->a);
-    tmp_str = RegisterAllocator::accessVariable(tmp);
-    b_str = RegisterAllocator::accessVariable(cmpllvm->b);
-    c_str = RegisterAllocator::accessVariable(cmpllvm->c);
+    a_str = out_Arm.DispatchReg(cmpllvm->a);
+    tmp_str = out_Arm.DispatchReg(tmp);
+    b_str = out_Arm.DispatchReg(cmpllvm->b);
+    c_str = out_Arm.DispatchReg(cmpllvm->c);
 
     return op0 + " " + b_str + ", " + c_str + "\n" +
            op1 + " " + a_str + ", " + op2 ;
@@ -230,7 +220,8 @@ void UnconditionalBranchLLVM::out_arm_str() {
 }
 
 void ConditionalBranchLLVM::out_arm_str()  {
-    std::string condition_str = RegisterAllocator::accessVariable(condition);
+    OutArm& out_Arm = OutArm::getInstance();
+    std::string condition_str = out_Arm.DispatchReg(this->condition);
     std::string true_branch_str = this->trueBranch->getName();
     std::string false_branch_str = this->falseBranch->getName();
 
@@ -239,20 +230,22 @@ void ConditionalBranchLLVM::out_arm_str()  {
 }
 
 void ReturnLLVM::out_arm_str()  {
+    OutArm& out_Arm = OutArm::getInstance();
     if (this->returnValue) {
-        std::string return_value_str = RegisterAllocator::accessVariable(this->returnValue);
+        std::string return_value_str = out_Arm.DispatchReg(this->returnValue);
         OutArm::outString("MOV X0, " + return_value_str); // Assuming X0 is the return register
     }
-    OutArm::outString(StackAllocator::emitEpilogue());
+    OutArm::outString(out_Arm.stackAllocator.emitEpilogue(out_Arm.stackAllocator.calculateStackSize()));
     OutArm::outString("RET");
 }
 
 void CallLLVM::out_arm_str()  {
+    OutArm& out_Arm = OutArm::getInstance();
     std::string func_name = this->function->getName();
-    std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
+    std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
 
     for (const auto& arg : this->arguments) {
-        std::string arg_str = RegisterAllocator::accessVariable(arg);
+        std::string arg_str = out_Arm.DispatchRegParam(arg);
         OutArm::outString("MOV " + arg_str + ", X" + std::to_string(&arg - &this->arguments[0] + 1)); // X1, X2, ...
     }
 
@@ -278,19 +271,23 @@ void PhiLLVM::out_arm_str()  {
 //全局变量将会统一在文件顶部输出
 
 void GlobalNonArrayVarDefination::out_arm_str()  {
-    void GlobalAllocator::allocateGlobal(dest_sym);
+    OutArm& out_Arm = OutArm::getInstance();
+    out_Arm.globalAllocator.allocateGlobal(dest_sym);
 }
 
 void ConstantNonArrayVarDefination::out_arm_str()  {
-    void GlobalAllocator::allocateGlobal(dest_sym);
+    OutArm& out_Arm = OutArm::getInstance();
+    out_Arm.globalAllocator.allocateGlobal(dest_sym);
 }
 
 void GlobalArrayVarDefination::out_arm_str()  {
-    void GlobalAllocator::allocateArray(dest_sym);
+    OutArm& out_Arm = OutArm::getInstance();
+    out_Arm.globalAllocator.allocateArray(dest_sym);
 }
 
 void ConstantArrayVarDefination::out_arm_str()  {
-    void GlobalAllocator::allocateArray(dest_sym);
+    OutArm& out_Arm = OutArm::getInstance();
+    out_Arm.globalAllocator.allocateArray(dest_sym);
 }
 
 //函数声明暂时不翻译？
@@ -300,16 +297,18 @@ void FuncDeclaration::out_arm_str()  {
 
 //没有写出函数的emit
 void FuncDefination::out_arm_str()  {
+    OutArm& out_Arm = OutArm::getInstance();
+
     // 函数定义需要输出 ARM 汇编代码
     std::string func_name = this->func->getName();
     OutArm::outString(func_name + ":");
     
-    int stack_size = StackAllocator::calculateStackSize(&this);
-    OutArm::outString(StackAllocator::emitPrologue(stack_size));
+    int stack_size = out_Arm.stackAllocator.calculateStackSize(&this);
+    OutArm::outString(out_Arm.stackAllocator.emitPrologue(stack_size));
 
     // 输出函数参数
     for (const auto& param : this->params) {
-        std::string param_str = RegisterAllocator::accessVariable(param);
+        std::string param_str = out_Arm.DispatchRegParam(param);
         OutArm::outString("MOV " + param_str + ", X" + std::to_string(&param - &this->params[0] + 1)); // X1, X2, ...
     }
 
@@ -321,8 +320,10 @@ void FuncDefination::out_arm_str()  {
 
 
 void AllocaNonArrayLLVM::out_arm_str()  {
-    std::string var_str = RegisterAllocator::accessVariable(this->dest_sym);
-    int size = StackAllocator::allocateLocal(this->dest_sym);
+    OutArm& out_Arm = OutArm::getInstance();
+
+    std::string var_str = out_Arm.DispatchReg(this->dest_sym);
+    int size = out_Arm.stackAllocator.allocateLocal(this->dest_sym);
     OutArm::outString("SUB SP, SP, #" + std::to_string(size));
     OutArm::outString("MOV " + var_str + ", SP");
 }

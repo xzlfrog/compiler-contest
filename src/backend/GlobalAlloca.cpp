@@ -70,7 +70,7 @@ std::string GlobalAllocator::getInitialValue(BasicSymbol* symbol) const {
     }
 }
 
-void GlobalAllocator::allocateGlobal(BasicSymbol* symbol) {
+void GlobalAllocator::allocateGlobal(Symbol* symbol) {
     std::string section = determineSection(symbol);
     globalVariables[section].push_back(symbol);
 }

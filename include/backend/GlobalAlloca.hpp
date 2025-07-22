@@ -25,7 +25,7 @@ public:
     void reset();
 
     // 全局变量分配
-    void allocateGlobal(BasicSymbol* symbol);
+    void allocateGlobal(Symbol* symbol);
     void allocateArray(ArraySymbol* arraySymbol);
 
     // 段与数据处理
