@@ -3,6 +3,7 @@
 #include "../../include/llvm.hpp"
 
 // extern std:ofstream outputArmFile;
+OutArm OutArm::instance; 
 
 void OutArm::outString(const std::string &str) {
     OutArm& out_Arm = OutArm::getInstance();

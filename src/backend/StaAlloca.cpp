@@ -1,6 +1,9 @@
 #include "../../include/backend/StaAlloca.hpp"
 #include <stdexcept>
 
+// 静态成员定义（唯一一份）
+StackAllocator StackAllocator::stackInstance;
+
 int StackAllocator::align(int value, int alignment) {
     if (alignment <= 0 || (alignment & (alignment - 1))) {
         throw std::invalid_argument("Alignment must be a power of 2");

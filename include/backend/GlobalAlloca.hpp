@@ -21,7 +21,9 @@ class ArraySymbol;
 class GlobalAllocator {
 public:
     // 构造与重置
-    GlobalAllocator();
+    GlobalAllocator(){
+        reset();
+    };
     void reset();
 
     // 全局变量分配

@@ -2,7 +2,7 @@
 CXX := g++
 # CXXFLAGS := -std=c++17 -O0 -Wall -Wextra -g -Iinclude -Isrc/frontend
 CXXFLAGS := -std=c++17 -O0 -g -Iinclude -Isrc/frontend -w
-LDFLAGS := -lfl
+#LDFLAGS := -lfl
 LDFLAGS += -static-libstdc++
 
 # Build directories
