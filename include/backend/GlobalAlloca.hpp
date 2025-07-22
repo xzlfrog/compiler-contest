@@ -25,13 +25,13 @@ public:
     void reset();
 
     // 全局变量分配
-    void allocateGlobal(Symbol* symbol);
+    void allocateGlobal(BasicSymbol* symbol);
     void allocateArray(ArraySymbol* arraySymbol);
 
     // 段与数据处理
     std::string determineSection(BasicSymbol* symbol) const;
     size_t getTypeSize(BasicSymbol* symbol) const;
-    size_t getTypeSize(ArraySymbol* symbol) const;
+    size_t getTypeSize(ArraySymbol* arraySymbol) const;
     std::string getAssemblyDirective(BasicSymbol* symbol) const;
     std::string getInitialValue(BasicSymbol* symbol) const;
 
