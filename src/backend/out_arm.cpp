@@ -303,7 +303,7 @@ void FuncDefination::out_arm_str()  {
     std::string func_name = this->func->getName();
     OutArm::outString(func_name + ":");
     
-    int stack_size = out_Arm.stackAllocator.calculateStackSize(&this);
+    int stack_size = out_Arm.stackAllocator.calculateStackSize();
     OutArm::outString(out_Arm.stackAllocator.emitPrologue(stack_size));
 
     // 输出函数参数
@@ -315,46 +315,53 @@ void FuncDefination::out_arm_str()  {
     // 输出函数体的 LLVM 指令
     //for (LLVM* llvm = this->block_tail; llvm != nullptr; llvm = llvm->next) {
     //
-        llvm->out_arm_str();
+    //    llvm->out_arm_str();
 }
-
 
 void AllocaNonArrayLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
-    std::string var_str = out_Arm.DispatchReg(this->dest_sym);
-    int size = out_Arm.stackAllocator.allocateLocal(this->dest_sym);
+    std::string var_str = out_Arm.DispatchReg(this->sym);
+    int size = out_Arm.stackAllocator.allocateLocal(this->sym);
     OutArm::outString("SUB SP, SP, #" + std::to_string(size));
     OutArm::outString("MOV " + var_str + ", SP");
 }
 
 void AllocaArrayLLVM::out_arm_str()  {
-    std::string array_str = RegisterAllocator::accessVariable(this->array);
-    int size = StackAllocator::allocateLocal(this->array);
+    OutArm& out_Arm = OutArm::getInstance();
+    std::string array_str = out_Arm.DispatchReg(this->array);
+    int size = out_Arm.stackAllocator.allocateArray(this->array);
+    
     OutArm::outString("SUB SP, SP, #" + std::to_string(size));
     OutArm::outString("MOV " + array_str + ", SP");
 }
 
 void LoadLLVM::out_arm_str()  {
-    std::string src_str = RegisterAllocator::accessVariable(this->src_sym);
-    int offset = StackAllocator::getOffset(this->src_sym);
-    std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
+    OutArm& out_Arm = OutArm::getInstance();
+
+    std::string src_str = out_Arm.DispatchReg(this->src_sym);
+    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym);
+    std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
+   
     OutArm::outString("LDR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
 }
 
 void StoreLLVM::out_arm_str()  {
-    std::string src_str = RegisterAllocator::accessVariable(this->src_sym);
-    int offset = StackAllocator::getOffset(this->dest_sym);
-    std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
+    OutArm& out_Arm = OutArm::getInstance();
+
+    std::string src_str = out_Arm.DispatchReg(this->src_sym);
+    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym);
+    std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
     
     OutArm::outString("STR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
 }
 
 //未对齐 可能有隐患
 void GetElementPtrLLVM::out_arm_str()  {
-    std::string base_ptr = RegisterAllocator::accessVariable(this->ptrval);
+    OutArm& out_Arm = OutArm::getInstance();
+    std::string base_ptr = out_Arm.DispatchReg(this->ptrval);
 
-    int offset = StackAllocator::getOffset(this->ptrval);
+    int offset = out_Arm.stackAllocator.getOffset(this->ptrval);
     for (auto dim : ty_idx) {
         if (dim.first == dataType::i32) {
             offset += dim.second->data->getValue<int>() * StackAllocator::getTypeSize(dim.first);
@@ -363,12 +370,13 @@ void GetElementPtrLLVM::out_arm_str()  {
         }
     }
 
-    StackAllocator::addPtr(this->dest_sym, offset);
+    out_Arm.stackAllocator.addPtr(this->dest_sym, offset);
 }
 
 void TypeConversionOperation::out_arm_str()  {
-    std::string src_str = RegisterAllocator::accessVariable(this->src_sym);
-    std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
+    OutArm& out_Arm = OutArm::getInstance();
+    std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
+    std::string src_str = out_Arm.DispatchReg(this->src_sym);
 
     switch (this->llvmType) {
         case llvm_trunc:
@@ -413,8 +421,9 @@ void TypeConversionOperation::out_arm_str()  {
 }
 
 void UnaryOperationLLVM::out_arm_str()  {
-    std::string src_str = RegisterAllocator::accessVariable(this->src_sym);
-    std::string dest_str = RegisterAllocator::accessVariable(this->dest_sym);
+    OutArm& out_Arm = OutArm::getInstance();
+    std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
+    std::string src_str = out_Arm.DispatchReg(this->src_sym);
 
     switch (this->llvmType) {
         case llvm_neg:
@@ -436,8 +445,8 @@ void insertContentToFileFront(std::ofstream& outputFile, const std::string& cont
 
     // 读取现有内容
     std::string existingContent;
-    outputFile.seekg(0, std::ios::end);
-    size_t fileSize = outputFile.tellg();
+    outputFile.seekp(0, std::ios::end);
+    size_t fileSize = outputFile.tellp();
     if (fileSize > 0) {
         outputFile.seekg(0, std::ios::beg);
         existingContent.resize(fileSize);

@@ -95,6 +95,7 @@
     "optional": "cpp",
     "queue": "cpp",
     "fstream": "cpp",
-    "format": "cpp"
+    "format": "cpp",
+    "istream": "cpp"
   }
 }
