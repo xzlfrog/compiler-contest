@@ -94,6 +94,7 @@
     "memory": "cpp",
     "optional": "cpp",
     "queue": "cpp",
-    "fstream": "cpp"
+    "fstream": "cpp",
+    "format": "cpp"
   }
 }

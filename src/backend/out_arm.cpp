@@ -1,19 +1,20 @@
 #include "../../include/backend/out_arm.hpp"
 #include "../../include/backend/StaAlloca.hpp"
-
 #include "../../include/llvm.hpp"
 
-extern FILE* outputArmFile;
+// extern std:ofstream outputArmFile;
 
 void OutArm::outString(const std::string &str) {
-    if (outputArmFile) {
-        fprintf(outputArmFile, "%s\n", str.c_str());
+    if (!outputArmFile.is_open()) {
+        std::cerr << "无法打开输出文件" << std::endl;
+        throw std::runtime_error("无法打开输出文件");
     }
+    outputArmFile << str << std::endl;
+    outputArmFile.flush();
 }
 
-
-std::string OutArm::ArithmeticOpConvert(LLVMtype *op) {
-    switch (*op) {
+std::string OutArm::ArithmeticOpConvert(LLVMtype op) {
+    switch (op) {
         case llvm_fadd: return "FADD";
         case llvm_fsub: return "FSUB";
         case llvm_fmul: return "FMUL";
@@ -34,16 +35,30 @@ std::string OutArm::ArithmeticOpConvert(LLVMtype *op) {
 
 }
 
-std::string OutArm::getIntNumberOfOperands(ConstVarSymbol *constvarsym) const {
+std::string OutArm::getIntNumberOfOperands(ConstVarSymbol *constvarsym){
     ValueVariant number = constvarsym->data->getValue();
     if (std::holds_alternative<int>(number)) {
         if(std::get<int>(number) == 0) {
             return "XZR"; // ARM zero register
         }
         return "#" + std::to_string(std::get<int>(number));
+    }else if(std::holds_alternative<float>(number)) {
+        return std::to_string(std::get<float>(number));
     }
 }
 
+std::string getIntNumberOfOperands(ConstSymbol *sym){
+    ValueVariant number = sym->data->getValue();
+    if (std::holds_alternative<int>(number)) {
+        if(std::get<int>(number) == 0) {
+            return "XZR"; // ARM zero register
+        }
+        return "#" + std::to_string(std::get<int>(number));
+    }else if(std::holds_alternative<float>(number)) {
+        return std::to_string(std::get<float>(number));
+    }
+    throw std::invalid_argument("Unsupported type for getIntNumberOfOperands");
+}
 
 void ArithmeticOperationLLVM::out_arm_str(){
     std::string op_str = OutArm::ArithmeticOpConvert(llvmType);
@@ -397,26 +412,25 @@ void UnaryOperationLLVM::out_arm_str()  {
     }
 }
 
-void insertContentToFileFront(const std::string& filename, const std::string& contentToInsert) {
-    std::ifstream inFile(filename);
-    if (!inFile) {
-        std::cerr << "无法打开文件：" << filename << std::endl;
-        return;
+void insertContentToFileFront(std::ofstream& outputFile, const std::string& contentToInsert) {
+    if (!outputFile.is_open()) {
+        std::cerr << "无法打开输出文件" << std::endl;
+        throw std::runtime_error("无法打开输出文件");
     }
 
-    // 读取原文件内容
-    std::ostringstream buffer;
-    buffer << inFile.rdbuf();
-    std::string originalContent = buffer.str();
-    inFile.close();
-
-    // 写回文件，先写入要插入的内容，再写原来的
-    std::ofstream outFile(filename);
-    if (!outFile) {
-        std::cerr << "无法写入文件：" << filename << std::endl;
-        return;
+    // 读取现有内容
+    std::string existingContent;
+    outputFile.seekg(0, std::ios::end);
+    size_t fileSize = outputFile.tellg();
+    if (fileSize > 0) {
+        outputFile.seekg(0, std::ios::beg);
+        existingContent.resize(fileSize);
+        outputFile.read(&existingContent[0], fileSize);
     }
 
-    outFile << contentToInsert << originalContent;
+    // 将新内容插入到现有内容前面
+    outputFile.seekp(0, std::ios::beg);
+    outputFile << contentToInsert << existingContent;
+    outputFile.flush();
 }
 
