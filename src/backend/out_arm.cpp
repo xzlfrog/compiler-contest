@@ -459,3 +459,82 @@ void insertContentToFileFront(std::ofstream& outputFile, const std::string& cont
     outputFile.flush();
 }
 
+
+void XRegAllocator::promoteToRegister(Symbol* symbol) {
+    StackAllocator& stackAllocator = StackAllocator::getInstance();
+    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
+    if (is_in_stack) {
+        int stack_offset = stackAllocator.getOffset(symbol->getName());
+        std::string reg_name = this->getRegister(symbol);
+        if (reg_name.empty()) {
+            throw std::runtime_error("No free registers available for promotion");
+        }
+        OutArm::outString("LDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+        int position = this->var_to_reg[symbol]; 
+        if(Registers[position]!= nullptr){
+            spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
+        }
+        Registers[position] = symbol;
+    }else{
+        throw std::runtime_error("Wrong load!");
+    }   
+}
+
+void XRegAllocator::spillToStack(Symbol* symbol) {
+    StackAllocator& stackAllocator = StackAllocator::getInstance();
+    int stack_offset;
+    std::string reg_name = this->getRegister(symbol);
+    if (reg_name.empty()) {
+        throw std::runtime_error("No register allocated for spilling");
+    }
+    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
+    if(is_in_stack) {
+        stack_offset = stackAllocator.getOffset(symbol->getName());
+    }else{
+        stack_offset = stackAllocator.allocateLocal(symbol);
+    }
+        OutArm::outString("STR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+   
+    // 清除寄存器映射
+    this->freeRegister(reg_name);
+}
+
+
+void DRegAllocator::promoteToRegister(Symbol* symbol) {
+    StackAllocator& stackAllocator = StackAllocator::getInstance();
+    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
+    if (is_in_stack) {
+        int stack_offset = stackAllocator.getOffset(symbol->getName());
+        std::string reg_name = this->getRegister(symbol);
+        if (reg_name.empty()) {
+            throw std::runtime_error("No free registers available for promotion");
+        }
+        OutArm::outString("LDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+        int position = this->var_to_reg[symbol]; 
+        if(Registers[position]!= nullptr){
+            spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
+        }
+        Registers[position] = symbol;
+    }else{
+        throw std::runtime_error("Wrong load!");
+    }   
+}
+
+void DRegAllocator::spillToStack(Symbol* symbol) {
+    StackAllocator& stackAllocator = StackAllocator::getInstance();
+    std::string reg_name = this->getRegister(symbol);
+    int stack_offset;
+    if (reg_name.empty()) {
+        throw std::runtime_error("No register allocated for spilling");
+    }
+    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
+    if(is_in_stack) {
+        stack_offset = stackAllocator.getOffset(symbol->getName());
+    }else{
+        stack_offset = stackAllocator.allocateLocal(symbol);
+    }
+        OutArm::outString("STR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+   
+    // 清除寄存器映射
+    this->freeRegister(reg_name);
+}

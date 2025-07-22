@@ -82,53 +82,17 @@ std::string XRegAllocator::getRegister(Symbol* symbol) const {
     return ""; // 如果没有分配寄存器，返回空字符串
 }
 
-void XRegAllocator::promoteToRegister(Symbol* symbol) {
-    StackAllocator& stackAllocator = StackAllocator::getInstance();
-    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
-    if (is_in_stack) {
-        int stack_offset = stackAllocator.getOffset(symbol->getName());
-        std::string reg_name = this->getRegister(symbol);
-        if (reg_name.empty()) {
-            throw std::runtime_error("No free registers available for promotion");
-        }
-        OutArm::outString("LDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
-        int position = this->var_to_reg[symbol]; 
-        if(Registers[position]!= nullptr){
-            spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
-        }
-        Registers[position] = symbol;
-    }else{
-        throw std::runtime_error("Wrong load!");
-    }   
-}
-
-void XRegAllocator::spillToStack(Symbol* symbol) {
-    std::string reg_name = this->getRegister(symbol);
-    if (reg_name.empty()) {
-        throw std::runtime_error("No register allocated for spilling");
-    }
-    bool is_in_stack = StackAllocator::hasVariable(symbol->getName());
-    if(is_in_stack) {
-        int stack_offset = StackAllocator::getOffset(symbol->getName());
-    }else{
-        int stack_offset = StackAllocator::allocateLocal(symbol);
-    }
-        OutArm::outString("STR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
-   
-    // 清除寄存器映射
-    this->freeRegister(reg_name);
-}
-
 std::string XRegAllocator::accessVariable(Symbol* symbol){
+    StackAllocator& stackAllocator = StackAllocator::getInstance();
     auto it = this->var_to_reg.find(symbol);
+    bool is_in_reg = true;
     if (it == this->var_to_reg.end()) {
         is_in_reg = false;
         this->allocateOtherSpace(symbol); // 如果没有分配寄存器，则分配
         it = this->var_to_reg.find(symbol); // 重新查找
     }
-
-    bool is_in_stack = StackAllocator::hasVariable(symbol->getName());
-    if (is_in_stack && !is_in_stack) {
+    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
+    if (is_in_stack && !is_in_reg) {
         XRegAllocator::promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
         return this->getRegister(symbol); // 返回寄存器名称
     }
@@ -141,6 +105,7 @@ std::string XRegAllocator::accessVariable(Symbol* symbol){
 }
 
 std::string XRegAllocator::accessParam(Symbol* symbol){
+    StackAllocator& stackAllocator = StackAllocator::getInstance();
     auto it = this->var_to_reg.find(symbol);
     bool is_in_reg = true;
     if (it == this->var_to_reg.end()) {
@@ -149,7 +114,7 @@ std::string XRegAllocator::accessParam(Symbol* symbol){
         it = this->var_to_reg.find(symbol); // 重新查找
     }
 
-    bool is_in_stack = StackAllocator::hasVariable(symbol->getName());
+    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
     if (is_in_stack && !is_in_reg) {
         XRegAllocator::promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
         return this->getRegister(symbol); // 返回寄存器名称
@@ -193,52 +158,18 @@ std::string DRegAllocator::getRegister(Symbol* symbol) const {
     return ""; // 如果没有分配寄存器，返回空字符串
 }
 
-void DRegAllocator::promoteToRegister(Symbol* symbol) {
-    bool is_in_stack = StackAllocator::hasVariable(symbol->getName());
-    if (is_in_stack) {
-        int stack_offset = StackAllocator::getOffset(symbol->getName());
-        std::string reg_name = this->getRegister(symbol);
-        if (reg_name.empty()) {
-            throw std::runtime_error("No free registers available for promotion");
-        }
-        OutArm::outString("LDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
-        int position = this->var_to_reg[symbol]; 
-        if(Registers[position]!= nullptr){
-            spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
-        }
-        Registers[position] = symbol;
-    }else{
-        throw std::runtime_error("Wrong load!");
-    }   
-}
-
-void DRegAllocator::spillToStack(Symbol* symbol) {
-    std::string reg_name = this->getRegister(symbol);
-    if (reg_name.empty()) {
-        throw std::runtime_error("No register allocated for spilling");
-    }
-    bool is_in_stack = StackAllocator::hasVariable(symbol->getName());
-    if(is_in_stack) {
-        int stack_offset = StackAllocator::getOffset(symbol->getName());
-    }else{
-        int stack_offset = StackAllocator::allocateLocal(symbol);
-    }
-        OutArm::outString("STR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
-   
-    // 清除寄存器映射
-    this->freeRegister(reg_name);
-}
-
 std::string DRegAllocator::accessVariable(Symbol* symbol){
+    StackAllocator& stackAllocator = StackAllocator::getInstance();
     auto it = this->var_to_reg.find(symbol);
+    bool is_in_reg = true;
     if (it == this->var_to_reg.end()) {
         is_in_reg = false;
         this->allocateOtherSpace(symbol); // 如果没有分配寄存器，则分配
         it = this->var_to_reg.find(symbol); // 重新查找
     }
 
-    bool is_in_stack = StackAllocator::hasVariable(symbol->getName());
-    if (is_in_stack && !is_in_stack) {
+    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
+    if (is_in_stack && !is_in_reg) {
         DRegAllocator::promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
         return this->getRegister(symbol); // 返回寄存器名称
     }
@@ -251,6 +182,7 @@ std::string DRegAllocator::accessVariable(Symbol* symbol){
 }
 
 std::string DRegAllocator::accessParam(Symbol* symbol){
+    StackAllocator& stackAllocator = StackAllocator::getInstance();
     auto it = this->var_to_reg.find(symbol);
     bool is_in_reg = true;
     if (it == this->var_to_reg.end()) {
@@ -259,7 +191,7 @@ std::string DRegAllocator::accessParam(Symbol* symbol){
         it = this->var_to_reg.find(symbol); // 重新查找
     }
 
-    bool is_in_stack = StackAllocator::hasVariable(symbol->getName());
+    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
     if (is_in_stack && !is_in_reg) {
         DRegAllocator::promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
         return this->getRegister(symbol); // 返回寄存器名称
