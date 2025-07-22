@@ -74,7 +74,9 @@ class XRegAllocator : public RegisterAllocator {
         XRegAllocator() : RegisterAllocator({"X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7",
                                               "X9", "X10", "X11", "X12", "X13", "X14", "X15",
                                               "X19", "X20", "X21", "X22", "X23", "X24", "X25",
-                                              "X26", "X27", "X28"}) {}
+                                              "X26", "X27", "X28"}) {
+            Registers.resize(32, nullptr); // 初始化寄存器数组
+                                              }
 
         int current_reg_offset1 = 0; // 当前偏移量 0-7
         int current_reg_offset2 = 9; // 当前偏移量 9-15
@@ -99,7 +101,9 @@ class DRegAllocator : public RegisterAllocator {
                                               "D8", "D9", "D10", "D11", "D12", "D13", "D14",
                                               "D15", "D16", "D17", "D18", "D19", "D20", "D21",
                                               "D22", "D23", "D24", "D25", "D26", "D27", "D28",
-                                              "D29", "D30", "D31"}) {}
+                                              "D29", "D30", "D31"}) {
+            Registers.resize(32, nullptr); // 初始化寄存器数组
+                                              }
 
         int current_reg_offset1 = 0; // 当前偏移量 0-7
         int current_reg_offset2 = 0; // 当前偏移量 8-31

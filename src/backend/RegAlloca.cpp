@@ -99,9 +99,10 @@ std::string XRegAllocator::accessVariable(Symbol* symbol){
 
     if(Registers[it->second] != nullptr){
         spillToStack(Registers[it->second]); // 如果寄存器已被占用，先溢出
+    }
         Registers[it->second] = symbol; // 更新寄存器
         return "X" + std::to_string(it->second); // 返回寄存器名称
-    }
+    
 }
 
 std::string XRegAllocator::accessParam(Symbol* symbol){
@@ -122,9 +123,10 @@ std::string XRegAllocator::accessParam(Symbol* symbol){
 
     if(Registers[it->second] != nullptr){
         spillToStack(Registers[it->second]); // 如果寄存器已被占用，先溢出
+    }
         Registers[it->second] = symbol; // 更新寄存器
         return "X" + std::to_string(it->second); // 返回寄存器名称
-    }
+    
 }
 
 void DRegAllocator::allocateParamSpace(Symbol* symbol) {

@@ -67,11 +67,11 @@ std::string OutArm::getIntNumberOfOperands(Symbol *constvarsym){
 std::string OutArm::DispatchReg(Symbol* symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     std::string reg_name;
-    if(symbol->type == symType::constant_var || symType::constant_nonvar) {
+    if(symbol->type == symType::constant_var || symbol->type == symType::constant_nonvar) {
         reg_name = OutArm::getIntNumberOfOperands(symbol);
-    }else if(symbol->data->getType() == (dataType::f32) || (dataType::f64)) {
+    }else if(symbol->data->getType() == (dataType::f32) || symbol->data->getType() == (dataType::f64)) {
         reg_name = out_Arm.dRegAllocator.accessVariable(symbol);
-    }else if(symbol->data->getType() == (dataType::i32) || (dataType::i64) || (dataType::i16) || (dataType::i8) || (dataType::i1)||(dataType::array_data)) {
+    }else if(symbol->data->getType() == (dataType::i32) || symbol->data->getType() == (dataType::i64) || symbol->data->getType() == (dataType::i16) || symbol->data->getType() == (dataType::i8) || symbol->data->getType() == (dataType::i1)||symbol->data->getType() == (dataType::array_data)) {
         reg_name = out_Arm.xRegAllocator.accessVariable(symbol);
     }
     return reg_name;
@@ -80,11 +80,11 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
 std::string OutArm::DispatchRegParam(Symbol* symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     std::string reg_name;
-    if(symbol->type == symType::constant_var || symType::constant_nonvar) {
+    if(symbol->type == symType::constant_var || symbol->type == symType::constant_nonvar) {
         reg_name = OutArm::getIntNumberOfOperands(symbol);
-    }else if(symbol->data->getType() == (dataType::f32) || (dataType::f64)) {
+    }else if(symbol->data->getType() == (dataType::f32) || symbol->data->getType() == (dataType::f64)) {
         reg_name = out_Arm.dRegAllocator.accessParam(symbol);
-    }else if(symbol->data->getType() == (dataType::i32) || (dataType::i64) || (dataType::i16) || (dataType::i8) || (dataType::i1)) {
+    }else if(symbol->data->getType() == (dataType::i32) || symbol->data->getType() == (dataType::i64) || symbol->data->getType() == (dataType::i16) || symbol->data->getType() == (dataType::i8) || symbol->data->getType() == (dataType::i1)||symbol->data->getType() == (dataType::array_data)) {
         reg_name = out_Arm.xRegAllocator.accessParam(symbol);
     }
     return reg_name;
