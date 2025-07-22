@@ -12,7 +12,7 @@
 #include <iostream>
 #include <sstream>
 
-std::ofstream outputArmFile;
+extern std::ofstream outputArmFile;
 class  OutArm {
 private:
     static OutArm* instance;
@@ -77,27 +77,4 @@ public:
 
 void insertContentToFileFront(std::ofstream& outputFile, const std::string& contentToInsert);
 
-void out_arm(std::string outputFileName, ModuleList* module_list) {
-    std::string name = outputFileName;
-    
-    // 创建OutArm实例
-    OutArm& Out_Arm = OutArm::getInstance();
-    Out_Arm.setName(name);
-    
-    // 遍历模块列表
-    for (Module* module = module_list->head; module != nullptr; module = module->next) {
-        // 输出模块名称
-        OutArm::outString(".module start");
-        
-        // 遍历每个llvm语句
-        for (LLVM* llvm = module->head; llvm != nullptr; llvm = llvm->next) {
-            llvm->out_arm_str();
-        }
-        
-        insertContentToFileFront(Out_Arm.out, Out_Arm.globalAllocator.emitAssemblyToString());
-
-        OutArm::outString(".endmodule");
-    }
-}
-
-void insertContentToFileFront(const std::string& filename, const std::string& contentToInsert);
+void out_arm(std::string outputFileName, ModuleList* module_list);

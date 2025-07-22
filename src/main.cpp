@@ -18,9 +18,13 @@ int array_init_idx;
 
 //compiler -S -o testcase.s testcase.sy
 int main(int argc,char* argv[]){
-    if(argc != 2) printf("usage: %s filename\n", argv[0]);
-    FILE* inputFile=fopen(argv[5],"r");
-    std::string inputFileName = argv[5];
+    //if(argc != 2) printf("usage: %s filename\n", argv[0]);
+    FILE* inputFile=fopen(argv[4],"r");
+    if (!inputFile) {
+        printf("Error: Unable to open input file %s\n", argv[4]);
+        return 1;
+    }
+    std::string inputFileName = argv[4];
     std::string outputFileName = inputFileName.substr(0, inputFileName.find_last_of('.')) + ".s";
     outputArmFile.open(outputFileName, std::ios::out | std::ios::trunc);
     if (!outputArmFile.is_open()) {

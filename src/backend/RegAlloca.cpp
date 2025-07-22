@@ -1,5 +1,5 @@
 #include "../../include/backend/RegAlloca.hpp"
-//#include "../../include/backend/StaAlloca.hpp"
+
 /*
 有变量操作时 
 判断是否满了？

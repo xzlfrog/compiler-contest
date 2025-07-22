@@ -85,7 +85,9 @@ class LLVM {
     };
 
     //输出成文本
-    virtual void out_arm_str();
+    virtual void out_arm_str(){
+        return;
+    };
     LLVMtype getLLVMType();//得到llvm指令类型
     virtual ~LLVM() = default;
 };

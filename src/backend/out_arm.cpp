@@ -4,6 +4,7 @@
 
 // extern std:ofstream outputArmFile;
 OutArm* OutArm::instance = nullptr; 
+std::ofstream outputArmFile;
 
 void OutArm::outString(const std::string &str) {
     OutArm& out_Arm = OutArm::getInstance();
@@ -302,7 +303,7 @@ void FuncDefination::out_arm_str()  {
 
     // 函数定义需要输出 ARM 汇编代码
     std::string func_name = this->func->getName();
-    OutArm::outString(func_name + ":");
+    OutArm::outString(func_name + " :");
     
     int stack_size = out_Arm.stackAllocator.calculateStackSize();
     OutArm::outString(out_Arm.stackAllocator.emitPrologue(stack_size));
@@ -310,9 +311,7 @@ void FuncDefination::out_arm_str()  {
     // 输出函数参数
     for (const auto& param : this->params) {
         std::string param_str = out_Arm.DispatchRegParam(param);
-        OutArm::outString("MOV " + param_str + ", X" + std::to_string(&param - &this->params[0] + 1)); // X1, X2, ...
     }
-
     // 输出函数体的 LLVM 指令
     //for (LLVM* llvm = this->block_tail; llvm != nullptr; llvm = llvm->next) {
     //
@@ -538,4 +537,27 @@ void DRegAllocator::spillToStack(Symbol* symbol) {
    
     // 清除寄存器映射
     this->freeRegister(reg_name);
+}
+
+void out_arm(std::string outputFileName, ModuleList* module_list) {
+    std::string name = outputFileName;
+    
+    // 创建OutArm实例
+    OutArm& Out_Arm = OutArm::getInstance();
+    Out_Arm.setName(name);
+    
+    // 遍历模块列表
+    for (Module* module = module_list->head; module != nullptr; module = module->next) {
+        // 输出模块名称
+        OutArm::outString(".module start");
+        
+        // 遍历每个llvm语句
+        for (LLVM* llvm = module->head; llvm != nullptr; llvm = llvm->next) {
+            llvm->out_arm_str();
+        }
+        
+        insertContentToFileFront(Out_Arm.out, Out_Arm.globalAllocator.emitAssemblyToString());
+
+        OutArm::outString(".endmodule");
+    }
 }

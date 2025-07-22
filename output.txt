@@ -7,26 +7,24 @@ store i32 0, i32* %ret.scope2.id0
 %i.scope2.id0 = alloca i32, align 8
 store i32 0, i32* %i.scope2.id0
 %label.tmp_label.0:
-%tmp_var.9.scope3.id0.1 = phi i32 [%tmp_var.9.scope3.id0.0, %label.entry.0], [%tmp_var.9.scope3.id0.3, %label.tmp_label.4]
-%i.loader.scope3.id1.1 = phi i32 [%i.loader.scope3.id1.0, %label.entry.0], [%i.loader.scope3.id1.3, %label.tmp_label.4]
-store i32 %i.loader.scope3.id1.1, i32* %i.scope2.id0
-%tmp_var.3.scope2.id0.1 = phi i1 [%tmp_var.3.scope2.id0.0, %label.entry.0], [%tmp_var.3.scope2.id0.2, %label.tmp_label.4]
-%tmp_var.11.scope3.id0.1 = phi i1 [%tmp_var.11.scope3.id0.0, %label.entry.0], [%tmp_var.11.scope3.id0.2, %label.tmp_label.4]
-%tmp_var.2.scope2.id0.1 = phi i32 [%tmp_var.2.scope2.id0.0, %label.entry.0], [%tmp_var.2.scope2.id0.2, %label.tmp_label.4]
-%tmp_var.8.scope3.id0.1 = phi i32 [%tmp_var.8.scope3.id0.0, %label.entry.0], [%tmp_var.8.scope3.id0.2, %label.tmp_label.4]
-%tmp_var.4.scope3.id0.1 = phi i32 [%tmp_var.4.scope3.id0.0, %label.entry.0], [%tmp_var.4.scope3.id0.2, %label.tmp_label.4]
-%i.loader.scope3.id0.1 = phi i32 [%i.loader.scope3.id0.0, %label.entry.0], [%i.loader.scope3.id0.2, %label.tmp_label.4]
-store i32 %i.loader.scope3.id0.1, i32* %i.scope2.id0
-%tmp_var.7.scope3.id0.1 = phi i1 [%tmp_var.7.scope3.id0.0, %label.entry.0], [%tmp_var.7.scope3.id0.2, %label.tmp_label.4]
-%ret.loader.scope3.id0.1 = phi i32 [%ret.loader.scope3.id0.0, %label.entry.0], [%ret.loader.scope3.id0.2, %label.tmp_label.4]
-store i32 %ret.loader.scope3.id0.1, i32* %ret.scope2.id0
-%tmp_var.1.scope2.id0.1 = phi i1 [%tmp_var.1.scope2.id0.0, %label.entry.0], [%tmp_var.1.scope2.id0.2, %label.tmp_label.4]
-%ret.loader.scope3.id1.1 = phi i32 [%ret.loader.scope3.id1.0, %label.entry.0], [%ret.loader.scope3.id1.3, %label.tmp_label.4]
-store i32 %ret.loader.scope3.id1.1, i32* %ret.scope2.id0
-%i.loader.scope3.id2.1 = phi i32 [%i.loader.scope3.id2.0, %label.entry.0], [%i.loader.scope3.id2.2, %label.tmp_label.4]
-store i32 %i.loader.scope3.id2.1, i32* %i.scope2.id0
 %i.loader.scope2.id0.1 = phi i32 [%i.loader.scope2.id0.0, %label.entry.0], [%i.loader.scope2.id0.2, %label.tmp_label.4]
 store i32 %i.loader.scope2.id0.1, i32* %i.scope2.id0
+%tmp_var.3.scope2.id0.1 = phi i1 [%tmp_var.3.scope2.id0.0, %label.entry.0], [%tmp_var.3.scope2.id0.2, %label.tmp_label.4]
+%tmp_var.1.scope2.id0.1 = phi i1 [%tmp_var.1.scope2.id0.0, %label.entry.0], [%tmp_var.1.scope2.id0.2, %label.tmp_label.4]
+%i.loader.scope3.id0.1 = phi i32 [%i.loader.scope3.id0.0, %label.entry.0], [%i.loader.scope3.id0.2, %label.tmp_label.4]
+store i32 %i.loader.scope3.id0.1, i32* %i.scope2.id0
+%tmp_var.2.scope2.id0.1 = phi i32 [%tmp_var.2.scope2.id0.0, %label.entry.0], [%tmp_var.2.scope2.id0.2, %label.tmp_label.4]
+%ret.loader.scope3.id0.1 = phi i32 [%ret.loader.scope3.id0.0, %label.entry.0], [%ret.loader.scope3.id0.2, %label.tmp_label.4]
+store i32 %ret.loader.scope3.id0.1, i32* %ret.scope2.id0
+%tmp_var.7.scope3.id0.1 = phi i1 [%tmp_var.7.scope3.id0.0, %label.entry.0], [%tmp_var.7.scope3.id0.2, %label.tmp_label.4]
+%tmp_var.8.scope3.id0.1 = phi i32 [%tmp_var.8.scope3.id0.0, %label.entry.0], [%tmp_var.8.scope3.id0.2, %label.tmp_label.4]
+%ret.loader.scope3.id1.1 = phi i32 [%ret.loader.scope3.id1.0, %label.entry.0], [%ret.loader.scope3.id1.3, %label.tmp_label.4]
+store i32 %ret.loader.scope3.id1.1, i32* %ret.scope2.id0
+%i.loader.scope3.id1.1 = phi i32 [%i.loader.scope3.id1.0, %label.entry.0], [%i.loader.scope3.id1.3, %label.tmp_label.4]
+store i32 %i.loader.scope3.id1.1, i32* %i.scope2.id0
+%tmp_var.11.scope3.id0.1 = phi i1 [%tmp_var.11.scope3.id0.0, %label.entry.0], [%tmp_var.11.scope3.id0.2, %label.tmp_label.4]
+%i.loader.scope3.id2.1 = phi i32 [%i.loader.scope3.id2.0, %label.entry.0], [%i.loader.scope3.id2.2, %label.tmp_label.4]
+store i32 %i.loader.scope3.id2.1, i32* %i.scope2.id0
 %i.loader.scope3.id3.1 = phi i32 [%i.loader.scope3.id3.0, %label.entry.0], [%i.loader.scope3.id3.2, %label.tmp_label.4]
 store i32 %i.loader.scope3.id3.1, i32* %i.scope2.id0
 %tmp_var.12.scope3.id0.1 = phi i32 [%tmp_var.12.scope3.id0.0, %label.entry.0], [%tmp_var.12.scope3.id0.2, %label.tmp_label.4]
@@ -38,22 +36,19 @@ br i1 %tmp_var.3.scope2.id0.2, label %label.tmp_label.1, label %label.tmp_label.
 %label.tmp_label.1:
 %ret.loader.scope3.id0.2 = load i32, i32* %ret.scope2.id0
 %i.loader.scope3.id0.2 = load i32, i32* %i.scope2.id0
-%tmp_var.4.scope3.id0.2 = getelementptr i32 i32* %arr.scope1.id0, i32 %i.loader.scope3.id0
-%tmp_var.7.scope3.id0.2 = icmp sgt i32 %tmp_var.4.scope3.id0.2, %ret.loader.scope3.id0.2
+%tmp_var.7.scope3.id0.2 = icmp sgt i32 %tmp_var.4.scope3.id0.0, %ret.loader.scope3.id0.2
 %tmp_var.8.scope3.id0.2 = zext i1 %tmp_var.7.scope3.id0.2 to i32
 %tmp_var.11.scope3.id0.2 = trunc i32 %tmp_var.8.scope3.id0.2 to i1
 br i1 %tmp_var.11.scope3.id0.2, label %label.tmp_label.3, label %label.tmp_label.4
 %label.tmp_label.3:
 %ret.loader.scope3.id1.2 = load i32, i32* %ret.scope2.id0
 %i.loader.scope3.id1.2 = load i32, i32* %i.scope2.id0
-%tmp_var.9.scope3.id0.2 = getelementptr i32 i32* %arr.scope1.id0, i32 %i.loader.scope3.id1
-store i32 %tmp_var.9.scope3.id0.2, i32* %ret.scope2.id0
+store i32 %tmp_var.9.scope3.id0.0, i32* %ret.scope2.id0
 %label.tmp_label.4:
-%tmp_var.9.scope3.id0.3 = phi i32 [%tmp_var.9.scope3.id0.1, %label.tmp_label.1], [%tmp_var.9.scope3.id0.2, %label.tmp_label.3]
-%i.loader.scope3.id1.3 = phi i32 [%i.loader.scope3.id1.1, %label.tmp_label.1], [%i.loader.scope3.id1.2, %label.tmp_label.3]
-store i32 %i.loader.scope3.id1.3, i32* %i.scope2.id0
 %ret.loader.scope3.id1.3 = phi i32 [%ret.loader.scope3.id1.1, %label.tmp_label.1], [%ret.loader.scope3.id1.2, %label.tmp_label.3]
 store i32 %ret.loader.scope3.id1.3, i32* %ret.scope2.id0
+%i.loader.scope3.id1.3 = phi i32 [%i.loader.scope3.id1.1, %label.tmp_label.1], [%i.loader.scope3.id1.2, %label.tmp_label.3]
+store i32 %i.loader.scope3.id1.3, i32* %i.scope2.id0
 %i.loader.scope3.id2.2 = load i32, i32* %i.scope2.id0
 %i.loader.scope3.id3.2 = load i32, i32* %i.scope2.id0
 %tmp_var.12.scope3.id0.2 = add i32 %i.loader.scope3.id3.2, 1
@@ -74,15 +69,15 @@ store i32 0, i32* %i.scope2.id1
 %label.tmp_label.5:
 %i.loader.scope2.id1.1 = phi i32 [%i.loader.scope2.id1.0, %label.entry.1], [%i.loader.scope2.id1.2, %label.tmp_label.6]
 store i32 %i.loader.scope2.id1.1, i32* %i.scope2.id1
+%tmp_var.17.scope2.id0.1 = phi i32 [%tmp_var.17.scope2.id0.0, %label.entry.1], [%tmp_var.17.scope2.id0.2, %label.tmp_label.6]
 %tmp_var.16.scope2.id0.1 = phi i1 [%tmp_var.16.scope2.id0.0, %label.entry.1], [%tmp_var.16.scope2.id0.2, %label.tmp_label.6]
 %tmp_var.18.scope2.id0.1 = phi i1 [%tmp_var.18.scope2.id0.0, %label.entry.1], [%tmp_var.18.scope2.id0.2, %label.tmp_label.6]
-%tmp_var.22.scope3.id0.1 = phi i32 [%tmp_var.22.scope3.id0.0, %label.entry.1], [%tmp_var.22.scope3.id0.2, %label.tmp_label.6]
-%tmp_var.17.scope2.id0.1 = phi i32 [%tmp_var.17.scope2.id0.0, %label.entry.1], [%tmp_var.17.scope2.id0.2, %label.tmp_label.6]
 %tmp_var.19.scope3.id0.1 = phi i32 [%tmp_var.19.scope3.id0.0, %label.entry.1], [%tmp_var.19.scope3.id0.2, %label.tmp_label.6]
 %i.loader.scope3.id4.1 = phi i32 [%i.loader.scope3.id4.0, %label.entry.1], [%i.loader.scope3.id4.2, %label.tmp_label.6]
 store i32 %i.loader.scope3.id4.1, i32* %i.scope2.id1
 %i.loader.scope3.id5.1 = phi i32 [%i.loader.scope3.id5.0, %label.entry.1], [%i.loader.scope3.id5.2, %label.tmp_label.6]
 store i32 %i.loader.scope3.id5.1, i32* %i.scope2.id1
+%tmp_var.22.scope3.id0.1 = phi i32 [%tmp_var.22.scope3.id0.0, %label.entry.1], [%tmp_var.22.scope3.id0.2, %label.tmp_label.6]
 %i.loader.scope2.id1.2 = load i32, i32* %i.scope2.id1
 %tmp_var.16.scope2.id0.2 = icmp slt i32 %i.loader.scope2.id1.2, %pos.scope1.id0.0
 %tmp_var.17.scope2.id0.2 = zext i1 %tmp_var.16.scope2.id0.2 to i32
@@ -120,29 +115,27 @@ ret void
 %i.scope3.id0 = alloca i32, align 8
 store i32 %l.scope1.id0.0, i32* %i.scope3.id0
 %label.tmp_label.10:
-%i.loader.scope4.id0.1 = phi i32 [%i.loader.scope4.id0.0, %label.tmp_label.9], [%i.loader.scope4.id0.2, %label.tmp_label.11]
-store i32 %i.loader.scope4.id0.1, i32* %i.scope3.id0
-%tmp_var.59.scope4.id0.1 = phi i32 [%tmp_var.59.scope4.id0.0, %label.tmp_label.9], [%tmp_var.59.scope4.id0.2, %label.tmp_label.11]
+%tmp_var.45.scope3.id0.1 = phi i1 [%tmp_var.45.scope3.id0.0, %label.tmp_label.9], [%tmp_var.45.scope3.id0.2, %label.tmp_label.11]
+%tmp_var.43.scope3.id0.1 = phi i1 [%tmp_var.43.scope3.id0.0, %label.tmp_label.9], [%tmp_var.43.scope3.id0.2, %label.tmp_label.11]
 %i.loader.scope4.id2.1 = phi i32 [%i.loader.scope4.id2.0, %label.tmp_label.9], [%i.loader.scope4.id2.2, %label.tmp_label.11]
 store i32 %i.loader.scope4.id2.1, i32* %i.scope3.id0
+%i.loader.scope4.id0.1 = phi i32 [%i.loader.scope4.id0.0, %label.tmp_label.9], [%i.loader.scope4.id0.2, %label.tmp_label.11]
+store i32 %i.loader.scope4.id0.1, i32* %i.scope3.id0
+%tmp_var.48.scope4.id0.1 = phi i32 [%tmp_var.48.scope4.id0.0, %label.tmp_label.9], [%tmp_var.48.scope4.id0.2, %label.tmp_label.11]
+%tmp_var.59.scope4.id0.1 = phi i32 [%tmp_var.59.scope4.id0.0, %label.tmp_label.9], [%tmp_var.59.scope4.id0.2, %label.tmp_label.11]
+%i.loader.scope4.id1.1 = phi i32 [%i.loader.scope4.id1.0, %label.tmp_label.9], [%i.loader.scope4.id1.2, %label.tmp_label.11]
+store i32 %i.loader.scope4.id1.1, i32* %i.scope3.id0
+%tmp_var.53.scope4.id0.1 = phi i32 [%tmp_var.53.scope4.id0.0, %label.tmp_label.9], [%tmp_var.53.scope4.id0.2, %label.tmp_label.11]
+%tmp_var.44.scope3.id0.1 = phi i32 [%tmp_var.44.scope3.id0.0, %label.tmp_label.9], [%tmp_var.44.scope3.id0.2, %label.tmp_label.11]
+%i.loader.scope3.id6.1 = phi i32 [%i.loader.scope3.id6.0, %label.tmp_label.9], [%i.loader.scope3.id6.2, %label.tmp_label.11]
+store i32 %i.loader.scope3.id6.1, i32* %i.scope3.id0
 %tmp_var.56.scope4.id0.1 = phi i32 [%tmp_var.56.scope4.id0.0, %label.tmp_label.9], [%tmp_var.56.scope4.id0.2, %label.tmp_label.11]
-%tmp_var.43.scope3.id0.1 = phi i1 [%tmp_var.43.scope3.id0.0, %label.tmp_label.9], [%tmp_var.43.scope3.id0.2, %label.tmp_label.11]
-%tmp_var.51.scope4.id0.1 = phi i32 [%tmp_var.51.scope4.id0.0, %label.tmp_label.9], [%tmp_var.51.scope4.id0.2, %label.tmp_label.11]
+%tmp_var.54.scope4.id0.1 = phi i32 [%tmp_var.54.scope4.id0.0, %label.tmp_label.9], [%tmp_var.54.scope4.id0.2, %label.tmp_label.11]
+store i32 %tmp_var.54.scope4.id0.1, i32* %tmp_var.55.scope4.id0
 %tmp_var.49.scope4.id0.1 = phi i32 [%tmp_var.49.scope4.id0.0, %label.tmp_label.9], [%tmp_var.49.scope4.id0.2, %label.tmp_label.11]
 store i32 %tmp_var.49.scope4.id0.1, i32* %tmp_var.50.scope4.id0
 %i.loader.scope4.id3.1 = phi i32 [%i.loader.scope4.id3.0, %label.tmp_label.9], [%i.loader.scope4.id3.2, %label.tmp_label.11]
 store i32 %i.loader.scope4.id3.1, i32* %i.scope3.id0
-%tmp_var.54.scope4.id0.1 = phi i32 [%tmp_var.54.scope4.id0.0, %label.tmp_label.9], [%tmp_var.54.scope4.id0.2, %label.tmp_label.11]
-store i32 %tmp_var.54.scope4.id0.1, i32* %tmp_var.55.scope4.id0
-%i.loader.scope4.id1.1 = phi i32 [%i.loader.scope4.id1.0, %label.tmp_label.9], [%i.loader.scope4.id1.2, %label.tmp_label.11]
-store i32 %i.loader.scope4.id1.1, i32* %i.scope3.id0
-%i.loader.scope3.id6.1 = phi i32 [%i.loader.scope3.id6.0, %label.tmp_label.9], [%i.loader.scope3.id6.2, %label.tmp_label.11]
-store i32 %i.loader.scope3.id6.1, i32* %i.scope3.id0
-%tmp_var.44.scope3.id0.1 = phi i32 [%tmp_var.44.scope3.id0.0, %label.tmp_label.9], [%tmp_var.44.scope3.id0.2, %label.tmp_label.11]
-%tmp_var.45.scope3.id0.1 = phi i1 [%tmp_var.45.scope3.id0.0, %label.tmp_label.9], [%tmp_var.45.scope3.id0.2, %label.tmp_label.11]
-%tmp_var.53.scope4.id0.1 = phi i32 [%tmp_var.53.scope4.id0.0, %label.tmp_label.9], [%tmp_var.53.scope4.id0.2, %label.tmp_label.11]
-%tmp_var.48.scope4.id0.1 = phi i32 [%tmp_var.48.scope4.id0.0, %label.tmp_label.9], [%tmp_var.48.scope4.id0.2, %label.tmp_label.11]
-%tmp_var.46.scope4.id0.1 = phi i32 [%tmp_var.46.scope4.id0.0, %label.tmp_label.9], [%tmp_var.46.scope4.id0.2, %label.tmp_label.11]
 %i.loader.scope3.id6.2 = load i32, i32* %i.scope3.id0
 %tmp_var.43.scope3.id0.2 = icmp slt i32 %i.loader.scope3.id6.2, %r.scope1.id0.0
 %tmp_var.44.scope3.id0.2 = zext i1 %tmp_var.43.scope3.id0.2 to i32
@@ -150,13 +143,11 @@ store i32 %i.loader.scope3.id6.1, i32* %i.scope3.id0
 br i1 %tmp_var.45.scope3.id0.2, label %label.tmp_label.11, label %label.tmp_label.12
 %label.tmp_label.11:
 %i.loader.scope4.id0.2 = load i32, i32* %i.scope3.id0
-%tmp_var.46.scope4.id0.2 = getelementptr i32 i32* %a.scope1.id0, i32 %i.loader.scope4.id0
-%tmp_var.48.scope4.id0.2 = call i32 @func.getNumPos(i32 %tmp_var.46.scope4.id0.2, i32 %bitround.scope1.id0.0)
+%tmp_var.48.scope4.id0.2 = call i32 @func.getNumPos(i32 %tmp_var.46.scope4.id0.0, i32 %bitround.scope1.id0.0)
 %tmp_var.50.scope4.id0 = getelementptr [16 x i32], [16 x i32]* %cnt.scope2.id0, i32 %tmp_var.48.scope4.id0
 %tmp_var.49.scope4.id0.2 = load i32, i32* %tmp_var.50.scope4.id0
 %i.loader.scope4.id1.2 = load i32, i32* %i.scope3.id0
-%tmp_var.51.scope4.id0.2 = getelementptr i32 i32* %a.scope1.id0, i32 %i.loader.scope4.id1
-%tmp_var.53.scope4.id0.2 = call i32 @func.getNumPos(i32 %tmp_var.51.scope4.id0.2, i32 %bitround.scope1.id0.0)
+%tmp_var.53.scope4.id0.2 = call i32 @func.getNumPos(i32 %tmp_var.51.scope4.id0.0, i32 %bitround.scope1.id0.0)
 %tmp_var.55.scope4.id0 = getelementptr [16 x i32], [16 x i32]* %cnt.scope2.id0, i32 %tmp_var.53.scope4.id0
 %tmp_var.54.scope4.id0.2 = load i32, i32* %tmp_var.55.scope4.id0
 %tmp_var.56.scope4.id0.2 = add i32 %tmp_var.54.scope4.id0.2, 1
@@ -179,38 +170,38 @@ store i32 %tmp_var.68.scope3.id0.1, i32* %tmp_var.65.scope3.id0
 %i.loader.scope3.id7.1 = load i32, i32* %i.scope3.id0
 store i32 1, i32* %i.scope3.id0
 %label.tmp_label.13:
-%i.loader.scope4.id8.1 = phi i32 [%i.loader.scope4.id8.0, %label.tmp_label.12], [%i.loader.scope4.id8.2, %label.tmp_label.14]
-store i32 %i.loader.scope4.id8.1, i32* %i.scope3.id0
+%tmp_var.74.scope3.id0.1 = phi i1 [%tmp_var.74.scope3.id0.0, %label.tmp_label.12], [%tmp_var.74.scope3.id0.2, %label.tmp_label.14]
+%tmp_var.72.scope3.id0.1 = phi i1 [%tmp_var.72.scope3.id0.0, %label.tmp_label.12], [%tmp_var.72.scope3.id0.2, %label.tmp_label.14]
+%i.loader.scope4.id10.1 = phi i32 [%i.loader.scope4.id10.0, %label.tmp_label.12], [%i.loader.scope4.id10.2, %label.tmp_label.14]
+store i32 %i.loader.scope4.id10.1, i32* %i.scope3.id0
+%tmp_var.73.scope3.id0.1 = phi i32 [%tmp_var.73.scope3.id0.0, %label.tmp_label.12], [%tmp_var.73.scope3.id0.2, %label.tmp_label.14]
+%i.loader.scope4.id4.1 = phi i32 [%i.loader.scope4.id4.0, %label.tmp_label.12], [%i.loader.scope4.id4.2, %label.tmp_label.14]
+store i32 %i.loader.scope4.id4.1, i32* %i.scope3.id0
+%i.loader.scope3.id8.1 = phi i32 [%i.loader.scope3.id8.0, %label.tmp_label.12], [%i.loader.scope3.id8.2, %label.tmp_label.14]
+store i32 %i.loader.scope3.id8.1, i32* %i.scope3.id0
+%i.loader.scope4.id5.1 = phi i32 [%i.loader.scope4.id5.0, %label.tmp_label.12], [%i.loader.scope4.id5.2, %label.tmp_label.14]
+store i32 %i.loader.scope4.id5.1, i32* %i.scope3.id0
 %tmp_var.77.scope4.id0.1 = phi i32 [%tmp_var.77.scope4.id0.0, %label.tmp_label.12], [%tmp_var.77.scope4.id0.2, %label.tmp_label.14]
 %tmp_var.80.scope4.id0.1 = phi i32 [%tmp_var.80.scope4.id0.0, %label.tmp_label.12], [%tmp_var.80.scope4.id0.2, %label.tmp_label.14]
 store i32 %tmp_var.80.scope4.id0.1, i32* %tmp_var.81.scope4.id0
-%tmp_var.73.scope3.id0.1 = phi i32 [%tmp_var.73.scope3.id0.0, %label.tmp_label.12], [%tmp_var.73.scope3.id0.2, %label.tmp_label.14]
-%tmp_var.72.scope3.id0.1 = phi i1 [%tmp_var.72.scope3.id0.0, %label.tmp_label.12], [%tmp_var.72.scope3.id0.2, %label.tmp_label.14]
-%i.loader.scope3.id8.1 = phi i32 [%i.loader.scope3.id8.0, %label.tmp_label.12], [%i.loader.scope3.id8.2, %label.tmp_label.14]
-store i32 %i.loader.scope3.id8.1, i32* %i.scope3.id0
-%i.loader.scope4.id9.1 = phi i32 [%i.loader.scope4.id9.0, %label.tmp_label.12], [%i.loader.scope4.id9.2, %label.tmp_label.14]
-store i32 %i.loader.scope4.id9.1, i32* %i.scope3.id0
 %tmp_var.88.scope4.id0.1 = phi i32 [%tmp_var.88.scope4.id0.0, %label.tmp_label.12], [%tmp_var.88.scope4.id0.2, %label.tmp_label.14]
-%tmp_var.84.scope4.id0.1 = phi i32 [%tmp_var.84.scope4.id0.0, %label.tmp_label.12], [%tmp_var.84.scope4.id0.2, %label.tmp_label.14]
-store i32 %tmp_var.84.scope4.id0.1, i32* %tmp_var.85.scope4.id0
 %tmp_var.82.scope4.id0.1 = phi i32 [%tmp_var.82.scope4.id0.0, %label.tmp_label.12], [%tmp_var.82.scope4.id0.2, %label.tmp_label.14]
 store i32 %tmp_var.82.scope4.id0.1, i32* %tmp_var.83.scope4.id0
-%tmp_var.86.scope4.id0.1 = phi i32 [%tmp_var.86.scope4.id0.0, %label.tmp_label.12], [%tmp_var.86.scope4.id0.2, %label.tmp_label.14]
-store i32 %tmp_var.86.scope4.id0.1, i32* %tmp_var.87.scope4.id0
-%i.loader.scope4.id5.1 = phi i32 [%i.loader.scope4.id5.0, %label.tmp_label.12], [%i.loader.scope4.id5.2, %label.tmp_label.14]
-store i32 %i.loader.scope4.id5.1, i32* %i.scope3.id0
-%i.loader.scope4.id4.1 = phi i32 [%i.loader.scope4.id4.0, %label.tmp_label.12], [%i.loader.scope4.id4.2, %label.tmp_label.14]
-store i32 %i.loader.scope4.id4.1, i32* %i.scope3.id0
-%tmp_var.74.scope3.id0.1 = phi i1 [%tmp_var.74.scope3.id0.0, %label.tmp_label.12], [%tmp_var.74.scope3.id0.2, %label.tmp_label.14]
-%tmp_var.91.scope4.id0.1 = phi i32 [%tmp_var.91.scope4.id0.0, %label.tmp_label.12], [%tmp_var.91.scope4.id0.2, %label.tmp_label.14]
-%i.loader.scope4.id10.1 = phi i32 [%i.loader.scope4.id10.0, %label.tmp_label.12], [%i.loader.scope4.id10.2, %label.tmp_label.14]
-store i32 %i.loader.scope4.id10.1, i32* %i.scope3.id0
-%tmp_var.75.scope4.id0.1 = phi i32 [%tmp_var.75.scope4.id0.0, %label.tmp_label.12], [%tmp_var.75.scope4.id0.2, %label.tmp_label.14]
-store i32 %tmp_var.75.scope4.id0.1, i32* %tmp_var.76.scope4.id0
-%i.loader.scope4.id6.1 = phi i32 [%i.loader.scope4.id6.0, %label.tmp_label.12], [%i.loader.scope4.id6.2, %label.tmp_label.14]
-store i32 %i.loader.scope4.id6.1, i32* %i.scope3.id0
 %i.loader.scope4.id7.1 = phi i32 [%i.loader.scope4.id7.0, %label.tmp_label.12], [%i.loader.scope4.id7.2, %label.tmp_label.14]
 store i32 %i.loader.scope4.id7.1, i32* %i.scope3.id0
+%tmp_var.91.scope4.id0.1 = phi i32 [%tmp_var.91.scope4.id0.0, %label.tmp_label.12], [%tmp_var.91.scope4.id0.2, %label.tmp_label.14]
+%tmp_var.86.scope4.id0.1 = phi i32 [%tmp_var.86.scope4.id0.0, %label.tmp_label.12], [%tmp_var.86.scope4.id0.2, %label.tmp_label.14]
+store i32 %tmp_var.86.scope4.id0.1, i32* %tmp_var.87.scope4.id0
+%tmp_var.84.scope4.id0.1 = phi i32 [%tmp_var.84.scope4.id0.0, %label.tmp_label.12], [%tmp_var.84.scope4.id0.2, %label.tmp_label.14]
+store i32 %tmp_var.84.scope4.id0.1, i32* %tmp_var.85.scope4.id0
+%i.loader.scope4.id9.1 = phi i32 [%i.loader.scope4.id9.0, %label.tmp_label.12], [%i.loader.scope4.id9.2, %label.tmp_label.14]
+store i32 %i.loader.scope4.id9.1, i32* %i.scope3.id0
+%i.loader.scope4.id6.1 = phi i32 [%i.loader.scope4.id6.0, %label.tmp_label.12], [%i.loader.scope4.id6.2, %label.tmp_label.14]
+store i32 %i.loader.scope4.id6.1, i32* %i.scope3.id0
+%i.loader.scope4.id8.1 = phi i32 [%i.loader.scope4.id8.0, %label.tmp_label.12], [%i.loader.scope4.id8.2, %label.tmp_label.14]
+store i32 %i.loader.scope4.id8.1, i32* %i.scope3.id0
+%tmp_var.75.scope4.id0.1 = phi i32 [%tmp_var.75.scope4.id0.0, %label.tmp_label.12], [%tmp_var.75.scope4.id0.2, %label.tmp_label.14]
+store i32 %tmp_var.75.scope4.id0.1, i32* %tmp_var.76.scope4.id0
 %i.loader.scope3.id8.2 = load i32, i32* %i.scope3.id0
 %tmp_var.72.scope3.id0.2 = icmp slt i32 %i.loader.scope3.id8.2, @base.scope0.id0
 %tmp_var.73.scope3.id0.2 = zext i1 %tmp_var.72.scope3.id0.2 to i32
@@ -245,11 +236,11 @@ br label %label.tmp_label.13
 %i.loader.scope3.id9.1 = load i32, i32* %i.scope3.id0
 store i32 0, i32* %i.scope3.id0
 %label.tmp_label.16:
+%i.loader.scope4.id14.1 = phi i32 [%i.loader.scope4.id14.0, %label.tmp_label.15], [%i.loader.scope4.id14, %label.tmp_label.21]
+store i32 %i.loader.scope4.id14.1, i32* %i.scope3.id0
 %i.loader.scope4.id13.1 = phi i32 [%i.loader.scope4.id13.0, %label.tmp_label.15], [%i.loader.scope4.id13, %label.tmp_label.21]
 store i32 %i.loader.scope4.id13.1, i32* %i.scope3.id0
 %tmp_var.145.scope4.id0.1 = phi i32 [%tmp_var.145.scope4.id0.0, %label.tmp_label.15], [%tmp_var.145.scope4.id0, %label.tmp_label.21]
-%i.loader.scope4.id14.1 = phi i32 [%i.loader.scope4.id14.0, %label.tmp_label.15], [%i.loader.scope4.id14, %label.tmp_label.21]
-store i32 %i.loader.scope4.id14.1, i32* %i.scope3.id0
 %i.loader.scope3.id10.1 = load i32, i32* %i.scope3.id0
 %tmp_var.95.scope3.id0.1 = icmp slt i32 %i.loader.scope3.id10.1, @base.scope0.id0
 %tmp_var.96.scope3.id0.1 = zext i1 %tmp_var.95.scope3.id0.1 to i32
@@ -271,50 +262,50 @@ store i32 %tmp_var.154.scope3.id0.1, i32* %tmp_var.151.scope3.id0
 %i.loader.scope3.id11.1 = load i32, i32* %i.scope3.id1
 store i32 0, i32* %i.scope3.id1
 %label.tmp_label.25:
-%tmp_var.184.scope4.id0.1 = phi i32 [%tmp_var.184.scope4.id0.0, %label.tmp_label.18], [%tmp_var.184.scope4.id0.2, %label.tmp_label.29]
-store i32 %tmp_var.184.scope4.id0.1, i32* %tmp_var.185.scope4.id0
-%i.loader.scope5.id8.1 = phi i32 [%i.loader.scope5.id8.0, %label.tmp_label.18], [%i.loader.scope5.id8.3, %label.tmp_label.29]
-store i32 %i.loader.scope5.id8.1, i32* %i.scope3.id1
-%tmp_var.175.scope5.id0.1 = phi i32 [%tmp_var.175.scope5.id0.0, %label.tmp_label.18], [%tmp_var.175.scope5.id0.3, %label.tmp_label.29]
-store i32 %tmp_var.175.scope5.id0.1, i32* %tmp_var.176.scope5.id0
-%i.loader.scope5.id9.1 = phi i32 [%i.loader.scope5.id9.0, %label.tmp_label.18], [%i.loader.scope5.id9.3, %label.tmp_label.29]
-store i32 %i.loader.scope5.id9.1, i32* %i.scope3.id1
-%tmp_var.171.scope5.id0.1 = phi i32 [%tmp_var.171.scope5.id0.0, %label.tmp_label.18], [%tmp_var.171.scope5.id0.3, %label.tmp_label.29]
-store i32 %tmp_var.171.scope5.id0.1, i32* %tmp_var.172.scope5.id0
-%i.loader.scope5.id7.1 = phi i32 [%i.loader.scope5.id7.0, %label.tmp_label.18], [%i.loader.scope5.id7.3, %label.tmp_label.29]
-store i32 %i.loader.scope5.id7.1, i32* %i.scope3.id1
-%tmp_var.160.scope3.id0.1 = phi i1 [%tmp_var.160.scope3.id0.0, %label.tmp_label.18], [%tmp_var.160.scope3.id0.2, %label.tmp_label.29]
-%tmp_var.158.scope3.id0.1 = phi i1 [%tmp_var.158.scope3.id0.0, %label.tmp_label.18], [%tmp_var.158.scope3.id0.2, %label.tmp_label.29]
-%i.loader.scope3.id12.1 = phi i32 [%i.loader.scope3.id12.0, %label.tmp_label.18], [%i.loader.scope3.id12.2, %label.tmp_label.29]
-store i32 %i.loader.scope3.id12.1, i32* %i.scope3.id1
-%tmp_var.177.scope5.id0.1 = phi i32 [%tmp_var.177.scope5.id0.0, %label.tmp_label.18], [%tmp_var.177.scope5.id0.3, %label.tmp_label.29]
-%tmp_var.186.scope4.id0.1 = phi i32 [%tmp_var.186.scope4.id0.0, %label.tmp_label.18], [%tmp_var.186.scope4.id0.2, %label.tmp_label.29]
-store i32 %tmp_var.186.scope4.id0.1, i32* %tmp_var.187.scope4.id0
-%tmp_var.180.scope4.id0.1 = phi i1 [%tmp_var.180.scope4.id0.0, %label.tmp_label.18], [%tmp_var.180.scope4.id0.2, %label.tmp_label.29]
-%i.loader.scope4.id16.1 = phi i32 [%i.loader.scope4.id16.0, %label.tmp_label.18], [%i.loader.scope4.id16.2, %label.tmp_label.29]
-store i32 %i.loader.scope4.id16.1, i32* %i.scope3.id1
-%tmp_var.169.scope5.id0.1 = phi i32 [%tmp_var.169.scope5.id0.0, %label.tmp_label.18], [%tmp_var.169.scope5.id0.3, %label.tmp_label.29]
-store i32 %tmp_var.169.scope5.id0.1, i32* %tmp_var.170.scope5.id0
+%i.loader.scope4.id18.1 = phi i32 [%i.loader.scope4.id18.0, %label.tmp_label.18], [%i.loader.scope4.id18.2, %label.tmp_label.29]
+store i32 %i.loader.scope4.id18.1, i32* %i.scope3.id1
+%tmp_var.164.scope5.id0.1 = phi i32 [%tmp_var.164.scope5.id0.0, %label.tmp_label.18], [%tmp_var.164.scope5.id0.3, %label.tmp_label.29]
+store i32 %tmp_var.164.scope5.id0.1, i32* %tmp_var.165.scope5.id0
 %tmp_var.163.scope4.id0.1 = phi i32 [%tmp_var.163.scope4.id0.0, %label.tmp_label.18], [%tmp_var.163.scope4.id0.2, %label.tmp_label.29]
-%i.loader.scope4.id17.1 = phi i32 [%i.loader.scope4.id17.0, %label.tmp_label.18], [%i.loader.scope4.id17.2, %label.tmp_label.29]
-store i32 %i.loader.scope4.id17.1, i32* %i.scope3.id1
 %i.loader.scope4.id15.1 = phi i32 [%i.loader.scope4.id15.0, %label.tmp_label.18], [%i.loader.scope4.id15.2, %label.tmp_label.29]
 store i32 %i.loader.scope4.id15.1, i32* %i.scope3.id1
 %tmp_var.166.scope5.id0.1 = phi i32 [%tmp_var.166.scope5.id0.0, %label.tmp_label.18], [%tmp_var.166.scope5.id0.3, %label.tmp_label.29]
-%tmp_var.188.scope4.id0.1 = phi i32 [%tmp_var.188.scope4.id0.0, %label.tmp_label.18], [%tmp_var.188.scope4.id0.2, %label.tmp_label.29]
+%i.loader.scope4.id16.1 = phi i32 [%i.loader.scope4.id16.0, %label.tmp_label.18], [%i.loader.scope4.id16.2, %label.tmp_label.29]
+store i32 %i.loader.scope4.id16.1, i32* %i.scope3.id1
+%i.loader.scope4.id17.1 = phi i32 [%i.loader.scope4.id17.0, %label.tmp_label.18], [%i.loader.scope4.id17.2, %label.tmp_label.29]
+store i32 %i.loader.scope4.id17.1, i32* %i.scope3.id1
 %i.loader.scope5.id6.1 = phi i32 [%i.loader.scope5.id6.0, %label.tmp_label.18], [%i.loader.scope5.id6.3, %label.tmp_label.29]
 store i32 %i.loader.scope5.id6.1, i32* %i.scope3.id1
+%i.loader.scope5.id8.1 = phi i32 [%i.loader.scope5.id8.0, %label.tmp_label.18], [%i.loader.scope5.id8.3, %label.tmp_label.29]
+store i32 %i.loader.scope5.id8.1, i32* %i.scope3.id1
+%tmp_var.158.scope3.id0.1 = phi i1 [%tmp_var.158.scope3.id0.0, %label.tmp_label.18], [%tmp_var.158.scope3.id0.2, %label.tmp_label.29]
+%tmp_var.177.scope5.id0.1 = phi i32 [%tmp_var.177.scope5.id0.0, %label.tmp_label.18], [%tmp_var.177.scope5.id0.3, %label.tmp_label.29]
 %i.loader.scope5.id5.1 = phi i32 [%i.loader.scope5.id5.0, %label.tmp_label.18], [%i.loader.scope5.id5.3, %label.tmp_label.29]
 store i32 %i.loader.scope5.id5.1, i32* %i.scope3.id1
-%tmp_var.162.scope4.id0.1 = phi i1 [%tmp_var.162.scope4.id0.0, %label.tmp_label.18], [%tmp_var.162.scope4.id0.2, %label.tmp_label.29]
+%i.loader.scope5.id9.1 = phi i32 [%i.loader.scope5.id9.0, %label.tmp_label.18], [%i.loader.scope5.id9.3, %label.tmp_label.29]
+store i32 %i.loader.scope5.id9.1, i32* %i.scope3.id1
+%tmp_var.188.scope4.id0.1 = phi i32 [%tmp_var.188.scope4.id0.0, %label.tmp_label.18], [%tmp_var.188.scope4.id0.2, %label.tmp_label.29]
+%i.loader.scope3.id12.1 = phi i32 [%i.loader.scope3.id12.0, %label.tmp_label.18], [%i.loader.scope3.id12.2, %label.tmp_label.29]
+store i32 %i.loader.scope3.id12.1, i32* %i.scope3.id1
 %tmp_var.159.scope3.id0.1 = phi i32 [%tmp_var.159.scope3.id0.0, %label.tmp_label.18], [%tmp_var.159.scope3.id0.2, %label.tmp_label.29]
+%tmp_var.160.scope3.id0.1 = phi i1 [%tmp_var.160.scope3.id0.0, %label.tmp_label.18], [%tmp_var.160.scope3.id0.2, %label.tmp_label.29]
+%tmp_var.162.scope4.id0.1 = phi i1 [%tmp_var.162.scope4.id0.0, %label.tmp_label.18], [%tmp_var.162.scope4.id0.2, %label.tmp_label.29]
+%tmp_var.180.scope4.id0.1 = phi i1 [%tmp_var.180.scope4.id0.0, %label.tmp_label.18], [%tmp_var.180.scope4.id0.2, %label.tmp_label.29]
+%tmp_var.169.scope5.id0.1 = phi i32 [%tmp_var.169.scope5.id0.0, %label.tmp_label.18], [%tmp_var.169.scope5.id0.3, %label.tmp_label.29]
+store i32 %tmp_var.169.scope5.id0.1, i32* %tmp_var.170.scope5.id0
+%i.loader.scope5.id7.1 = phi i32 [%i.loader.scope5.id7.0, %label.tmp_label.18], [%i.loader.scope5.id7.3, %label.tmp_label.29]
+store i32 %i.loader.scope5.id7.1, i32* %i.scope3.id1
+%tmp_var.171.scope5.id0.1 = phi i32 [%tmp_var.171.scope5.id0.0, %label.tmp_label.18], [%tmp_var.171.scope5.id0.3, %label.tmp_label.29]
+store i32 %tmp_var.171.scope5.id0.1, i32* %tmp_var.172.scope5.id0
+%tmp_var.175.scope5.id0.1 = phi i32 [%tmp_var.175.scope5.id0.0, %label.tmp_label.18], [%tmp_var.175.scope5.id0.3, %label.tmp_label.29]
+store i32 %tmp_var.175.scope5.id0.1, i32* %tmp_var.176.scope5.id0
 %tmp_var.173.scope5.id0.1 = phi i32 [%tmp_var.173.scope5.id0.0, %label.tmp_label.18], [%tmp_var.173.scope5.id0.3, %label.tmp_label.29]
 store i32 %tmp_var.173.scope5.id0.1, i32* %tmp_var.174.scope5.id0
-%tmp_var.164.scope5.id0.1 = phi i32 [%tmp_var.164.scope5.id0.0, %label.tmp_label.18], [%tmp_var.164.scope5.id0.3, %label.tmp_label.29]
-store i32 %tmp_var.164.scope5.id0.1, i32* %tmp_var.165.scope5.id0
 %tmp_var.181.scope4.id0.1 = phi i32 [%tmp_var.181.scope4.id0.0, %label.tmp_label.18], [%tmp_var.181.scope4.id0.2, %label.tmp_label.29]
-%i.loader.scope4.id18.1 = phi i32 [%i.loader.scope4.id18.0, %label.tmp_label.18], [%i.loader.scope4.id18.2, %label.tmp_label.29]
-store i32 %i.loader.scope4.id18.1, i32* %i.scope3.id1
+%tmp_var.184.scope4.id0.1 = phi i32 [%tmp_var.184.scope4.id0.0, %label.tmp_label.18], [%tmp_var.184.scope4.id0.2, %label.tmp_label.29]
+store i32 %tmp_var.184.scope4.id0.1, i32* %tmp_var.185.scope4.id0
+%tmp_var.186.scope4.id0.1 = phi i32 [%tmp_var.186.scope4.id0.0, %label.tmp_label.18], [%tmp_var.186.scope4.id0.2, %label.tmp_label.29]
+store i32 %tmp_var.186.scope4.id0.1, i32* %tmp_var.187.scope4.id0
 %i.loader.scope4.id19.1 = phi i32 [%i.loader.scope4.id19.0, %label.tmp_label.18], [%i.loader.scope4.id19.2, %label.tmp_label.29]
 store i32 %i.loader.scope4.id19.1, i32* %i.scope3.id1
 %i.loader.scope3.id12.2 = load i32, i32* %i.scope3.id1
@@ -349,28 +340,28 @@ store i32 %tmp_var.169.scope5.id0.2, i32* %tmp_var.165.scope5.id0
 %tmp_var.177.scope5.id0.2 = add i32 %tmp_var.173.scope5.id0.2, %tmp_var.175.scope5.id0.2
 store i32 %tmp_var.177.scope5.id0.2, i32* %tmp_var.172.scope5.id0
 %label.tmp_label.29:
-%i.loader.scope5.id8.3 = phi i32 [%i.loader.scope5.id8.1, %label.tmp_label.26], [%i.loader.scope5.id8.2, %label.tmp_label.28]
-store i32 %i.loader.scope5.id8.3, i32* %i.scope3.id1
-%tmp_var.175.scope5.id0.3 = phi i32 [%tmp_var.175.scope5.id0.1, %label.tmp_label.26], [%tmp_var.175.scope5.id0.2, %label.tmp_label.28]
-store i32 %tmp_var.175.scope5.id0.3, i32* %tmp_var.176.scope5.id0
-%i.loader.scope5.id9.3 = phi i32 [%i.loader.scope5.id9.1, %label.tmp_label.26], [%i.loader.scope5.id9.2, %label.tmp_label.28]
-store i32 %i.loader.scope5.id9.3, i32* %i.scope3.id1
-%tmp_var.171.scope5.id0.3 = phi i32 [%tmp_var.171.scope5.id0.1, %label.tmp_label.26], [%tmp_var.171.scope5.id0.2, %label.tmp_label.28]
-store i32 %tmp_var.171.scope5.id0.3, i32* %tmp_var.172.scope5.id0
-%i.loader.scope5.id7.3 = phi i32 [%i.loader.scope5.id7.1, %label.tmp_label.26], [%i.loader.scope5.id7.2, %label.tmp_label.28]
-store i32 %i.loader.scope5.id7.3, i32* %i.scope3.id1
-%tmp_var.177.scope5.id0.3 = phi i32 [%tmp_var.177.scope5.id0.1, %label.tmp_label.26], [%tmp_var.177.scope5.id0.2, %label.tmp_label.28]
-%tmp_var.169.scope5.id0.3 = phi i32 [%tmp_var.169.scope5.id0.1, %label.tmp_label.26], [%tmp_var.169.scope5.id0.2, %label.tmp_label.28]
-store i32 %tmp_var.169.scope5.id0.3, i32* %tmp_var.170.scope5.id0
+%tmp_var.164.scope5.id0.3 = phi i32 [%tmp_var.164.scope5.id0.1, %label.tmp_label.26], [%tmp_var.164.scope5.id0.2, %label.tmp_label.28]
+store i32 %tmp_var.164.scope5.id0.3, i32* %tmp_var.165.scope5.id0
 %tmp_var.166.scope5.id0.3 = phi i32 [%tmp_var.166.scope5.id0.1, %label.tmp_label.26], [%tmp_var.166.scope5.id0.2, %label.tmp_label.28]
 %i.loader.scope5.id6.3 = phi i32 [%i.loader.scope5.id6.1, %label.tmp_label.26], [%i.loader.scope5.id6.2, %label.tmp_label.28]
 store i32 %i.loader.scope5.id6.3, i32* %i.scope3.id1
+%i.loader.scope5.id8.3 = phi i32 [%i.loader.scope5.id8.1, %label.tmp_label.26], [%i.loader.scope5.id8.2, %label.tmp_label.28]
+store i32 %i.loader.scope5.id8.3, i32* %i.scope3.id1
+%tmp_var.177.scope5.id0.3 = phi i32 [%tmp_var.177.scope5.id0.1, %label.tmp_label.26], [%tmp_var.177.scope5.id0.2, %label.tmp_label.28]
 %i.loader.scope5.id5.3 = phi i32 [%i.loader.scope5.id5.1, %label.tmp_label.26], [%i.loader.scope5.id5.2, %label.tmp_label.28]
 store i32 %i.loader.scope5.id5.3, i32* %i.scope3.id1
+%i.loader.scope5.id9.3 = phi i32 [%i.loader.scope5.id9.1, %label.tmp_label.26], [%i.loader.scope5.id9.2, %label.tmp_label.28]
+store i32 %i.loader.scope5.id9.3, i32* %i.scope3.id1
+%tmp_var.169.scope5.id0.3 = phi i32 [%tmp_var.169.scope5.id0.1, %label.tmp_label.26], [%tmp_var.169.scope5.id0.2, %label.tmp_label.28]
+store i32 %tmp_var.169.scope5.id0.3, i32* %tmp_var.170.scope5.id0
+%i.loader.scope5.id7.3 = phi i32 [%i.loader.scope5.id7.1, %label.tmp_label.26], [%i.loader.scope5.id7.2, %label.tmp_label.28]
+store i32 %i.loader.scope5.id7.3, i32* %i.scope3.id1
+%tmp_var.171.scope5.id0.3 = phi i32 [%tmp_var.171.scope5.id0.1, %label.tmp_label.26], [%tmp_var.171.scope5.id0.2, %label.tmp_label.28]
+store i32 %tmp_var.171.scope5.id0.3, i32* %tmp_var.172.scope5.id0
+%tmp_var.175.scope5.id0.3 = phi i32 [%tmp_var.175.scope5.id0.1, %label.tmp_label.26], [%tmp_var.175.scope5.id0.2, %label.tmp_label.28]
+store i32 %tmp_var.175.scope5.id0.3, i32* %tmp_var.176.scope5.id0
 %tmp_var.173.scope5.id0.3 = phi i32 [%tmp_var.173.scope5.id0.1, %label.tmp_label.26], [%tmp_var.173.scope5.id0.2, %label.tmp_label.28]
 store i32 %tmp_var.173.scope5.id0.3, i32* %tmp_var.174.scope5.id0
-%tmp_var.164.scope5.id0.3 = phi i32 [%tmp_var.164.scope5.id0.1, %label.tmp_label.26], [%tmp_var.164.scope5.id0.2, %label.tmp_label.28]
-store i32 %tmp_var.164.scope5.id0.3, i32* %tmp_var.165.scope5.id0
 %tmp_var.181.scope4.id0.2 = sub i32 %bitround.scope1.id0.0, 1
 %i.loader.scope4.id16.2 = load i32, i32* %i.scope3.id1
 %tmp_var.185.scope4.id0 = getelementptr [16 x i32], [16 x i32]* %head.scope2.id0, i32 %i.loader.scope4.id16
@@ -401,33 +392,33 @@ call void @func.radixSort(i32 %n.loader.scope2.id0.1)
 %i.scope2.id2 = alloca i32, align 8
 store i32 0, i32* %i.scope2.id2
 %label.tmp_label.30:
-%tmp_var.200.scope3.id0.1 = phi i32 [%tmp_var.200.scope3.id0.0, %label.entry.3], [%tmp_var.200.scope3.id0.2, %label.tmp_label.31]
+%n.loader.scope2.id1.1 = phi i32 [%n.loader.scope2.id1.0, %label.entry.3], [%n.loader.scope2.id1.2, %label.tmp_label.31]
+store i32 %n.loader.scope2.id1.1, i32* %n.scope2.id0
+%i.loader.scope2.id2.1 = phi i32 [%i.loader.scope2.id2.0, %label.entry.3], [%i.loader.scope2.id2.2, %label.tmp_label.31]
+store i32 %i.loader.scope2.id2.1, i32* %i.scope2.id2
+%tmp_var.192.scope2.id0.1 = phi i1 [%tmp_var.192.scope2.id0.0, %label.entry.3], [%tmp_var.192.scope2.id0.2, %label.tmp_label.31]
+%tmp_var.193.scope2.id0.1 = phi i32 [%tmp_var.193.scope2.id0.0, %label.entry.3], [%tmp_var.193.scope2.id0.2, %label.tmp_label.31]
+%ans.loader.scope3.id1.1 = phi i32 [%ans.loader.scope3.id1.0, %label.entry.3], [%ans.loader.scope3.id1.2, %label.tmp_label.31]
+store i32 %ans.loader.scope3.id1.1, i32* @ans.scope0.id0
+%tmp_var.195.scope3.id0.1 = phi i32 [%tmp_var.195.scope3.id0.0, %label.entry.3], [%tmp_var.195.scope3.id0.2, %label.tmp_label.31]
+store i32 %tmp_var.195.scope3.id0.1, i32* %tmp_var.196.scope3.id0
+%i.loader.scope3.id15.1 = phi i32 [%i.loader.scope3.id15.0, %label.entry.3], [%i.loader.scope3.id15.2, %label.tmp_label.31]
+store i32 %i.loader.scope3.id15.1, i32* %i.scope2.id2
+%tmp_var.194.scope2.id0.1 = phi i1 [%tmp_var.194.scope2.id0.0, %label.entry.3], [%tmp_var.194.scope2.id0.2, %label.tmp_label.31]
 %i.loader.scope3.id14.1 = phi i32 [%i.loader.scope3.id14.0, %label.entry.3], [%i.loader.scope3.id14.2, %label.tmp_label.31]
 store i32 %i.loader.scope3.id14.1, i32* %i.scope2.id2
 %tmp_var.197.scope3.id0.1 = phi i32 [%tmp_var.197.scope3.id0.0, %label.entry.3], [%tmp_var.197.scope3.id0.2, %label.tmp_label.31]
-%i.loader.scope3.id15.1 = phi i32 [%i.loader.scope3.id15.0, %label.entry.3], [%i.loader.scope3.id15.2, %label.tmp_label.31]
-store i32 %i.loader.scope3.id15.1, i32* %i.scope2.id2
-%tmp_var.203.scope3.id0.1 = phi i32 [%tmp_var.203.scope3.id0.0, %label.entry.3], [%tmp_var.203.scope3.id0.2, %label.tmp_label.31]
-%i.loader.scope3.id13.1 = phi i32 [%i.loader.scope3.id13.0, %label.entry.3], [%i.loader.scope3.id13.2, %label.tmp_label.31]
-store i32 %i.loader.scope3.id13.1, i32* %i.scope2.id2
-%tmp_var.194.scope2.id0.1 = phi i1 [%tmp_var.194.scope2.id0.0, %label.entry.3], [%tmp_var.194.scope2.id0.2, %label.tmp_label.31]
-%i.loader.scope3.id16.1 = phi i32 [%i.loader.scope3.id16.0, %label.entry.3], [%i.loader.scope3.id16.2, %label.tmp_label.31]
-store i32 %i.loader.scope3.id16.1, i32* %i.scope2.id2
+%tmp_var.200.scope3.id0.1 = phi i32 [%tmp_var.200.scope3.id0.0, %label.entry.3], [%tmp_var.200.scope3.id0.2, %label.tmp_label.31]
+%tmp_var.206.scope3.id0.1 = phi i32 [%tmp_var.206.scope3.id0.0, %label.entry.3], [%tmp_var.206.scope3.id0.2, %label.tmp_label.31]
 %ans.loader.scope3.id0.1 = phi i32 [%ans.loader.scope3.id0.0, %label.entry.3], [%ans.loader.scope3.id0.2, %label.tmp_label.31]
 store i32 %ans.loader.scope3.id0.1, i32* @ans.scope0.id0
-%tmp_var.195.scope3.id0.1 = phi i32 [%tmp_var.195.scope3.id0.0, %label.entry.3], [%tmp_var.195.scope3.id0.2, %label.tmp_label.31]
-store i32 %tmp_var.195.scope3.id0.1, i32* %tmp_var.196.scope3.id0
-%tmp_var.193.scope2.id0.1 = phi i32 [%tmp_var.193.scope2.id0.0, %label.entry.3], [%tmp_var.193.scope2.id0.2, %label.tmp_label.31]
-%tmp_var.192.scope2.id0.1 = phi i1 [%tmp_var.192.scope2.id0.0, %label.entry.3], [%tmp_var.192.scope2.id0.2, %label.tmp_label.31]
-%i.loader.scope2.id2.1 = phi i32 [%i.loader.scope2.id2.0, %label.entry.3], [%i.loader.scope2.id2.2, %label.tmp_label.31]
-store i32 %i.loader.scope2.id2.1, i32* %i.scope2.id2
-%n.loader.scope2.id1.1 = phi i32 [%n.loader.scope2.id1.0, %label.entry.3], [%n.loader.scope2.id1.2, %label.tmp_label.31]
-store i32 %n.loader.scope2.id1.1, i32* %n.scope2.id0
-%ans.loader.scope3.id1.1 = phi i32 [%ans.loader.scope3.id1.0, %label.entry.3], [%ans.loader.scope3.id1.2, %label.tmp_label.31]
-store i32 %ans.loader.scope3.id1.1, i32* @ans.scope0.id0
-%tmp_var.206.scope3.id0.1 = phi i32 [%tmp_var.206.scope3.id0.0, %label.entry.3], [%tmp_var.206.scope3.id0.2, %label.tmp_label.31]
+%i.loader.scope3.id16.1 = phi i32 [%i.loader.scope3.id16.0, %label.entry.3], [%i.loader.scope3.id16.2, %label.tmp_label.31]
+store i32 %i.loader.scope3.id16.1, i32* %i.scope2.id2
+%i.loader.scope3.id13.1 = phi i32 [%i.loader.scope3.id13.0, %label.entry.3], [%i.loader.scope3.id13.2, %label.tmp_label.31]
+store i32 %i.loader.scope3.id13.1, i32* %i.scope2.id2
 %i.loader.scope3.id17.1 = phi i32 [%i.loader.scope3.id17.0, %label.entry.3], [%i.loader.scope3.id17.2, %label.tmp_label.31]
 store i32 %i.loader.scope3.id17.1, i32* %i.scope2.id2
+%tmp_var.203.scope3.id0.1 = phi i32 [%tmp_var.203.scope3.id0.0, %label.entry.3], [%tmp_var.203.scope3.id0.2, %label.tmp_label.31]
 %tmp_var.209.scope3.id0.1 = phi i32 [%tmp_var.209.scope3.id0.0, %label.entry.3], [%tmp_var.209.scope3.id0.2, %label.tmp_label.31]
 %n.loader.scope2.id1.2 = load i32, i32* %n.scope2.id0
 %i.loader.scope2.id2.2 = load i32, i32* %i.scope2.id2
@@ -464,9 +455,9 @@ br i1 %tmp_var.216.scope2.id0.1, label %label.tmp_label.33, label %label.tmp_lab
 %tmp_var.215.scope2.id0.1 = sub i32 0, %ans.loader.scope2.id2.0
 store i32 %tmp_var.215.scope2.id0.1, i32* @ans.scope0.id0
 %label.tmp_label.34:
+%tmp_var.215.scope2.id0.2 = phi i32 [%tmp_var.215.scope2.id0.0, %label.tmp_label.32], [%tmp_var.215.scope2.id0.1, %label.tmp_label.33]
 %ans.loader.scope2.id1.2 = phi i32 [%ans.loader.scope2.id1.0, %label.tmp_label.32], [%ans.loader.scope2.id1.1, %label.tmp_label.33]
 store i32 %ans.loader.scope2.id1.2, i32* @ans.scope0.id0
-%tmp_var.215.scope2.id0.2 = phi i32 [%tmp_var.215.scope2.id0.0, %label.tmp_label.32], [%tmp_var.215.scope2.id0.1, %label.tmp_label.33]
 ret i32 0
 }
 
