@@ -340,7 +340,7 @@ void LoadLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
-    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym);
+    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
    
     OutArm::outString("LDR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
@@ -350,7 +350,7 @@ void StoreLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
-    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym);
+    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
     
     OutArm::outString("STR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
@@ -361,14 +361,14 @@ void GetElementPtrLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     std::string base_ptr = out_Arm.DispatchReg(this->ptrval);
 
-    int offset = out_Arm.stackAllocator.getOffset(this->ptrval);
-    for (auto dim : ty_idx) {
-        if (dim.first == dataType::i32) {
-            offset += dim.second->data->getValue<int>() * StackAllocator::getTypeSize(dim.first);
-        } else {
-            throw std::invalid_argument("Unsupported dimension type for ARM conversion");
-        }
-    }
+    int offset = out_Arm.stackAllocator.getOffset(this->ptrval->getName());
+    // for (auto dim : ty_idx) {
+    //     if (dim.first == dataType::i32) {
+    //         offset += dim.second->data->getValue() * out_Arm.stackAllocator.getTypeSize(dim.first);
+    //     } else {
+    //         throw std::invalid_argument("Unsupported dimension type for ARM conversion");
+    //     }
+    // }
 
     out_Arm.stackAllocator.addPtr(this->dest_sym, offset);
 }
@@ -448,9 +448,9 @@ void insertContentToFileFront(std::ofstream& outputFile, const std::string& cont
     outputFile.seekp(0, std::ios::end);
     size_t fileSize = outputFile.tellp();
     if (fileSize > 0) {
-        outputFile.seekg(0, std::ios::beg);
+        outputFile.seekp(0, std::ios::beg);
         existingContent.resize(fileSize);
-        outputFile.read(&existingContent[0], fileSize);
+        //outputFile.read(&existingContent[0], fileSize);
     }
 
     // 将新内容插入到现有内容前面
