@@ -60,6 +60,18 @@ std::string getIntNumberOfOperands(ConstSymbol *sym){
     throw std::invalid_argument("Unsupported type for getIntNumberOfOperands");
 }
 
+std::string OutArm::DispatchReg(Symbol* symbol) {
+    std::string reg_name;
+    if(symbol->symType == symType::constant_var || symType::constant_nonvar) {
+        reg_name = OutArm::getIntNumberOfOperandss(symbol);
+    }else if(symbol->Data->getType() == dataType::f32) {
+        reg_name = dRegAllocator.accessVariable(symbol);
+    }else if(Rsymbol->Data->getType() == dataType::i32) {
+        reg_name = xRegAllocator.accessVariable(symbol);
+    }
+    return reg_name;
+}
+
 void ArithmeticOperationLLVM::out_arm_str(){
     std::string op_str = OutArm::ArithmeticOpConvert(llvmType);
 

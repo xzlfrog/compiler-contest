@@ -39,6 +39,8 @@ public:
     static std::string getIntNumberOfOperands(ConstVarSymbol *sym) ;
     static std::string getIntNumberOfOperands(ConstSymbol *sym) ;
 
+    static std::string DispatchReg(Symbol* symbol);
+    
         // 输出整个模块
    // void outputModule(Module *module);
 
