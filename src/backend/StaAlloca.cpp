@@ -22,6 +22,18 @@ int StackAllocator::getTypeSize(Symbol* symbol) {
     }
 }
 
+
+int StackAllocator::getTypeSize(ArraySymbol* symbol) {
+    dataType dtype = symbol->getArrayType();
+    switch(dtype) {
+        case i32: case f32: return 4;
+        case i64: case f64: return 8;
+        case i1: case i8: return 1;
+        case i16: return 2;
+        default: return 4; // 默认4字节
+    }
+}
+
 void StackAllocator::addUsedRegister(std::string& reg) {
     if (reg.size() < 2 || reg[0] != 'X') return;
     
