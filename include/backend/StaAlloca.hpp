@@ -41,7 +41,7 @@ class StackAllocator {
         void emitRegisterRestore(std::ostream& out, int offset) const;
 
         int calculateStackSize();
-        int getOffset(const std::string &varName);
+        int getOffset(Symbol *symbol);
         std::string emitPrologue(int stackSize) ;
         std::string emitEpilogue(int stackSize) ;
         int getCurrentOffset() const;

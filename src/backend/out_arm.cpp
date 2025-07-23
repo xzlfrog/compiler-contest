@@ -365,7 +365,7 @@ void LoadLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
-    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
+    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym);
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
    
     OutArm::outString("LDR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
@@ -375,7 +375,7 @@ void StoreLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
-    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
+    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym);
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
     
     OutArm::outString("STR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
@@ -386,7 +386,7 @@ void GetElementPtrLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     std::string base_ptr = out_Arm.DispatchReg(this->ptrval);
 
-    int offset = out_Arm.stackAllocator.getOffset(this->ptrval->getName());
+    int offset = out_Arm.stackAllocator.getOffset(this->ptrval);
     // for (auto dim : ty_idx) {
     //     if (dim.first == dataType::i32) {
     //         offset += dim.second->data->getValue() * out_Arm.stackAllocator.getTypeSize(dim.first);
@@ -489,7 +489,7 @@ void XRegAllocator::promoteToRegister(Symbol* symbol) {
     StackAllocator& stackAllocator = StackAllocator::getInstance();
     bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
     if (is_in_stack) {
-        int stack_offset = stackAllocator.getOffset(symbol->getName());
+        int stack_offset = stackAllocator.getOffset(symbol);
         std::string reg_name = this->getRegister(symbol);
         if (reg_name.empty()) {
             throw std::runtime_error("No free registers available for promotion");
@@ -514,7 +514,7 @@ void XRegAllocator::spillToStack(Symbol* symbol) {
     }
     bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
     if(is_in_stack) {
-        stack_offset = stackAllocator.getOffset(symbol->getName());
+        stack_offset = stackAllocator.getOffset(symbol);
     }else{
         stack_offset = stackAllocator.allocateLocal(symbol);
     }
@@ -529,7 +529,7 @@ void DRegAllocator::promoteToRegister(Symbol* symbol) {
     StackAllocator& stackAllocator = StackAllocator::getInstance();
     bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
     if (is_in_stack) {
-        int stack_offset = stackAllocator.getOffset(symbol->getName());
+        int stack_offset = stackAllocator.getOffset(symbol);
         std::string reg_name = this->getRegister(symbol);
         if (reg_name.empty()) {
             throw std::runtime_error("No free registers available for promotion");
@@ -554,7 +554,7 @@ void DRegAllocator::spillToStack(Symbol* symbol) {
     }
     bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
     if(is_in_stack) {
-        stack_offset = stackAllocator.getOffset(symbol->getName());
+        stack_offset = stackAllocator.getOffset(symbol);
     }else{
         stack_offset = stackAllocator.allocateLocal(symbol);
     }

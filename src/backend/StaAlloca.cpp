@@ -59,7 +59,20 @@ int StackAllocator::calculateRegisterSaveAreaSize() {
     
     // 确保16字节对齐
     return align(size, 16);
-}  
+}
+
+int StackAllocator::getOffset(Symbol* symbol) {
+    const std::string& varName = symbol->getName();
+    auto it = localVarOffsets.find(varName);
+    if (it != localVarOffsets.end()) {
+        return it->second;
+    }else if(auto array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {
+        return allocateArray(array_Symbol);
+    }else{
+        return allocateLocal(symbol);
+    }
+    throw std::runtime_error("Variable not found: " + varName);
+}   
 
 int StackAllocator::allocateLocal(Symbol* symbol) {
     std::string name = symbol->getName();
