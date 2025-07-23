@@ -1,5 +1,14 @@
-.module start
-.endmodule
+	.section .rodata
+	.global @base.scope0.id0
+	.align 4
+@base.scope0.id0:
+	.word 16
+	.section .rodata
+	.global @base.scope0.id0
+	.align 4
+@base.scope0.id0:
+	.word 16
+	.section .rod.endmodule
 .module start
 @func.getMaxNum :
     ;Function prologue
@@ -114,7 +123,89 @@ STR X9, [SP, #-88]
 MOV X0, X9
     // Function epilogue
     add sp, sp, #96      // Deallocate stack space
-    ldp x29, x30, [sp], #16 // Restore FP and LR
-    ret                                            // Return
+    ldp x29, x30, [sp], #16 // Re.endmodule
+.module start
+@func.getNumPos :
+    ;Function prologue
+    stp x29, x30, [sp, #-16]!  // Save FP and LR
+    mov x29, sp                                    // Set new FP
+    sub sp, sp, #96      // Allocate stack space
 
-RET
+%label.entry.1:
+STR X10, [SP, #-92]
+SUB SP, SP, #-96
+MOV X10, SP
+STR X10, [SP, #-96]
+STR #1, [SP, #-96]
+STR X11, [SP, #-64]
+SUB SP, SP, #-100
+MOV X11, SP
+STR X11, [SP, #-100]
+STR XZR, [SP, #-100]
+%label.tmp_label.5:
+STR X12, [SP, #-68]
+LDR X13, [SP, #-100]
+STR X13, [SP, #-104]
+STR X12, [SP, #-100]
+STR X13, [SP, #-100]
+STR X14, [SP, #-100]
+STR X15, [SP, #-108]
+LDR X19, [SP, #-100]
+STR X19, [SP, #-112]
+STR X15, [SP, #-100]
+STR X19, [SP, #-100]
+LDR X20, [SP, #-116]
+LDR X0, [SP, #-116]
+STR X21, [SP, #-72]
+LDR X23, [SP, #-116]
+STR X23, [SP, #-76]
+STR X24, [SP, #-120]
+CMP X23, X24
+CSET X21, LT
+STR X25, [SP, #-76]
+STR X26, [SP, #-120]
+ZEXT X25, X26
+STR X27, [SP, #-4]
+STR X28, [SP, #-92]
+TRUNC X27, X28
+STR X9, [SP, #-92]
+CBZ X9, %label.tmp_label.6
+CBNZ X9, %label.tmp_label.7
+%label.tmp_label.6:
+SDIV X10, X11, #16
+LDR X12, [SP, #-100]
+STR X12, [SP, #-124]
+LDR X13, [SP, #-128]
+LDR X12, [SP, #-128]
+STR X12, [SP, #-100]
+LDR X14, [SP, #-132]
+STR X14, [SP, #-136]
+LDR X0, [SP, #-132]
+STR X15, [SP, #-140]
+LDR X19, [SP, #-132]
+ADD X15, X19, #1
+STR X20, [SP, #-116]
+LDR X21, [SP, #-100]
+STR X21, [SP, #-140]
+STR X20, [SP, #-100]
+B %label.tmp_label.5
+%label.tmp_label.7:
+STR X22, [SP, #-144]
+STR X23, [SP, #-116]
+STR X24, [SP, #-148]
+SDIV X23, X24, #16
+MUL X23, X23, #16
+SUB X22, X22, X23
+STR X25, [SP, #-152]
+MOV X0, X25
+    // Function epilogue
+    add sp, sp, #160      // Deallocate stack space
+    ldp x29, x30, [sp], #16 // Re.endmodule
+.module start
+@func.radixSort :
+    ;Function prologue
+    stp x29, x30, [sp, #-16]!  // Save FP and LR
+    mov x29, sp                                    // Set new FP
+    sub sp, sp, #160      // Allocate stack space
+
+%label.entry.2:

@@ -461,28 +461,43 @@ void UnaryOperationLLVM::out_arm_str()  {
     }
 }
 
-void insertContentToFileFront(std::ofstream& outputFile, const std::string& contentToInsert) {
-    if (!outputFile.is_open()) {
-        std::cerr << "无法打开输出文件" << std::endl;
-        throw std::runtime_error("无法打开输出文件");
+// void insertContentToFileFront(std::ofstream& outputFile, const std::string& contentToInsert) {
+//     if (!outputFile.is_open()) {
+//         std::cerr << "无法打开输出文件" << std::endl;
+//         throw std::runtime_error("无法打开输出文件");
+//     }
+
+//     // 读取现有内容
+//     std::string existingContent;
+//     outputFile.seekp(0, std::ios::end);
+//     size_t fileSize = outputFile.tellp();
+//     if (fileSize > 0) {
+//         outputFile.seekp(0, std::ios::beg);
+//         existingContent.resize(fileSize);
+//         //outputFile.read(&existingContent[0], fileSize);
+//     }
+
+//     // 将新内容插入到现有内容前面
+//     outputFile.seekp(0, std::ios::beg);
+//     outputFile << contentToInsert << existingContent;
+//     outputFile.flush();
+// }
+void insertContentToFileFront(const std::string& filename, const std::string& contentToInsert) {
+    std::ifstream read(filename, std::ios::binary);
+    std::string oldContent;
+    if (read.is_open()) {
+        oldContent.assign((std::istreambuf_iterator<char>(read)),
+                          std::istreambuf_iterator<char>());
+        read.close();
     }
 
-    // 读取现有内容
-    std::string existingContent;
-    outputFile.seekp(0, std::ios::end);
-    size_t fileSize = outputFile.tellp();
-    if (fileSize > 0) {
-        outputFile.seekp(0, std::ios::beg);
-        existingContent.resize(fileSize);
-        //outputFile.read(&existingContent[0], fileSize);
+    std::ofstream write(filename, std::ios::binary);
+    if (!write.is_open()) {
+        throw std::runtime_error("无法打开文件: " + filename);
     }
-
-    // 将新内容插入到现有内容前面
-    outputFile.seekp(0, std::ios::beg);
-    outputFile << contentToInsert << existingContent;
-    outputFile.flush();
+    write << contentToInsert << oldContent;
+    write.close();
 }
-
 
 void XRegAllocator::promoteToRegister(Symbol* symbol) {
     StackAllocator& stackAllocator = StackAllocator::getInstance();
@@ -580,7 +595,7 @@ void out_arm(std::string outputFileName, ModuleList* module_list) {
             llvm->out_arm_str();
         }
         
-        insertContentToFileFront(Out_Arm.out, Out_Arm.globalAllocator.emitAssemblyToString());
+        insertContentToFileFront(name, Out_Arm.globalAllocator.emitAssemblyToString());
 
         OutArm::outString(".endmodule");
     }
