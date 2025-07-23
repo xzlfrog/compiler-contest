@@ -210,3 +210,97 @@ MOV X0, X25
 
 %label.entry.2:
 STR X26, [SP, #-140]
+SUB SP, SP, #-216
+MOV X26, SP
+STR X27, [SP, #-216]
+SUB SP, SP, #-280
+MOV X27, SP
+STR X28, [SP, #-152]
+SUB SP, SP, #-344
+MOV X28, SP
+STR X9, [SP, #-216]
+STR X10, [SP, #-348]
+ADD X9, X10, #1
+STR X11, [SP, #-352]
+STR X13, [SP, #-128]
+STR X14, [SP, #-132]
+CMP X13, X14
+CSET X11, GE
+STR X15, [SP, #-356]
+STR X19, [SP, #-132]
+ZEXT X15, X19
+STR X20, [SP, #-356]
+STR X21, [SP, #-100]
+STR X22, [SP, #-360]
+CMP X22, #-1
+CSET X20, EQ
+STR X23, [SP, #-364]
+STR X24, [SP, #-352]
+ZEXT X23, X24
+STR X25, [SP, #-360]
+STR X26, [SP, #-216]
+STR X27, [SP, #-280]
+OR X25, X26, X27
+STR X28, [SP, #-344]
+STR X9, [SP, #-368]
+TRUNC X28, X9
+STR X10, [SP, #-372]
+CBZ X10, %label.tmp_label.8
+CBNZ X10, %label.tmp_label.9
+%label.tmp_label.8:
+    // Function epilogue
+    add sp, sp, #384      // Deallocate stack space
+    ldp x29, x30, [sp], #16 // Restore FP and LR
+    ret                                            // Return
+
+RET
+%label.tmp_label.9:
+SUB SP, SP, #-376
+MOV , SP
+LDR X11, [SP, #-372]
+STR X11, [SP, #-376]
+STR X11, [SP, #-376]
+%label.tmp_label.10:
+STR X12, [SP, #-380]
+STR X12, [SP, #-376]
+STR X13, [SP, #-368]
+STR X13, [SP, #-376]
+STR X14, [SP, #-384]
+STR X14, [SP, #-376]
+STR X15, [SP, #-388]
+STR X15, [SP, #-376]
+STR X19, [SP, #-376]
+LDR X20, [SP, #-392]
+STR X20, [SP, #-392]
+STR X19, [SP, #-392]
+STR X21, [SP, #-396]
+LDR X22, [SP, #-400]
+STR X22, [SP, #-404]
+STR X21, [SP, #-400]
+STR X23, [SP, #-408]
+STR X23, [SP, #-376]
+LDR X24, [SP, #-412]
+STR X24, [SP, #-392]
+LDR , [SP, #-412]
+STR X25, [SP, #-416]
+STR X26, [SP, #-420]
+LDR X27, [SP, #-412]
+STR X27, [SP, #-424]
+LDR X28, [SP, #-384]
+STR X28, [SP, #-424]
+CMP X27, X28
+CSET X25, LT
+STR X9, [SP, #-428]
+STR X10, [SP, #-424]
+ZEXT X9, X10
+STR X11, [SP, #-372]
+STR X12, [SP, #-432]
+TRUNC X11, X12
+STR X13, [SP, #-436]
+CBZ X13, %label.tmp_label.11
+CBNZ X13, %label.tmp_label.12
+%label.tmp_label.11:
+LDR X14, [SP, #-440]
+STR X14, [SP, #-444]
+LDR , [SP, #-440]
+STR X15, [SP, #-448]
