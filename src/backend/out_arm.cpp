@@ -77,17 +77,28 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
     return reg_name;
 }
 
-std::string OutArm::DispatchRegParam(Symbol* symbol) {
+std::string OutArm::DispatchRegParam(VarSymbol* symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     std::string reg_name;
     if(symbol->type == symType::constant_var || symbol->type == symType::constant_nonvar) {
         reg_name = OutArm::getIntNumberOfOperands(symbol);
-    }else if(symbol->data->getType() == (dataType::f32) || symbol->data->getType() == (dataType::f64)) {
+    }else if(symbol->getDataType() == (dataType::f32) || symbol->getDataType() == (dataType::f64)) {
         reg_name = out_Arm.dRegAllocator.accessParam(symbol);
-    }else if(symbol->data->getType() == (dataType::i32) || symbol->data->getType() == (dataType::i64) || symbol->data->getType() == (dataType::i16) || symbol->data->getType() == (dataType::i8) || symbol->data->getType() == (dataType::i1)||symbol->data->getType() == (dataType::array_data)) {
+    }else if(symbol->getDataType() == (dataType::i32) || symbol->getDataType() == (dataType::i64) || symbol->getDataType() == (dataType::i16) || symbol->getDataType() == (dataType::i8) || symbol->getDataType() == (dataType::i1)|| symbol->getDataType() == (dataType::array_data)) {
         reg_name = out_Arm.xRegAllocator.accessParam(symbol);
     }
-    return reg_name;
+    return reg_name; 
+}
+
+std::string OutArm::DispatchRegParam(ArraySymbol* symbol) {
+    OutArm& out_Arm = OutArm::getInstance();
+    std::string reg_name;
+    if(symbol->getArrayType() == (dataType::f32) || symbol->getArrayType() == (dataType::f64)) {
+        reg_name = out_Arm.dRegAllocator.accessParam(symbol);
+    }else if(symbol->getArrayType() == (dataType::i32) || symbol->getArrayType() == (dataType::i64) || symbol->getArrayType() == (dataType::i16) || symbol->getArrayType() == (dataType::i8) || symbol->getArrayType() == (dataType::i1)||symbol->getArrayType() == (dataType::array_data)) {
+        reg_name = out_Arm.xRegAllocator.accessParam(symbol);
+    }
+    return reg_name; 
 }
 
 void ArithmeticOperationLLVM::out_arm_str(){
@@ -245,9 +256,16 @@ void CallLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     std::string func_name = this->function->getName();
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
+    std::string arg_str;
 
     for (const auto& arg : this->arguments) {
-        std::string arg_str = out_Arm.DispatchRegParam(arg);
+        if (auto* array_symbol = dynamic_cast<ArraySymbol*>(arg)) {
+            arg_str = out_Arm.DispatchRegParam(array_symbol);
+        }
+        else if (auto* var_symbol = dynamic_cast<VarSymbol*>(arg)) {
+            arg_str = out_Arm.DispatchRegParam(var_symbol);
+        }
+        
         OutArm::outString("MOV " + arg_str + ", X" + std::to_string(&arg - &this->arguments[0] + 1)); // X1, X2, ...
     }
 
@@ -308,9 +326,16 @@ void FuncDefination::out_arm_str()  {
     int stack_size = out_Arm.stackAllocator.calculateStackSize();
     OutArm::outString(out_Arm.stackAllocator.emitPrologue(stack_size));
 
+    std::string param_str;
     // 输出函数参数
+        
     for (const auto& param : this->params) {
-        std::string param_str = out_Arm.DispatchRegParam(param);
+        if (auto* array_symbol = dynamic_cast<ArraySymbol*>(param)) {
+            param_str = out_Arm.DispatchRegParam(array_symbol);
+        }
+        else if (auto* var_symbol = dynamic_cast<VarSymbol*>(param)) {
+            param_str = out_Arm.DispatchRegParam(var_symbol);
+        }
     }
     // 输出函数体的 LLVM 指令
     //for (LLVM* llvm = this->block_tail; llvm != nullptr; llvm = llvm->next) {

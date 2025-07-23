@@ -57,8 +57,8 @@ public:
    //static std::string getIntNumberOfOperands(ConstSymbol *sym) ;
 
     static std::string DispatchReg(Symbol* symbol);
-    static std::string DispatchRegParam(Symbol* symbol);
-    
+    static std::string DispatchRegParam(ArraySymbol* symbol);
+    static std::string DispatchRegParam(VarSymbol* symbol);
         // 输出整个模块
    // void outputModule(Module *module);
 
