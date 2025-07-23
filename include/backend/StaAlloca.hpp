@@ -15,8 +15,7 @@ class StackAllocator {
         
         // 辅助函数
         int align(int value, int alignment);
-        int getTypeSize(Symbol* symbol) ;
-        int getTypeSize(ArraySymbol* symbol);
+        int getTypeSize(Symbol* symbol);
 
         // 构造函数
         StackAllocator() = default;

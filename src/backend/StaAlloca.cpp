@@ -12,19 +12,12 @@ int StackAllocator::align(int value, int alignment) {
 }
 
 int StackAllocator::getTypeSize(Symbol* symbol) {
-    dataType dtype = symbol->getDataType();
-    switch(dtype) {
-        case i32: case f32: return 4;
-        case i64: case f64: return 8;
-        case i1: case i8: return 1;
-        case i16: return 2;
-        default: return 4; // 默认4字节
+    dataType dtype;
+    if (auto* arraySymbol = dynamic_cast<ArraySymbol*>(symbol)) {
+        dtype = arraySymbol->getArrayType();
+    } else {
+        dtype = symbol->getDataType();
     }
-}
-
-
-int StackAllocator::getTypeSize(ArraySymbol* symbol) {
-    dataType dtype = symbol->getArrayType();
     switch(dtype) {
         case i32: case f32: return 4;
         case i64: case f64: return 8;
@@ -177,20 +170,18 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
     int registerSaveSize = calculateRegisterSaveAreaSize();
     int variableAreaSize = stackSize - registerSaveSize;
     
-    out << "    // Function epilogue\n";
+    out << "    /; Function epilogue\n";
     
     if (variableAreaSize > 0) {
-        out << "    add sp, sp, #" << variableAreaSize << "      // Deallocate stack space\n";
+        out << "    ADD sp, sp, #" << variableAreaSize << "\n      ;Deallocate stack space\n";
     }
     
     if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
-        out << "    // Restore callee-saved registers\n";
+        out << "\n    ; Restore callee-saved registers\n";
         emitRegisterRestore(out, 16);
     }
     
-    out << "    ldp x29, x30, [sp], #" << registerSaveSize << " // Restore FP and LR\n";
-    out << "    ret                                            // Return\n";
-    
+    out << "    LDP x29, x30, [sp], #" << registerSaveSize << "\n      ;Restore FP and LR\n";  
     return out.str();
 }
 
@@ -229,7 +220,7 @@ int StackAllocator::getCurrentOffset() const {
 void StackAllocator::addPtr(Symbol *symbol, int offset) {
     const std::string& name = symbol->getName();
     if (hasVariable(name)) {
-        throw std::runtime_error("Duplicate pointer: " + name);
+        return; // 如果变量已经存在，则不需要重新添加
     }
     
     // Store the pointer with its offset

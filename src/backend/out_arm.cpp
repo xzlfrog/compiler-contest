@@ -263,13 +263,16 @@ void ReturnLLVM::out_arm_str()  {
         OutArm::outString("MOV X0, " + return_value_str); // Assuming X0 is the return register
     }
     OutArm::outString(out_Arm.stackAllocator.emitEpilogue(out_Arm.stackAllocator.calculateStackSize()));
-    OutArm::outString("RET");
+    OutArm::outString("RET\n");
 }
 
 void CallLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     std::string func_name = this->function->getName();
-    std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
+    std::string dest_str; 
+    if(this->dest_sym) {
+        dest_str= out_Arm.DispatchReg(this->dest_sym);
+    }
     std::string arg_str;
 
     for (const auto& arg : this->arguments) {
@@ -526,7 +529,7 @@ void XRegAllocator::promoteToRegister(Symbol* symbol) {
         OutArm::outString("LDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
         int position = this->var_to_reg[symbol]; 
         if(Registers[position]!= nullptr){
-            spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
+            this->spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
         }
         Registers[position] = symbol;
     }else{
@@ -566,7 +569,7 @@ void DRegAllocator::promoteToRegister(Symbol* symbol) {
         OutArm::outString("LDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
         int position = this->var_to_reg[symbol]; 
         if(Registers[position]!= nullptr){
-            spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
+            this->spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
         }
         Registers[position] = symbol;
     }else{
