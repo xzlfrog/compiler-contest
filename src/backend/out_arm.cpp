@@ -102,9 +102,8 @@ std::string OutArm::DispatchRegParam(ArraySymbol* symbol) {
 }
 
 void ArithmeticOperationLLVM::out_arm_str(){
-    std::string op_str = OutArm::ArithmeticOpConvert(llvmType);
 
-    switch(this->getType()){
+    switch(this->llvmType){
         case llvm_fadd:
         case llvm_fsub:
         case llvm_fmul:
