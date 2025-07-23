@@ -123,24 +123,24 @@ int StackAllocator::calculateStackSize() {
 
 void StackAllocator::emitRegisterSave(std::ostream& out, int offset) const {
     for (const auto& reg : usedRegisters) {
-        out << "    str " << reg << ", [sp, #" << offset << "]\n";
+        out << "    STR " << reg << ", [SP, #" << offset << "]\n";
         offset += 8;
     }
     
     for (const auto& reg : usedFloatRegisters) {
-        out << "    str " << reg << ", [sp, #" << offset << "]\n";
+        out << "    STR " << reg << ", [SP, #" << offset << "]\n";
         offset += 8;
     }
 }
 
 void StackAllocator::emitRegisterRestore(std::ostream& out, int offset) const {
     for (const auto& reg : usedFloatRegisters) {
-        out << "    ldr " << reg << ", [sp, #" << offset << "]\n";
+        out << "    LDR " << reg << ", [SP, #" << offset << "]\n";
         offset += 8;
     }
     
     for (const auto& reg : usedRegisters) {
-        out << "    ldr " << reg << ", [sp, #" << offset << "]\n";
+        out << "    LDR " << reg << ", [SP, #" << offset << "]\n";
         offset += 8;
     }
 }
@@ -149,17 +149,17 @@ std::string StackAllocator::emitPrologue(int stackSize) {
     int registerSaveSize = calculateRegisterSaveAreaSize();
     int variableAreaSize = stackSize - registerSaveSize;
     
-    out << "    ;Function prologue\n";
-    out << "    stp x29, x30, [sp, #-" << registerSaveSize << "]!  // Save FP and LR\n";
-    out << "    mov x29, sp                                    // Set new FP\n";
+    out << "\t; Function prologue\n";
+    out << "\tSTP X29, X30, [SP, #-" << registerSaveSize << "]!\n\t; Save FP and LR\n";
+    out << "\tMOV X29, SP\n\t; Set new FP\n";
     
     if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
-        out << "    ;Save callee-saved registers\n";
+        out << "\t; Save callee-saved registers\n";
         emitRegisterSave(out, 16);
     }
     
     if (variableAreaSize > 0) {
-        out << "    sub sp, sp, #" << variableAreaSize << "      // Allocate stack space\n";
+        out << "\tSUB SP, SP, #" << variableAreaSize << "      // Allocate stack space\n";
     }
     
     return out.str();
@@ -170,18 +170,18 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
     int registerSaveSize = calculateRegisterSaveAreaSize();
     int variableAreaSize = stackSize - registerSaveSize;
     
-    out << "    /; Function epilogue\n";
+    out << "\n\t; Function epilogue\n";
     
     if (variableAreaSize > 0) {
-        out << "    ADD sp, sp, #" << variableAreaSize << "\n      ;Deallocate stack space\n";
+        out << "\tADD SP, SP, #" << variableAreaSize << "\n\t; Deallocate stack space\n";
     }
     
     if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
-        out << "\n    ; Restore callee-saved registers\n";
+        out << "\t; Restore callee-saved registers\n";
         emitRegisterRestore(out, 16);
     }
     
-    out << "    LDP x29, x30, [sp], #" << registerSaveSize << "\n      ;Restore FP and LR\n";  
+    out << "\tLDP X29, X30, [SP], #" << registerSaveSize << "\n\t; Restore FP and LR\n";  
     return out.str();
 }
 

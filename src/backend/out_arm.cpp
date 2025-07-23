@@ -82,7 +82,20 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
                array_Symbol->getArrayType() == dataType::array_data) {
         reg_name = out_Arm.xRegAllocator.accessVariable(array_Symbol);
     }
-    }else{
+    }else if(auto* pointer_symbol = dynamic_cast<PointerSymbol*>(symbol)){
+        if (pointer_symbol->getPointedType() == dataType::f32 || 
+        pointer_symbol->getPointedType() == dataType::f64) {
+        reg_name = out_Arm.dRegAllocator.accessVariable(pointer_symbol);
+    } else if (pointer_symbol->getPointedType() == dataType::i32 || 
+               pointer_symbol->getPointedType() == dataType::i64 || 
+               pointer_symbol->getPointedType() == dataType::i16 || 
+               pointer_symbol->getPointedType() == dataType::i8 || 
+               pointer_symbol->getPointedType() == dataType::i1 || 
+               pointer_symbol->getPointedType() == dataType::array_data) {
+        reg_name = out_Arm.xRegAllocator.accessVariable(pointer_symbol);
+    }
+    }
+    else{
         if(symbol->data->getType() == (dataType::f32) || symbol->data->getType() == (dataType::f64)) {
             reg_name = out_Arm.dRegAllocator.accessVariable(symbol);
         }else if(symbol->data->getType() == (dataType::i32) || symbol->data->getType() == (dataType::i64) || symbol->data->getType() == (dataType::i16) || symbol->data->getType() == (dataType::i8) || symbol->data->getType() == (dataType::i1)||symbol->data->getType() == (dataType::array_data)) {
@@ -131,12 +144,12 @@ void ArithmeticOperationLLVM::out_arm_str(){
         case logical_and:
         case logical_or:
         case logical_xor:
-            OutArm::outString(OutArm::ASMDOperation(this));
+            OutArm::outString("\t"+OutArm::ASMDOperation(this));
             break;
         case llvm_frem:
         case urem:
         case srem:
-            OutArm::outString(OutArm::RemOperation(this));
+            OutArm::outString("\t"+OutArm::RemOperation(this));
             break;
         case icmp_eq:
         case icmp_ne:
@@ -144,7 +157,7 @@ void ArithmeticOperationLLVM::out_arm_str(){
         case icmp_sge:
         case icmp_slt:
         case icmp_sle:
-            OutArm::outString(OutArm::ComparisonOperation(this));
+            OutArm::outString("\t"+OutArm::ComparisonOperation(this));
             break;
 
         default:
@@ -243,7 +256,7 @@ std::string OutArm::ComparisonOperation(ArithmeticOperationLLVM* cmpllvm) {
 
 void UnconditionalBranchLLVM::out_arm_str() {
     std::string target_str = this->target->getName();
-    OutArm::outString("B " + target_str);
+    OutArm::outString("\tB " + target_str);
 }
 
 void ConditionalBranchLLVM::out_arm_str()  {
@@ -252,23 +265,26 @@ void ConditionalBranchLLVM::out_arm_str()  {
     std::string true_branch_str = this->trueBranch->getName();
     std::string false_branch_str = this->falseBranch->getName();
 
-    OutArm::outString("CBZ " + condition_str + ", " + true_branch_str);
-    OutArm::outString("CBNZ " + condition_str + ", " + false_branch_str);
+    OutArm::outString("\tCBZ " + condition_str + ", " + true_branch_str);
+    OutArm::outString("\tCBNZ " + condition_str + ", " + false_branch_str);
 }
 
 void ReturnLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     if (this->returnValue) {
         std::string return_value_str = out_Arm.DispatchReg(this->returnValue);
-        OutArm::outString("MOV X0, " + return_value_str); // Assuming X0 is the return register
+        OutArm::outString("\tMOV X0, " + return_value_str); // Assuming X0 is the return register
     }
     OutArm::outString(out_Arm.stackAllocator.emitEpilogue(out_Arm.stackAllocator.calculateStackSize()));
-    OutArm::outString("RET\n");
+    OutArm::outString("\tRET");
 }
 
 void CallLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     std::string func_name = this->function->getName();
+    if (!func_name.empty()) {
+        func_name = func_name.substr(1);  // 从第1个字符开始，取到末尾
+    }
     std::string dest_str; 
     if(this->dest_sym) {
         dest_str= out_Arm.DispatchReg(this->dest_sym);
@@ -283,13 +299,13 @@ void CallLLVM::out_arm_str()  {
             arg_str = out_Arm.DispatchRegParam(var_symbol);
         }
         
-        OutArm::outString("MOV " + arg_str + ", X" + std::to_string(&arg - &this->arguments[0] + 1)); // X1, X2, ...
+        OutArm::outString("\tMOV " + arg_str + ", X" + std::to_string(&arg - &this->arguments[0] + 1)); // X1, X2, ...
     }
 
     std::string call_str = "BL " + func_name;
-    OutArm::outString(call_str);
+    OutArm::outString("\t"+call_str);
     if (this->dest_sym) {
-        OutArm::outString("MOV " + dest_str + ", X0"); // Assuming X0 is the return register
+        OutArm::outString("\tMOV " + dest_str + ", X0"); // Assuming X0 is the return register
     }
 
 
@@ -338,6 +354,9 @@ void FuncDefination::out_arm_str()  {
 
     // 函数定义需要输出 ARM 汇编代码
     std::string func_name = this->func->getName();
+    if(!func_name.empty()) {
+        func_name = func_name.substr(1);  // 从第1个字符开始，取到末尾
+    }
     OutArm::outString(func_name + " :");
     
     int stack_size = out_Arm.stackAllocator.calculateStackSize();
@@ -365,8 +384,8 @@ void AllocaNonArrayLLVM::out_arm_str()  {
 
     std::string var_str = out_Arm.DispatchReg(this->sym);
     int size = out_Arm.stackAllocator.allocateLocal(this->sym);
-    OutArm::outString("SUB SP, SP, #" + std::to_string(size));
-    OutArm::outString("MOV " + var_str + ", SP");
+    OutArm::outString("\tSUB SP, SP, #" + std::to_string(size));
+    OutArm::outString("\tMOV " + var_str + ", SP");
 }
 
 void AllocaArrayLLVM::out_arm_str()  {
@@ -374,8 +393,8 @@ void AllocaArrayLLVM::out_arm_str()  {
     std::string array_str = out_Arm.DispatchReg(this->array);
     int size = out_Arm.stackAllocator.allocateArray(this->array);
     
-    OutArm::outString("SUB SP, SP, #" + std::to_string(size));
-    OutArm::outString("MOV " + array_str + ", SP");
+    OutArm::outString("\tSUB SP, SP, #" + std::to_string(size));
+    OutArm::outString("\tMOV " + array_str + ", SP");
 }
 
 void LoadLLVM::out_arm_str()  {
@@ -385,7 +404,7 @@ void LoadLLVM::out_arm_str()  {
     int offset = out_Arm.stackAllocator.getOffset(this->dest_sym);
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
    
-    OutArm::outString("LDR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
+    OutArm::outString("\tLDR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
 }
 
 void StoreLLVM::out_arm_str()  {
@@ -395,7 +414,7 @@ void StoreLLVM::out_arm_str()  {
     int offset = out_Arm.stackAllocator.getOffset(this->dest_sym);
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
     
-    OutArm::outString("STR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
+    OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
 }
 
 //未对齐 可能有隐患
@@ -422,40 +441,40 @@ void TypeConversionOperation::out_arm_str()  {
 
     switch (this->llvmType) {
         case llvm_trunc:
-            OutArm::outString("TRUNC " + dest_str + ", " + src_str);
+            OutArm::outString("\tTRUNC " + dest_str + ", " + src_str);
             break;
         case zext:
-            OutArm::outString("ZEXT " + dest_str + ", " + src_str);
+            OutArm::outString("\tZEXT " + dest_str + ", " + src_str);
             break;
         case sext:
-            OutArm::outString("SEXT " + dest_str + ", " + src_str);
+            OutArm::outString("\tSEXT " + dest_str + ", " + src_str);
             break;
         case bitcast:
-            OutArm::outString("BITCAST " + dest_str + ", " + src_str);
+            OutArm::outString("\tBITCAST " + dest_str + ", " + src_str);
             break;
         case fptrunc:
-            OutArm::outString("FPTRUNC " + dest_str + ", " + src_str);
+            OutArm::outString("\tFPTRUNC " + dest_str + ", " + src_str);
             break;
         case fpext:
-            OutArm::outString("FPEXT " + dest_str + ", " + src_str);
+            OutArm::outString("\tFPEXT " + dest_str + ", " + src_str);
             break;
         case fptoui:
-            OutArm::outString("FPTUOI " + dest_str + ", " + src_str);
+            OutArm::outString("\tFPTUOI " + dest_str + ", " + src_str);
             break;
         case fptosi:
-            OutArm::outString("FPTOSI " + dest_str + ", " + src_str);
+            OutArm::outString("\tFPTOSI " + dest_str + ", " + src_str);
             break;
         case uitofp:
-            OutArm::outString("UITOFP " + dest_str + ", " + src_str);
+            OutArm::outString("\tUITOFP " + dest_str + ", " + src_str);
             break;
         case sitofp:
-            OutArm::outString("SITOFP " + dest_str + ", " + src_str);
+            OutArm::outString("\tSITOFP " + dest_str + ", " + src_str);
             break;
         case ptrtoint:
-            OutArm::outString("PTRTOINT " + dest_str + ", " + src_str);
+            OutArm::outString("\tPTRTOINT " + dest_str + ", " + src_str);
             break;
         case inttoptr:
-            OutArm::outString("INTTOPTR " + dest_str + ", " + src_str);
+            OutArm::outString("\tINTTOPTR " + dest_str + ", " + src_str);
             break;
         default:
             throw std::invalid_argument("Unsupported type conversion for ARM conversion");
@@ -469,10 +488,10 @@ void UnaryOperationLLVM::out_arm_str()  {
 
     switch (this->llvmType) {
         case llvm_neg:
-            OutArm::outString("NEG " + dest_str + ", " + src_str);
+            OutArm::outString("\tNEG " + dest_str + ", " + src_str);
             break;
         case llvm_fneg:
-            OutArm::outString("FNEG " + dest_str + ", " + src_str);
+            OutArm::outString("\tFNEG " + dest_str + ", " + src_str);
             break;
         default:
             throw std::invalid_argument("Unsupported unary operation for ARM conversion");
@@ -526,7 +545,7 @@ void XRegAllocator::promoteToRegister(Symbol* symbol) {
         if (reg_name.empty()) {
             throw std::runtime_error("No free registers available for promotion");
         }
-        OutArm::outString("LDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+        OutArm::outString("\tLDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
         int position = this->var_to_reg[symbol]; 
         if(Registers[position]!= nullptr){
             this->spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
@@ -550,7 +569,7 @@ void XRegAllocator::spillToStack(Symbol* symbol) {
     }else{
         stack_offset = stackAllocator.allocateLocal(symbol);
     }
-        OutArm::outString("STR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+        OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
    
     // 清除寄存器映射
     this->freeRegister(reg_name);
@@ -566,7 +585,7 @@ void DRegAllocator::promoteToRegister(Symbol* symbol) {
         if (reg_name.empty()) {
             throw std::runtime_error("No free registers available for promotion");
         }
-        OutArm::outString("LDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+        OutArm::outString("\tLDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
         int position = this->var_to_reg[symbol]; 
         if(Registers[position]!= nullptr){
             this->spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
@@ -590,7 +609,7 @@ void DRegAllocator::spillToStack(Symbol* symbol) {
     }else{
         stack_offset = stackAllocator.allocateLocal(symbol);
     }
-        OutArm::outString("STR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+        OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
    
     // 清除寄存器映射
     this->freeRegister(reg_name);
@@ -606,7 +625,7 @@ void out_arm(std::string outputFileName, ModuleList* module_list) {
     // 遍历模块列表
     for (Module* module = module_list->head; module != nullptr; module = module->next) {
         // 输出模块名称
-        OutArm::outString(".module start");
+        OutArm::outString(";.module start");
         
         // 遍历每个llvm语句
         for (LLVM* llvm = module->head; llvm != nullptr; llvm = llvm->next) {
@@ -615,6 +634,6 @@ void out_arm(std::string outputFileName, ModuleList* module_list) {
         
         insertContentToFileFront(name, Out_Arm.globalAllocator.emitAssemblyToString());
 
-        OutArm::outString(".endmodule");
+        OutArm::outString(";.endmodule");
     }
 }
