@@ -209,3 +209,4 @@ MOV X0, X25
     sub sp, sp, #160      // Allocate stack space
 
 %label.entry.2:
+STR X26, [SP, #-140]

@@ -64,15 +64,30 @@ std::string OutArm::getIntNumberOfOperands(Symbol *constvarsym){
 //     throw std::invalid_argument("Unsupported type for getIntNumberOfOperands");
 // }
 
+
 std::string OutArm::DispatchReg(Symbol* symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     std::string reg_name;
     if(symbol->type == symType::constant_var || symbol->type == symType::constant_nonvar) {
         reg_name = OutArm::getIntNumberOfOperands(symbol);
-    }else if(symbol->data->getType() == (dataType::f32) || symbol->data->getType() == (dataType::f64)) {
-        reg_name = out_Arm.dRegAllocator.accessVariable(symbol);
-    }else if(symbol->data->getType() == (dataType::i32) || symbol->data->getType() == (dataType::i64) || symbol->data->getType() == (dataType::i16) || symbol->data->getType() == (dataType::i8) || symbol->data->getType() == (dataType::i1)||symbol->data->getType() == (dataType::array_data)) {
-        reg_name = out_Arm.xRegAllocator.accessVariable(symbol);
+    }else if(auto* array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {       
+        if (array_Symbol->getArrayType() == dataType::f32 || 
+        array_Symbol->getArrayType() == dataType::f64) {
+        reg_name = out_Arm.dRegAllocator.accessVariable(array_Symbol);
+    } else if (array_Symbol->getArrayType() == dataType::i32 || 
+               array_Symbol->getArrayType() == dataType::i64 || 
+               array_Symbol->getArrayType() == dataType::i16 || 
+               array_Symbol->getArrayType() == dataType::i8 || 
+               array_Symbol->getArrayType() == dataType::i1 || 
+               array_Symbol->getArrayType() == dataType::array_data) {
+        reg_name = out_Arm.xRegAllocator.accessVariable(array_Symbol);
+    }
+    }else{
+        if(symbol->data->getType() == (dataType::f32) || symbol->data->getType() == (dataType::f64)) {
+            reg_name = out_Arm.dRegAllocator.accessVariable(symbol);
+        }else if(symbol->data->getType() == (dataType::i32) || symbol->data->getType() == (dataType::i64) || symbol->data->getType() == (dataType::i16) || symbol->data->getType() == (dataType::i8) || symbol->data->getType() == (dataType::i1)||symbol->data->getType() == (dataType::array_data)) {
+            reg_name = out_Arm.xRegAllocator.accessVariable(symbol);
+        }
     }
     return reg_name;
 }
