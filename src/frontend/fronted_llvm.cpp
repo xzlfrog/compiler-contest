@@ -854,9 +854,9 @@ void end_parser(){
     if(outfile.is_open()){
         for(;llvmlist!=nullptr;llvmlist=llvmlist->next){
             llvm=llvmlist->head;
-            if(llvm->getLLVMType()==LLVMtype::func_def){
-                SSA(llvmlist);
-            }
+            // if(llvm->getLLVMType()==LLVMtype::func_def){
+            //     SSA(llvmlist);
+            // }
             outfile<<llvm->out_str();
         }
         outfile.close();

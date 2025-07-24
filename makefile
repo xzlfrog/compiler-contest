@@ -1,8 +1,7 @@
 # Compiler and flags
-CXX := g++
-CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -g -Iinclude -Isrc/frontend
-LDFLAGS := -lfl
-LDFLAGS += -static-libstdc++
+CXX := clang++
+CXXFLAGS := -std=c++17 -O2 -g -Iinclude -Isrc/frontend -I/extlibs -I/opt/homebrew/Cellar/boost/1.88.0/include -w
+LDFLAGS := -lm -L/extlibs  -Wl #,-rpath=/extlibs -lantlr4-runtime
 
 # Build directories
 BUILD_DIR := build
@@ -49,7 +48,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(YACC_HPP) | parser $(OBJ_DIR)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# 特殊规则处理生成的解析器代码 - 关键修改在这里
+# 特殊规则处理生成的解析器代码
 $(OBJ_DIR)/frontend/sysy.y.o: $(YACC_CPP) | parser $(OBJ_DIR)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -59,7 +58,7 @@ $(OBJ_DIR)/frontend/sysy.l.o: $(LEX_CPP) | parser $(OBJ_DIR)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -x c++ -c $< -o $@
 
-# 3. 链接可执行文件 - 调整链接顺序
+# 3. 链接可执行文件 - 调整链接顺序，并使用 LDFLAGS
 $(TARGET): $(OBJS) | $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
@@ -72,9 +71,9 @@ clean:
 	rm -rf $(BUILD_DIR) $(YACC_CPP) $(YACC_HPP) $(LEX_CPP)
 
 test:
-	./build/bin/compiler ./test/test1.sy
+	lldb --args ./build/bin/compiler -S -o ./test/test1.s ./test/test1.sy
 
 debug:
-	gdb --args ./build/bin/compiler ./test/test1.sy
+	lldb ./build/bin/compiler
 
-.PHONY: all clean parser
+.PHONY: all clean parser test debug

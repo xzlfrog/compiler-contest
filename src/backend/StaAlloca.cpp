@@ -1,15 +1,27 @@
 #include "../../include/backend/StaAlloca.hpp"
 #include <stdexcept>
+#include <iostream>
+#include <ostream>
+#include <fstream> 
+#include <sstream>
 
-/*int StackAllocator::align(int value, int alignment) const {
+// 静态成员定义（唯一一份）
+StackAllocator* StackAllocator::stackInstance = nullptr;
+
+int StackAllocator::align(int value, int alignment) {
     if (alignment <= 0 || (alignment & (alignment - 1))) {
         throw std::invalid_argument("Alignment must be a power of 2");
     }
     return (value + alignment - 1) & ~(alignment - 1);
 }
 
-int StackAllocator::getTypeSize(BasicSymbol* symbol) const {
-    dataType dtype = symbol->getDataType();
+int StackAllocator::getTypeSize(Symbol* symbol) {
+    dataType dtype;
+    if (auto* arraySymbol = dynamic_cast<ArraySymbol*>(symbol)) {
+        dtype = arraySymbol->getArrayType();
+    } else {
+        dtype = symbol->getDataType();
+    }
     switch(dtype) {
         case i32: case f32: return 4;
         case i64: case f64: return 8;
@@ -19,7 +31,7 @@ int StackAllocator::getTypeSize(BasicSymbol* symbol) const {
     }
 }
 
-void StackAllocator::addUsedRegister(const std::string& reg) {
+void StackAllocator::addUsedRegister(std::string& reg) {
     if (reg.size() < 2 || reg[0] != 'X') return;
     
     try {
@@ -32,7 +44,7 @@ void StackAllocator::addUsedRegister(const std::string& reg) {
     }
 }
 
-void StackAllocator::addUsedFloatRegister(const std::string& reg) {
+void StackAllocator::addUsedFloatRegister(std::string& reg) {
     if (reg.size() < 2 || reg[0] != 'D') return;
     
     try {
@@ -45,7 +57,7 @@ void StackAllocator::addUsedFloatRegister(const std::string& reg) {
     }
 }
 
-int StackAllocator::calculateRegisterSaveAreaSize() const {
+int StackAllocator::calculateRegisterSaveAreaSize() {
     int size = 16; // FP(x29)和LR(x30)必须保存
     
     // 被调用者保存的通用寄存器 (x19-x28)
@@ -58,16 +70,21 @@ int StackAllocator::calculateRegisterSaveAreaSize() const {
     return align(size, 16);
 }
 
-int StackAllocator::getOffset(const std::string &varName) {
+int StackAllocator::getOffset(Symbol* symbol) {
+    const std::string& varName = symbol->getName();
     auto it = localVarOffsets.find(varName);
     if (it != localVarOffsets.end()) {
         return it->second;
+    }else if(auto array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {
+        return allocateArray(array_Symbol);
+    }else{
+        return allocateLocal(symbol);
     }
     throw std::runtime_error("Variable not found: " + varName);
 }   
 
-int StackAllocator::allocateLocal(BasicSymbol* symbol) {
-    const std::string& name = symbol->getName();
+int StackAllocator::allocateLocal(Symbol* symbol) {
+    std::string name = symbol->getName();
     if (hasVariable(name)) {
         throw std::runtime_error("Duplicate variable: " + name);
     }
@@ -110,67 +127,65 @@ int StackAllocator::calculateStackSize() {
 
 void StackAllocator::emitRegisterSave(std::ostream& out, int offset) const {
     for (const auto& reg : usedRegisters) {
-        out << "    str " << reg << ", [sp, #" << offset << "]\n";
+        out << "    STR " << reg << ", [SP, #" << offset << "]\n";
         offset += 8;
     }
     
     for (const auto& reg : usedFloatRegisters) {
-        out << "    str " << reg << ", [sp, #" << offset << "]\n";
+        out << "    STR " << reg << ", [SP, #" << offset << "]\n";
         offset += 8;
     }
 }
 
 void StackAllocator::emitRegisterRestore(std::ostream& out, int offset) const {
     for (const auto& reg : usedFloatRegisters) {
-        out << "    ldr " << reg << ", [sp, #" << offset << "]\n";
+        out << "    LDR " << reg << ", [SP, #" << offset << "]\n";
         offset += 8;
     }
     
     for (const auto& reg : usedRegisters) {
-        out << "    ldr " << reg << ", [sp, #" << offset << "]\n";
+        out << "    LDR " << reg << ", [SP, #" << offset << "]\n";
         offset += 8;
     }
 }
-std::string StackAllocator::emitPrologue(int stackSize) const {
+std::string StackAllocator::emitPrologue(int stackSize) {
     std::ostringstream out;
     int registerSaveSize = calculateRegisterSaveAreaSize();
     int variableAreaSize = stackSize - registerSaveSize;
     
-    out << "    ;Function prologue\n";
-    out << "    stp x29, x30, [sp, #-" << registerSaveSize << "]!  // Save FP and LR\n";
-    out << "    mov x29, sp                                    // Set new FP\n";
+    out << "\t; Function prologue\n";
+    out << "\tSTP X29, X30, [SP, #-" << registerSaveSize << "]!\n\t; Save FP and LR\n";
+    out << "\tMOV X29, SP\n\t; Set new FP\n";
     
     if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
-        out << "    ;Save callee-saved registers\n";
+        out << "\t; Save callee-saved registers\n";
         emitRegisterSave(out, 16);
     }
     
     if (variableAreaSize > 0) {
-        out << "    sub sp, sp, #" << variableAreaSize << "      // Allocate stack space\n";
+        out << "\tSUB SP, SP, #" << variableAreaSize << "      // Allocate stack space\n";
     }
     
     return out.str();
 }
 
-std::string StackAllocator::emitEpilogue(int stackSize) const {
+std::string StackAllocator::emitEpilogue(int stackSize) {
     std::ostringstream out;
     int registerSaveSize = calculateRegisterSaveAreaSize();
     int variableAreaSize = stackSize - registerSaveSize;
     
-    out << "    // Function epilogue\n";
+    out << "\n\t; Function epilogue\n";
     
     if (variableAreaSize > 0) {
-        out << "    add sp, sp, #" << variableAreaSize << "      // Deallocate stack space\n";
+        out << "\tADD SP, SP, #" << variableAreaSize << "\n\t; Deallocate stack space\n";
     }
     
     if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
-        out << "    // Restore callee-saved registers\n";
+        out << "\t; Restore callee-saved registers\n";
         emitRegisterRestore(out, 16);
     }
     
-    out << "    ldp x29, x30, [sp], #" << registerSaveSize << " // Restore FP and LR\n";
-    out << "    ret                                            // Return\n";
-    
+    out << "\tLDP X29, X30, [SP], #" << registerSaveSize << "\n\t; Restore FP and LR\n";  
     return out.str();
 }
 
@@ -197,7 +212,7 @@ void StackAllocator::printAllocation(std::ostream& out) const {
     }
 }
 
-bool StackAllocator::hasVariable(const std::string& varName) const {
+bool StackAllocator::hasVariable(const std::string& varName) {
     return localVarOffsets.find(varName) != localVarOffsets.end();
 }
 
@@ -209,9 +224,9 @@ int StackAllocator::getCurrentOffset() const {
 void StackAllocator::addPtr(Symbol *symbol, int offset) {
     const std::string& name = symbol->getName();
     if (hasVariable(name)) {
-        throw std::runtime_error("Duplicate pointer: " + name);
+        return; // 如果变量已经存在，则不需要重新添加
     }
     
     // Store the pointer with its offset
     localVarOffsets[name] = offset;
-}*/
+}

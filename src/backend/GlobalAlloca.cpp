@@ -2,8 +2,19 @@
 #include <stdexcept>
 #include <string>
 #include <iostream>
+#include <sstream>
 
-/*std::string GlobalAllocator::determineSection(BasicSymbol* symbol) const {
+std::string GlobalAllocator::determineSection(BasicSymbol* symbol) const {
+    if (symbol->getType() == constant_var || symbol->getType() == constant_nonvar) {
+        return ".rodata";
+    } else if (symbol->getType() == variable && symbol->data != nullptr) {
+        return ".data";
+    } else {
+        return ".bss";
+    }
+}
+
+std::string GlobalAllocator::determineSection(PointerSymbol* symbol) const {
     if (symbol->getType() == constant_var || symbol->getType() == constant_nonvar) {
         return ".rodata";
     } else if (symbol->getType() == variable && symbol->data != nullptr) {
@@ -57,14 +68,14 @@ std::string GlobalAllocator::getInitialValue(BasicSymbol* symbol) const {
     if (symbol->data == nullptr) return "0";
     
     switch(symbol->getDataType()) {
-        case i32: return std::to_string(symbol->data->getValue());
-        case i64: return std::to_string(symbol->data->getValue());
+        case i32: return my_to_string(symbol->data);
+        case i64: return my_to_string(symbol->data);
         case f32: 
             // 将float转换为IEEE754表示的整数
-            return std::to_string(*reinterpret_cast<int*>(symbol->data->getValue()));
+            return my_to_string(symbol->data);
         case f64:
             // 将double转换为IEEE754表示的整数
-            return std::to_string(*reinterpret_cast<long*>(symbol->data->getValue()));
+            return my_to_string(symbol->data);
         default: return "0";
     }
 }
@@ -72,6 +83,11 @@ std::string GlobalAllocator::getInitialValue(BasicSymbol* symbol) const {
 void GlobalAllocator::allocateGlobal(BasicSymbol* symbol) {
     std::string section = determineSection(symbol);
     globalVariables[section].push_back(symbol);
+}
+
+void GlobalAllocator::allocateGlobal(PointerSymbol* symbol){
+    std::string section = determineSection(symbol);
+    globalVariables2[section].push_back(symbol);
 }
 
 void GlobalAllocator::allocateArray(ArraySymbol* arraySymbol) {
@@ -85,7 +101,7 @@ void GlobalAllocator::emitArrayInitialization(std::ostream& out, ArraySymbol* ar
     
     if (array->isInitialized() && array->initialedData != nullptr) {
         for (const auto& elem : array->initialedData->initializedData) {
-            out << "\t.word " << std::to_string(elem.second->getValue()) << "\n";
+            out << "\t.word " << my_to_string(elem.second) << "\n";
         }
     } else {
         size_t totalSize = 1;
@@ -97,7 +113,7 @@ void GlobalAllocator::emitArrayInitialization(std::ostream& out, ArraySymbol* ar
     }
 }
 
-void GlobalAllocator::emitAssembly(std::ostream& out) const {
+void GlobalAllocator::emitAssembly(std::ostream& out){
     // .data段
     if (globalVariables.count(".data")) {
         out << "\t.section .data\n";
@@ -140,6 +156,12 @@ void GlobalAllocator::emitAssembly(std::ostream& out) const {
     }
 }
 
+std::string GlobalAllocator::emitAssemblyToString() {
+    std::ostringstream oss;
+    GlobalAllocator::emitAssembly(oss); // 原来的函数，只是现在输出到ostringstream
+    return oss.str();
+}
+
 void GlobalAllocator::reset() {
     globalVariables.clear();
     globalArrays.clear();
@@ -167,4 +189,4 @@ void GlobalAllocator::printAllocation(std::ostream& out) const {
         }
         out << "] (" << (array->isInitialized() ? "initialized" : "uninitialized") << ")\n";
     }
-}*/
+}

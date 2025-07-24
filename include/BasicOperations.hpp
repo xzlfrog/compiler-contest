@@ -13,7 +13,7 @@ public:
 
     void setLLVMType(LLVMtype type);
     std::string out_str() const override;//output the LLVM IR string representation
-    //void out_arm_str() const override;
+    void out_arm_str() override;
     void setOperandA(BasicSymbol* operand);//set the result operand
     void setOperandB(BasicSymbol* operand);//set the first operand
     void setOperandC(BasicSymbol* operand);//set the second operand
