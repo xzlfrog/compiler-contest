@@ -2,10 +2,13 @@
 
 #include "../llvm.hpp"
 #include "../sym.hpp"
-#include "../BasicBlock.hpp"
+//#include "../BasicBlock.hpp"
 #include <string>
 #include <map>
 #include <set>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 class StackAllocator {
     private:

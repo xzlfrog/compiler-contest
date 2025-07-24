@@ -3,6 +3,9 @@
 #include "RegAlloca.hpp"
 #include "StaAlloca.hpp"
 
+#include "../BasicOperations.hpp"
+#include "../LocalMemoryOperations.hpp"
+#include "../LLVMFactory.hpp"
 #include "../llvm.hpp"
 #include "../sym.hpp"
 #include "../SSA.hpp"
