@@ -11,7 +11,7 @@
 #define VREG_SIZE 29 // v0-v28
 
 
-class RegisterAllocator {
+/*class RegisterAllocator {
     public:
         RegisterAllocator(const std::vector<std::string>& available_registers){}
 
@@ -74,7 +74,7 @@ class SRegAllocator : public RegisterAllocator {
 class ZERORegAllocator : public RegisterAllocator {
     public:
         std::string XZR = "XZR"; // ARM zero register, always zero
-};
+};*/
 
 
 

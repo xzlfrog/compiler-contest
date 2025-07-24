@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX := g++
-CXXFLAGS := -std=c++17 -O0 -Wall -Wextra -g -Iinclude -Isrc/frontend
+CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -g -Iinclude -Isrc/frontend
 LDFLAGS := -lfl
 LDFLAGS += -static-libstdc++
 

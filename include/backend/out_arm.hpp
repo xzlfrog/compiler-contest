@@ -9,7 +9,7 @@
 #include <fstream>
 #include <string>
 
-class OutArm {
+/*class OutArm {
     std::ofstream out;
 
 public:
@@ -42,5 +42,5 @@ public:
     
     std::string getIntNumberOfOperands(ConstVarSymbol *sym) const;
     std::string getIntNumberOfOperands(ConstSymbol *sym) const;
-};
+};*/
 

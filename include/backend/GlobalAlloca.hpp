@@ -13,7 +13,7 @@
 #include <iostream>
 
 // 假设这些类型/类已经在其他头文件中定义
-enum class symbolType;
+/*enum class symbolType;
 
 class BasicSymbol;
 class ArraySymbol;
@@ -48,4 +48,4 @@ private:
 
     // 存储全局数组
     std::vector<ArraySymbol*> globalArrays;
-};
+};*/

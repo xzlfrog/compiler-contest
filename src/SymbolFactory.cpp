@@ -32,7 +32,7 @@ std::string addScopeToName(std::string name){
 
 VarSymbol* SymbolFactory::createVarSymbolWithScope(std::string name,int scope,Data*data){
     VarSymbol *varSymbol=new VarSymbol();
-    varSymbol->name=addScopeToName(name);
+    varSymbol->name=name;
     if(scope>=0)
         varSymbol->setScope(scope);
     varSymbol->ssa_name=varSymbol->name;
@@ -43,7 +43,7 @@ VarSymbol* SymbolFactory::createVarSymbolWithScope(std::string name,int scope,Da
 
 VarSymbol* SymbolFactory::createVarSymbolWithScope(std::string name,dataType type,int scope){
     VarSymbol *varSymbol=new VarSymbol();
-    varSymbol->name=addScopeToName(name);
+    varSymbol->name=name;
     if(scope>=0)
         varSymbol->setScope(scope);
     varSymbol->ssa_name=varSymbol->name;
@@ -54,7 +54,7 @@ VarSymbol* SymbolFactory::createVarSymbolWithScope(std::string name,dataType typ
 
 ConstVarSymbol* SymbolFactory::createConstVarSymbolWithScope(std::string name,int scope,Data* data){
     ConstVarSymbol *constVarSymbol=new ConstVarSymbol();
-    constVarSymbol->name=addScopeToName(name);
+    constVarSymbol->name=name;
     if(scope>=0)
         constVarSymbol->setScope(scope);
     constVarSymbol->ssa_name=constVarSymbol->name;
@@ -66,7 +66,7 @@ ConstVarSymbol* SymbolFactory::createConstVarSymbolWithScope(std::string name,in
 VarSymbol* SymbolFactory::createTmpVarSymbolWithScope(dataType type,int scope){
     std::string name=generate_tmp_var_name();
     VarSymbol *varSymbol=new VarSymbol();
-    varSymbol->name=addScopeToName(name);
+    varSymbol->name=name;
     if(scope>=0)
         varSymbol->setScope(scope);
     varSymbol->ssa_name=varSymbol->name;

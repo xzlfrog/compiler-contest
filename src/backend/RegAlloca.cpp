@@ -11,7 +11,7 @@
 1.遇到全局怎么办 直接算常数
 2.两个常数运算？ 直接合并！
 */
-
+/*
 // 检查寄存器是否已被使用
 bool RegisterAllocator::isRegisterUsed(Symbol* symbol) const{
     auto it = var_to_reg.find(symbol);
@@ -160,5 +160,5 @@ std::string XRegAllocator::accessVariable(Symbol* symbol) {
     // }
     /*不行 这块得放到外面 X 可以放在这 直接在此处输出而不是std::string
     翻译赋值语句时 先判断是否在栈帧上 是则加载到寄存器 */
-    return regName;
-}
+    //return regName;
+//}

@@ -2,7 +2,6 @@
 
 #include"llvm.hpp"
 #include"sym.hpp"
-#include<boost/dynamic_bitset.hpp>
 #include"../include/SymbolFactory.hpp"
 #include"../include/LLVMFactory.hpp"
 
@@ -19,12 +18,12 @@ public:
     LLVM* tail=nullptr;
     Label* label=nullptr;
     int idx;
-    boost::dynamic_bitset<> gen;
-    boost::dynamic_bitset<> kill;
-    boost::dynamic_bitset<> in;
-    boost::dynamic_bitset<> out;
-    std::vector<BasicBlock*> prevNode;//block--->this
-    std::vector<BasicBlock*> nextNode;//this--->block
+    std::vector<bool> gen;
+    std::vector<bool> kill;
+    std::vector<bool> in;
+    std::vector<bool> out;
+    std::vector<BasicBlock*> prevNode=std::vector<BasicBlock*>(0);//block--->this
+    std::vector<BasicBlock*> nextNode=std::vector<BasicBlock*>(0);//this--->block
     //BasicBlock* next;
     //BasicBlock* prev;
 

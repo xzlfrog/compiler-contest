@@ -1,7 +1,7 @@
 #include "../../include/backend/StaAlloca.hpp"
 #include <stdexcept>
 
-int StackAllocator::align(int value, int alignment) const {
+/*int StackAllocator::align(int value, int alignment) const {
     if (alignment <= 0 || (alignment & (alignment - 1))) {
         throw std::invalid_argument("Alignment must be a power of 2");
     }
@@ -214,4 +214,4 @@ void StackAllocator::addPtr(Symbol *symbol, int offset) {
     
     // Store the pointer with its offset
     localVarOffsets[name] = offset;
-}
+}*/

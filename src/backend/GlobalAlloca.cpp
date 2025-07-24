@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 
-std::string GlobalAllocator::determineSection(BasicSymbol* symbol) const {
+/*std::string GlobalAllocator::determineSection(BasicSymbol* symbol) const {
     if (symbol->getType() == constant_var || symbol->getType() == constant_nonvar) {
         return ".rodata";
     } else if (symbol->getType() == variable && symbol->data != nullptr) {
@@ -167,4 +167,4 @@ void GlobalAllocator::printAllocation(std::ostream& out) const {
         }
         out << "] (" << (array->isInitialized() ? "initialized" : "uninitialized") << ")\n";
     }
-}
+}*/

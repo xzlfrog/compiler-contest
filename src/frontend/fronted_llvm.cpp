@@ -398,17 +398,8 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
             bs=SymbolFactory::createTmpVarSymbolWithScope(array->getArrayType(),scope);
             PointerSymbol* ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
             ps->isConst=array->isConst;
-            if(array->getDimensions().size()!=0){
-                llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM(ps,array,getIdxFromExp(exps)));
-                llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
-            }
-            else{
-                BasicSymbol* idx=dynamic_cast<BasicSymbol*>((*exps)[0]->sym);
-                if(idx==nullptr){
-                    throw std::runtime_error("the idx is not a basicSymbol type");
-                }
-                llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM_PointerToVar(array,bs,idx));
-            }
+            llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM(ps,array,getIdxFromExp(exps)));
+            llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
             for(auto &exp : (*exps)){
                 llvmlist->InsertHead(exp->llvmlist);
             }

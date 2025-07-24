@@ -6,7 +6,7 @@
 #include <string>
 #include <map>
 
-class StackAllocator {
+/*class StackAllocator {
     private:
         std::map<std::string, int> localVarOffsets; // 变量名 -> 栈偏移
         int currentOffset = 0;                      // 当前栈指针偏移值
@@ -34,4 +34,4 @@ class StackAllocator {
         void printAllocation(std::ostream &out);
         bool hasVariable(const std::string &varName) const;
         int getCurrentOffset() const;
-    };
+    };*/

@@ -3,10 +3,10 @@
 
 std::unordered_map<std::string,BasicBlock*> label_to_basicBlock;
 int function_num;
-std::unordered_map<std::string,PointerSymbol*>bs_to_ps;
+//std::unordered_map<std::string,PointerSymbol*>bs_to_ps;
 
 std::string generate_begin_label(){
-    return "entry.label."+std::to_string(function_num);
+    return "var.def."+std::to_string(function_num);
 }
 
 std::string generate_entry_label(){
@@ -104,6 +104,7 @@ std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
     basicBlocks.push_back(BasicBlock::createBasicBlock(beginLabel,beginLabel,llvmlist)) ;//begin基本块
     basicBlocks[0]->idx=cnt;
     cnt++;
+    //llvmlist->InsertHead(beginLabel);
 
     Label* entryLabel=LLVMfactory::createLableLLVM(SymbolFactory::createLabelSymbolWithScope(generate_entry_label(),1));
     llvmlist->InsertAfter(llvmlist->head,entryLabel);
@@ -117,7 +118,7 @@ std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
     while(llvm!=nullptr&&llvm->prev!=exitLabel){
         if(llvm->getLLVMType()==LLVMtype::load){
             LoadLLVM* loadLLVM=dynamic_cast<LoadLLVM*>(llvm);
-            bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
+            //bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
         }
         if(llvm->getLLVMType()==LLVMtype::label){
             bb=BasicBlock::createBasicBlock(start,llvm->prev,llvmlist);

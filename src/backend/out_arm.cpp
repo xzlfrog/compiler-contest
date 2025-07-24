@@ -2,7 +2,7 @@
 #include "../../include/backend/StaAlloca.hpp"
 #include "../../include/llvm.hpp"
 
-void outputModule(Module *module) {
+/*void outputModule(Module *module) {
     OutArm out("output.s");
     out.outputModule(module);
 }
@@ -396,6 +396,6 @@ void UnaryOperationLLVM::out_arm_str() const {
         default:
             throw std::invalid_argument("Unsupported unary operation for ARM conversion");
     }
-}
+}*/
 
 
