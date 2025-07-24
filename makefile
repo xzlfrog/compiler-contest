@@ -1,7 +1,7 @@
 # Compiler and flags
 CXX := clang++
-CXXFLAGS := -std=c++17 -O2 -g -Iinclude -Isrc/frontend -I/extlibs
-LDFLAGS := -lm -L/extlibs -lantlr4-runtime -Wl,-rpath=/extlibs
+CXXFLAGS := -std=c++17 -O2 -g -Iinclude -Isrc/frontend -I/extlibs -I/opt/homebrew/Cellar/boost/1.88.0/include -w
+LDFLAGS := -lm -L/extlibs  -Wl #,-rpath=/extlibs -lantlr4-runtime
 
 # Build directories
 BUILD_DIR := build
@@ -38,42 +38,42 @@ parser: $(YACC_CPP) $(LEX_CPP) $(YACC_HPP)
 
 # 生成解析器源文件
 $(YACC_CPP) $(YACC_HPP): $(YACC_SRC)
-    bison -d -o $(YACC_CPP) $<
+	bison -d -o $(YACC_CPP) $<
 
 $(LEX_CPP): $(LEX_SRC) $(YACC_HPP)
-    flex -o $@ $<
+	flex -o $@ $<
 
 # 2. 编译规则
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(YACC_HPP) | parser $(OBJ_DIR)
-    @mkdir -p $(@D)
-    $(CXX) $(CXXFLAGS) -c $< -o $@
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # 特殊规则处理生成的解析器代码
 $(OBJ_DIR)/frontend/sysy.y.o: $(YACC_CPP) | parser $(OBJ_DIR)
-    @mkdir -p $(@D)
-    $(CXX) $(CXXFLAGS) -c $< -o $@
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # 特殊处理 Flex 生成的 C 文件 - 添加 -x c++ 选项
 $(OBJ_DIR)/frontend/sysy.l.o: $(LEX_CPP) | parser $(OBJ_DIR)
-    @mkdir -p $(@D)
-    $(CXX) $(CXXFLAGS) -x c++ -c $< -o $@
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -x c++ -c $< -o $@
 
 # 3. 链接可执行文件 - 调整链接顺序，并使用 LDFLAGS
 $(TARGET): $(OBJS) | $(BIN_DIR)
-    $(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
 # 创建构建目录
 $(BIN_DIR) $(OBJ_DIR):
-    @mkdir -p $@
+	@mkdir -p $@
 
 # 清理构建文件
 clean:
-    rm -rf $(BUILD_DIR) $(YACC_CPP) $(YACC_HPP) $(LEX_CPP)
+	rm -rf $(BUILD_DIR) $(YACC_CPP) $(YACC_HPP) $(LEX_CPP)
 
 test:
-    lldb --args ./build/bin/compiler -S -o ./test/test1.s ./test/test1.sy
+	lldb --args ./build/bin/compiler -S -o ./test/test1.s ./test/test1.sy
 
 debug:
-    lldb ./build/bin/compiler
+	lldb ./build/bin/compiler
 
 .PHONY: all clean parser test debug
