@@ -26,21 +26,21 @@ class RegisterAllocator {
     public:
         RegisterAllocator(const std::vector<std::string>& available_registers){}
 
-        std::vector<Symbol*> Registers; // 实际情况 寄存器数组，存储指向 变量 的指针
-        std::unordered_map<Symbol*, int> var_to_reg; // 理论映射 变量 到 索引的映射
+        std::vector<std::string> Registers; // 实际情况 寄存器数组，存储指向 变量 的指针
+        std::unordered_map<std::string, int> var_to_reg; // 理论映射 变量 到 索引的映射
 
         // 为某个Symbol分配一个物理寄存器
-        virtual void allocateParamSpace(Symbol* symbol) = 0;
-        virtual void allocateOtherSpace(Symbol* symbol) = 0;
+        virtual void allocateParamSpace(std::string symbol) = 0;
+        virtual void allocateOtherSpace(std::string symbol) = 0;
     
         // 获取已分配寄存器
-        virtual std::string getRegister(Symbol* symbol) const = 0;
+        virtual std::string getRegister(std::string symbol) const = 0;
 
-        virtual std::string accessVariable(Symbol* symbol) = 0;
-        virtual std::string accessParam(Symbol* symbol) = 0;
+        virtual std::string accessVariable(std::string symbol) = 0;
+        virtual std::string accessParam(std::string symbol) = 0;
 
         // 检查寄存器是否装载对应symbol
-        bool isRegisterUsed(Symbol* symbol) const;
+        bool isRegisterUsed(std::string symbol) const;
     
         // 检查是否所有寄存器都已被使用
         // 感觉没啥用但暂时保留
@@ -63,8 +63,8 @@ class RegisterAllocator {
         void reset();
 
         // 内部方法
-    virtual void promoteToRegister( Symbol* symbol) = 0;
-    virtual void spillToStack(Symbol* symbol) = 0;
+    virtual void promoteToRegister( std::string symbol) = 0;
+    virtual void spillToStack(std::string symbol) = 0;
         
     };
 
@@ -75,24 +75,24 @@ class XRegAllocator : public RegisterAllocator {
                                               "X9", "X10", "X11", "X12", "X13", "X14", "X15",
                                               "X19", "X20", "X21", "X22", "X23", "X24", "X25",
                                               "X26", "X27", "X28"}) {
-            Registers.resize(32, nullptr); // 初始化寄存器数组
+            Registers.resize(32); // 初始化寄存器数组
                                               }
 
         int current_reg_offset1 = 0; // 当前偏移量 0-7
         int current_reg_offset2 = 9; // 当前偏移量 9-15
         int current_reg_offset3 = 19; // 当前偏移量 19-28 暂时不用3 因为未区分临时变量
     
-        void allocateParamSpace(Symbol* symbol) override ;
-        void allocateOtherSpace(Symbol* symbol) override ;
-        std::string getRegister(Symbol* symbol) const override;;
+        void allocateParamSpace(std::string symbol) override ;
+        void allocateOtherSpace(std::string symbol) override ;
+        std::string getRegister(std::string symbol) const override;;
 
 
         // 访问变量（使用或分配）
-        std::string accessVariable(Symbol* symbol) override ;
-        std::string accessParam(Symbol* symbol) override;
+        std::string accessVariable(std::string symbol) override ;
+        std::string accessParam(std::string symbol) override;
         
-        void promoteToRegister(Symbol* symbol) override ;
-        void spillToStack(Symbol* symbol) override ;
+        void promoteToRegister(std::string symbol) override ;
+        void spillToStack(std::string symbol) override ;
 };
 
 class DRegAllocator : public RegisterAllocator {
@@ -102,22 +102,22 @@ class DRegAllocator : public RegisterAllocator {
                                               "D15", "D16", "D17", "D18", "D19", "D20", "D21",
                                               "D22", "D23", "D24", "D25", "D26", "D27", "D28",
                                               "D29", "D30", "D31"}) {
-            Registers.resize(32, nullptr); // 初始化寄存器数组
+            Registers.resize(32); // 初始化寄存器数组
                                               }
 
         int current_reg_offset1 = 0; // 当前偏移量 0-7
         int current_reg_offset2 = 0; // 当前偏移量 8-31
-        void allocateParamSpace(Symbol* symbol) override ;
-        void allocateOtherSpace(Symbol* symbol) override ;
-        std::string getRegister(Symbol* symbol) const override;;
+        void allocateParamSpace(std::string symbol) override ;
+        void allocateOtherSpace(std::string symbol) override ;
+        std::string getRegister(std::string symbol) const override;;
         
 
         // 访问变量（使用或分配）
-        std::string accessVariable(Symbol* symbol) override ;
-        std::string accessParam(Symbol* symbol) override;
+        std::string accessVariable(std::string symbol) override ;
+        std::string accessParam(std::string symbol) override;
 
-        void promoteToRegister(Symbol* symbol) override ;
-        void spillToStack(Symbol* symbol) override ;
+        void promoteToRegister(std::string symbol) override ;
+        void spillToStack(std::string symbol) override ;
 };
 
 class ZERORegAllocator : public RegisterAllocator {

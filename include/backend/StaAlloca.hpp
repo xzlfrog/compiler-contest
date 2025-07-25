@@ -35,16 +35,16 @@ class StackAllocator {
         }
 
         // 核心功能函数
-        int allocateLocal(Symbol *symbol);
-        int allocateArray(ArraySymbol* arraySymbol);
-        void addPtr(Symbol *symbol, int offset);
+        int allocateLocal(int size, std::string symbol);
+        int allocateArray(int elementSize, const std::vector<int>& dimensions ,std::string arraySymbol);
+        void addPtr(std::string symbol, int offset);
 
         int calculateRegisterSaveAreaSize();
         void emitRegisterSave(std::ostream& out, int offset) const;
         void emitRegisterRestore(std::ostream& out, int offset) const;
 
         int calculateStackSize();
-        int getOffset(Symbol *symbol);
+        int getOffset(std::string symbol);
         std::string emitPrologue(int stackSize) ;
         std::string emitEpilogue(int stackSize) ;
         int getCurrentOffset() const;
@@ -55,7 +55,7 @@ class StackAllocator {
         void printAllocation(std::ostream& out) const;
 
         void reset();
-        std::string getStackPointer(Symbol *symbol) const;
+        std::string getStackPointer(std::string symbol) const;
         void printAllocation(std::ostream &out);
         bool hasVariable(const std::string &varName) ;
         

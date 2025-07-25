@@ -7,6 +7,28 @@
 OutArm* OutArm::instance = nullptr; 
 std::ofstream outputArmFile;
 
+int OutArm::getDataSize(Symbol* symbol){
+    int size ;
+    if(auto * arraySymbol = dynamic_cast<ArraySymbol*>(symbol)) {
+        size =  arraySymbol->getArrayType();
+    } else if(auto * pointerSymbol = dynamic_cast<PointerSymbol*>(symbol)) {
+        size = pointerSymbol->getPointedType();
+    } else {
+        size = symbol->getDataType();
+    }
+    switch(size) {
+        case dataType::i1: return 1;
+        case dataType::i8: return 1;
+        case dataType::i16: return 2;
+        case dataType::i32: return 4;
+        case dataType::i64: return 8;
+        case dataType::f32: return 4;
+        case dataType::f64: return 8;
+        case dataType::dataType_pointer: return 16; // 假设指针大小为8字节
+        default: throw std::invalid_argument("Unsupported data type for size calculation");
+    }
+}
+
 void OutArm::outString(const std::string &str) {
     OutArm& out_Arm = OutArm::getInstance();
     out_Arm.out.open(out_Arm.outputFileName, std::ios::out | std::ios::app);
@@ -74,33 +96,33 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
     }else if(auto* array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {       
         if (array_Symbol->getArrayType() == dataType::f32 || 
         array_Symbol->getArrayType() == dataType::f64) {
-        reg_name = out_Arm.dRegAllocator.accessVariable(array_Symbol);
+        reg_name = out_Arm.dRegAllocator.accessVariable(array_Symbol->getName());
     } else if (array_Symbol->getArrayType() == dataType::i32 || 
                array_Symbol->getArrayType() == dataType::i64 || 
                array_Symbol->getArrayType() == dataType::i16 || 
                array_Symbol->getArrayType() == dataType::i8 || 
                array_Symbol->getArrayType() == dataType::i1 || 
                array_Symbol->getArrayType() == dataType::array_data) {
-        reg_name = out_Arm.xRegAllocator.accessVariable(array_Symbol);
+        reg_name = out_Arm.xRegAllocator.accessVariable(array_Symbol->getName());
     }
     }else if(auto* pointer_symbol = dynamic_cast<PointerSymbol*>(symbol)){
         if (pointer_symbol->getPointedType() == dataType::f32 || 
         pointer_symbol->getPointedType() == dataType::f64) {
-        reg_name = out_Arm.dRegAllocator.accessVariable(pointer_symbol);
+        reg_name = out_Arm.dRegAllocator.accessVariable(pointer_symbol->getName());
     } else if (pointer_symbol->getPointedType() == dataType::i32 || 
                pointer_symbol->getPointedType() == dataType::i64 || 
                pointer_symbol->getPointedType() == dataType::i16 || 
                pointer_symbol->getPointedType() == dataType::i8 || 
                pointer_symbol->getPointedType() == dataType::i1 || 
                pointer_symbol->getPointedType() == dataType::array_data) {
-        reg_name = out_Arm.xRegAllocator.accessVariable(pointer_symbol);
+        reg_name = out_Arm.xRegAllocator.accessVariable(pointer_symbol->getName());
     }
     }
     else{
         if(symbol->data->getType() == (dataType::f32) || symbol->data->getType() == (dataType::f64)) {
-            reg_name = out_Arm.dRegAllocator.accessVariable(symbol);
+            reg_name = out_Arm.dRegAllocator.accessVariable(symbol->getName());
         }else if(symbol->data->getType() == (dataType::i32) || symbol->data->getType() == (dataType::i64) || symbol->data->getType() == (dataType::i16) || symbol->data->getType() == (dataType::i8) || symbol->data->getType() == (dataType::i1)||symbol->data->getType() == (dataType::array_data)) {
-            reg_name = out_Arm.xRegAllocator.accessVariable(symbol);
+            reg_name = out_Arm.xRegAllocator.accessVariable(symbol->getName());
         }
     }
     return reg_name;
@@ -112,9 +134,9 @@ std::string OutArm::DispatchRegParam(VarSymbol* symbol) {
     if(symbol->type == symType::constant_var || symbol->type == symType::constant_nonvar) {
         reg_name = OutArm::getIntNumberOfOperands(symbol);
     }else if(symbol->getDataType() == (dataType::f32) || symbol->getDataType() == (dataType::f64)) {
-        reg_name = out_Arm.dRegAllocator.accessParam(symbol);
+        reg_name = out_Arm.dRegAllocator.accessParam(symbol->getName());
     }else if(symbol->getDataType() == (dataType::i32) || symbol->getDataType() == (dataType::i64) || symbol->getDataType() == (dataType::i16) || symbol->getDataType() == (dataType::i8) || symbol->getDataType() == (dataType::i1)|| symbol->getDataType() == (dataType::array_data)) {
-        reg_name = out_Arm.xRegAllocator.accessParam(symbol);
+        reg_name = out_Arm.xRegAllocator.accessParam(symbol->getName());
     }
     return reg_name; 
 }
@@ -123,9 +145,9 @@ std::string OutArm::DispatchRegParam(ArraySymbol* symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     std::string reg_name;
     if(symbol->getArrayType() == (dataType::f32) || symbol->getArrayType() == (dataType::f64)) {
-        reg_name = out_Arm.dRegAllocator.accessParam(symbol);
+        reg_name = out_Arm.dRegAllocator.accessParam(symbol->getName());
     }else if(symbol->getArrayType() == (dataType::i32) || symbol->getArrayType() == (dataType::i64) || symbol->getArrayType() == (dataType::i16) || symbol->getArrayType() == (dataType::i8) || symbol->getArrayType() == (dataType::i1)||symbol->getArrayType() == (dataType::array_data)) {
-        reg_name = out_Arm.xRegAllocator.accessParam(symbol);
+        reg_name = out_Arm.xRegAllocator.accessParam(symbol->getName());
     }
     return reg_name; 
 }
@@ -196,8 +218,8 @@ std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
     b_str = out_Arm.DispatchReg(REMllvm->b);
     c_str = out_Arm.DispatchReg(REMllvm->c);
 
-    return op1 + " " + tmp_str + ", " + b_str + ", " + c_str + "\n" +
-           op2 + " " + tmp_str + ", " + tmp_str + ", " + c_str + "\n" +
+    return op1 + " " + tmp_str + ", " + b_str + ", " + c_str + "\n\t" +
+           op2 + " " + tmp_str + ", " + tmp_str + ", " + c_str + "\n\t" +
            op3 + " " + a_str + ", " + a_str + ", " + tmp_str;
     
 }
@@ -250,13 +272,16 @@ std::string OutArm::ComparisonOperation(ArithmeticOperationLLVM* cmpllvm) {
     b_str = out_Arm.DispatchReg(cmpllvm->b);
     c_str = out_Arm.DispatchReg(cmpllvm->c);
 
-    return op0 + " " + b_str + ", " + c_str + "\n" +
+    return op0 + " " + b_str + ", " + c_str + "\n\t" +
            op1 + " " + a_str + ", " + op2 ;
            
 }
 
 void UnconditionalBranchLLVM::out_arm_str() {
     std::string target_str = this->target->getName();
+    if (!target_str.empty()) {
+        target_str = target_str.substr(1);  // 从第1个字符开始，取到末尾
+    }
     OutArm::outString("\tB " + target_str);
 }
 
@@ -264,8 +289,13 @@ void ConditionalBranchLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     std::string condition_str = out_Arm.DispatchReg(this->condition);
     std::string true_branch_str = this->trueBranch->getName();
+    if (!true_branch_str.empty()) {
+        true_branch_str = true_branch_str.substr(1);  // 从第1个字符开始，取到末尾
+    }
     std::string false_branch_str = this->falseBranch->getName();
-
+    if (!false_branch_str.empty()) {
+        false_branch_str = false_branch_str.substr(1);  // 从第1个字符开始，取到末尾
+    }
     OutArm::outString("\tCBZ " + condition_str + ", " + true_branch_str);
     OutArm::outString("\tCBNZ " + condition_str + ", " + false_branch_str);
 }
@@ -274,7 +304,11 @@ void ReturnLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     if (this->returnValue) {
         std::string return_value_str = out_Arm.DispatchReg(this->returnValue);
-        OutArm::outString("\tMOV X0, " + return_value_str); // Assuming X0 is the return register
+        if(this->getReturnType() == dataType::f32 || this->getReturnType() == dataType::f64) 
+        {OutArm::outString("\tMOV D0, " + return_value_str); 
+        }else{
+            OutArm::outString("\tMOV X0, " + return_value_str);
+        }
     }
     OutArm::outString(out_Arm.stackAllocator.emitEpilogue(out_Arm.stackAllocator.calculateStackSize()));
     OutArm::outString("\tRET");
@@ -291,22 +325,28 @@ void CallLLVM::out_arm_str()  {
         dest_str= out_Arm.DispatchReg(this->dest_sym);
     }
     std::string arg_str;
+    std::string ori_str;
 
     for (const auto& arg : this->arguments) {
         if (auto* array_symbol = dynamic_cast<ArraySymbol*>(arg)) {
+            ori_str = out_Arm.DispatchReg(array_symbol);
             arg_str = out_Arm.DispatchRegParam(array_symbol);
         }
         else if (auto* var_symbol = dynamic_cast<VarSymbol*>(arg)) {
+            ori_str = out_Arm.DispatchReg(var_symbol);
             arg_str = out_Arm.DispatchRegParam(var_symbol);
-        }
-        
-        OutArm::outString("\tMOV " + arg_str + ", X" + std::to_string(&arg - &this->arguments[0] + 1)); // X1, X2, ...
-    }
-
+        } 
+        OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
+    }  
+    
     std::string call_str = "BL " + func_name;
     OutArm::outString("\t"+call_str);
     if (this->dest_sym) {
-        OutArm::outString("\tMOV " + dest_str + ", X0"); // Assuming X0 is the return register
+        if(this->function->getReturnType() == dataType::f32 || this->function->getReturnType() == dataType::f64) {
+            OutArm::outString("\tMOV " + dest_str + ", D0"); // Assuming S0 is the return register for floating point
+        } else {
+            OutArm::outString("\tMOV " + dest_str + ", X0"); // Assuming X0 is the return register for integers
+        }
     }
 
 
@@ -314,6 +354,9 @@ void CallLLVM::out_arm_str()  {
 
 void Label::out_arm_str()  {
     std::string label_name = this->label->getName();
+    if (!label_name.empty()) {
+        label_name = label_name.substr(1);  // 从第1个字符开始，取到末尾
+    }
     OutArm::outString(label_name + ":");
 }
 
@@ -384,36 +427,42 @@ void AllocaNonArrayLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
     std::string var_str = out_Arm.DispatchReg(this->sym);
-    int size = out_Arm.stackAllocator.allocateLocal(this->sym);
-    OutArm::outString("\tSUB SP, SP, #" + std::to_string(size));
-    OutArm::outString("\tMOV " + var_str + ", SP");
+    if(this->sym->getPointedType()==dataType::f32 || this->sym->getPointedType()==dataType::f64) {
+       out_Arm.dRegAllocator.allocateOtherSpace(this->sym->getName());
+    }else{
+         out_Arm.xRegAllocator.allocateOtherSpace(this->sym->getName());
+    }
+    int datasize = OutArm::getDataSize(this->sym);
+    int size = out_Arm.stackAllocator.allocateLocal(datasize,this->sym->getName());
+    
 }
 
 void AllocaArrayLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     std::string array_str = out_Arm.DispatchReg(this->array);
-    int size = out_Arm.stackAllocator.allocateArray(this->array);
-    
-    OutArm::outString("\tSUB SP, SP, #" + std::to_string(size));
-    OutArm::outString("\tMOV " + array_str + ", SP");
+    if(this->array->getArrayType() == dataType::f32 || this->array->getArrayType() == dataType::f64) {
+        out_Arm.dRegAllocator.allocateOtherSpace(this->array->getName());
+    } else{
+        out_Arm.xRegAllocator.allocateOtherSpace(this->array->getName());
+    }
+    int datasize = OutArm::getDataSize(this->array);
+    int size = out_Arm.stackAllocator.allocateArray(datasize,this->getDimensions(),this->array->getName());
 }
 
 void LoadLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
-    std::string src_str = out_Arm.DispatchReg(this->src_sym);
-    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym);
+    int offset = out_Arm.stackAllocator.getOffset(this->src_sym->getName());
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
    
-    OutArm::outString("\tLDR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
+    OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
 }
 
 void StoreLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
-    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym);
-    std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
+    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
     
     OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
 }
@@ -423,7 +472,7 @@ void GetElementPtrLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     std::string base_ptr = out_Arm.DispatchReg(this->ptrval);
 
-    int offset = out_Arm.stackAllocator.getOffset(this->ptrval);
+    int offset = out_Arm.stackAllocator.getOffset(this->ptrval->getName());
     // for (auto dim : ty_idx) {
     //     if (dim.first == dataType::i32) {
     //         offset += dim.second->data->getValue() * out_Arm.stackAllocator.getTypeSize(dim.first);
@@ -432,7 +481,7 @@ void GetElementPtrLLVM::out_arm_str()  {
     //     }
     // }
 
-    out_Arm.stackAllocator.addPtr(this->dest_sym, offset);
+    out_Arm.stackAllocator.addPtr(this->dest_sym->getName(), offset);
 }
 
 void TypeConversionOperation::out_arm_str()  {
@@ -537,9 +586,9 @@ void insertContentToFileFront(const std::string& filename, const std::string& co
     write.close();
 }
 
-void XRegAllocator::promoteToRegister(Symbol* symbol) {
+void XRegAllocator::promoteToRegister(std::string symbol) {
     StackAllocator& stackAllocator = StackAllocator::getInstance();
-    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
+    bool is_in_stack = stackAllocator.hasVariable(symbol);
     if (is_in_stack) {
         int stack_offset = stackAllocator.getOffset(symbol);
         std::string reg_name = this->getRegister(symbol);
@@ -548,7 +597,7 @@ void XRegAllocator::promoteToRegister(Symbol* symbol) {
         }
         OutArm::outString("\tLDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
         int position = this->var_to_reg[symbol]; 
-        if(Registers[position]!= nullptr){
+        if(!Registers[position].empty()){
             this->spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
         }
         Registers[position] = symbol;
@@ -557,29 +606,29 @@ void XRegAllocator::promoteToRegister(Symbol* symbol) {
     }   
 }
 
-void XRegAllocator::spillToStack(Symbol* symbol) {
+void XRegAllocator::spillToStack(std::string symbol) {
     StackAllocator& stackAllocator = StackAllocator::getInstance();
-    int stack_offset;
+    int stack_offset = stackAllocator.getOffset(symbol);
     std::string reg_name = this->getRegister(symbol);
     if (reg_name.empty()) {
         throw std::runtime_error("No register allocated for spilling");
     }
-    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
-    if(is_in_stack) {
-        stack_offset = stackAllocator.getOffset(symbol);
-    }else{
-        stack_offset = stackAllocator.allocateLocal(symbol);
-    }
+    // bool is_in_stack = stackAllocator.hasVariable(symbol);
+    // if(is_in_stack) {
+    //     stack_offset = stackAllocator.getOffset(symbol);
+    // }else{
+    //     stack_offset = stackAllocator.allocateLocal(symbol);
+    // }
         OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
    
     // 清除寄存器映射
-    this->freeRegister(reg_name);
+    //this->freeRegister(reg_name);
 }
 
 
-void DRegAllocator::promoteToRegister(Symbol* symbol) {
+void DRegAllocator::promoteToRegister(std::string symbol) {
     StackAllocator& stackAllocator = StackAllocator::getInstance();
-    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
+    bool is_in_stack = stackAllocator.hasVariable(symbol);
     if (is_in_stack) {
         int stack_offset = stackAllocator.getOffset(symbol);
         std::string reg_name = this->getRegister(symbol);
@@ -588,7 +637,7 @@ void DRegAllocator::promoteToRegister(Symbol* symbol) {
         }
         OutArm::outString("\tLDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
         int position = this->var_to_reg[symbol]; 
-        if(Registers[position]!= nullptr){
+        if(!Registers[position].empty()){
             this->spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
         }
         Registers[position] = symbol;
@@ -597,23 +646,23 @@ void DRegAllocator::promoteToRegister(Symbol* symbol) {
     }   
 }
 
-void DRegAllocator::spillToStack(Symbol* symbol) {
+void DRegAllocator::spillToStack(std::string symbol) {
     StackAllocator& stackAllocator = StackAllocator::getInstance();
     std::string reg_name = this->getRegister(symbol);
-    int stack_offset;
+    int stack_offset = stackAllocator.getOffset(symbol);
     if (reg_name.empty()) {
         throw std::runtime_error("No register allocated for spilling");
     }
-    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
-    if(is_in_stack) {
-        stack_offset = stackAllocator.getOffset(symbol);
-    }else{
-        stack_offset = stackAllocator.allocateLocal(symbol);
-    }
-        OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+    // bool is_in_stack = stackAllocator.hasVariable(symbol);
+    // if(is_in_stack) {
+    //     stack_offset = stackAllocator.getOffset(symbol);
+    // }else{
+    //     stack_offset = stackAllocator.allocateLocal(symbol);
+    // }
+          OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
    
     // 清除寄存器映射
-    this->freeRegister(reg_name);
+    //this->freeRegister(reg_name);
 }
 
 void out_arm(std::string outputFileName, ModuleList* module_list) {

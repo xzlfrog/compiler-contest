@@ -51,6 +51,7 @@ public:
     
     static void outString(const std::string &str);
 
+    static int getDataSize(Symbol* symbol);
     static std::string ArithmeticOpConvert(LLVMtype op);
     static std::string ASMDOperation(ArithmeticOperationLLVM* ASMDllvm);
     static std::string ComparisonOperation(ArithmeticOperationLLVM* cmpllvm);

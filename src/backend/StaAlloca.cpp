@@ -11,22 +11,6 @@ int StackAllocator::align(int value, int alignment) {
     return (value + alignment - 1) & ~(alignment - 1);
 }
 
-int StackAllocator::getTypeSize(Symbol* symbol) {
-    dataType dtype;
-    if (auto* arraySymbol = dynamic_cast<ArraySymbol*>(symbol)) {
-        dtype = arraySymbol->getArrayType();
-    } else {
-        dtype = symbol->getDataType();
-    }
-    switch(dtype) {
-        case i32: case f32: return 4;
-        case i64: case f64: return 8;
-        case i1: case i8: return 1;
-        case i16: return 2;
-        default: return 4; // 默认4字节
-    }
-}
-
 void StackAllocator::addUsedRegister(std::string& reg) {
     if (reg.size() < 2 || reg[0] != 'X') return;
     
@@ -66,26 +50,26 @@ int StackAllocator::calculateRegisterSaveAreaSize() {
     return align(size, 16);
 }
 
-int StackAllocator::getOffset(Symbol* symbol) {
-    const std::string& varName = symbol->getName();
+int StackAllocator::getOffset(std::string symbol) {
+    const std::string& varName = symbol;
     auto it = localVarOffsets.find(varName);
     if (it != localVarOffsets.end()) {
         return it->second;
-    }else if(auto array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {
-        return allocateArray(array_Symbol);
-    }else{
-        return allocateLocal(symbol);
     }
+    // }else if(is_array) {
+    //     return allocateArray(symbol);
+    // }else{
+    //     return allocateLocal(symbol);
+    //x}
     throw std::runtime_error("Variable not found: " + varName);
 }   
 
-int StackAllocator::allocateLocal(Symbol* symbol) {
-    std::string name = symbol->getName();
+int StackAllocator::allocateLocal(int size, std::string symbol) {
+    std::string name = symbol;
     if (hasVariable(name)) {
         throw std::runtime_error("Duplicate variable: " + name);
     }
     
-    int size = getTypeSize(symbol);
     int alignment = size >= 8 ? 8 : 4;
     
     currentOffset = align(currentOffset - size, alignment);
@@ -94,14 +78,14 @@ int StackAllocator::allocateLocal(Symbol* symbol) {
     return currentOffset;
 }
 
-int StackAllocator::allocateArray(ArraySymbol* arraySymbol) {
-    const std::string& name = arraySymbol->getName();
+int StackAllocator::allocateArray(int elementSize, const std::vector<int>& dimensions ,std::string arraySymbol) {
+    const std::string& name = arraySymbol;
     if (hasVariable(name)) {
         throw std::runtime_error("Duplicate variable: " + name);
     }
 
-    int elementSize = getTypeSize(arraySymbol);
-    const std::vector<int>& dimensions = arraySymbol->getDimensions(); // Assuming this method exists to get the dimensions
+    //int elementSize = getTypeSize(arraySymbol);
+    //const std::vector<int>& dimensions = arraySymbol->getDimensions(); // Assuming this method exists to get the dimensions
     int totalSize = elementSize;
     for (int dim : dimensions) {
         totalSize *= dim;
@@ -217,8 +201,8 @@ int StackAllocator::getCurrentOffset() const {
 }
 
 //未对齐可能有隐患
-void StackAllocator::addPtr(Symbol *symbol, int offset) {
-    const std::string& name = symbol->getName();
+void StackAllocator::addPtr(std::string symbol, int offset) {
+    const std::string& name = symbol;
     if (hasVariable(name)) {
         return; // 如果变量已经存在，则不需要重新添加
     }

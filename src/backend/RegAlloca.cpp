@@ -14,7 +14,7 @@
 
 // 检查寄存器是否已被使用
 
-bool RegisterAllocator::isRegisterUsed(Symbol* symbol) const{
+bool RegisterAllocator::isRegisterUsed(std::string symbol) const{
     auto it = var_to_reg.find(symbol);
 
     // 检查映射中是否存在symbol，并且寄存器数组中对应位置的指针是symbol
@@ -25,7 +25,7 @@ bool RegisterAllocator::isRegisterUsed(Symbol* symbol) const{
 // 检查是否所有寄存器都已被使用
 bool RegisterAllocator::isAllRegistersUsed() const{
     for (const auto& reg : Registers) {
-        if (reg == nullptr) {
+        if (reg.empty()) {
             return false; // 只要有一个寄存器是空闲的，就返回false
         }
     }
@@ -35,7 +35,7 @@ bool RegisterAllocator::isAllRegistersUsed() const{
 // 释放寄存器（用于临时值）
 void RegisterAllocator::freeRegister(std::string reg_name){
     size_t index = std::stoi(reg_name.substr(1)); // 获取寄存器索引
-    if (index < Registers.size() && Registers[index] != nullptr) {
+    if (index < Registers.size() && !Registers[index].empty()) {
         //var_to_reg.erase(Registers[index]); // 从映射中删除变量
         Registers[index] = nullptr; // 释放寄存器
     } else {
@@ -49,7 +49,7 @@ void RegisterAllocator::reset() {
     
 }
 
-void XRegAllocator::allocateParamSpace(Symbol* symbol) {
+void XRegAllocator::allocateParamSpace(std::string symbol) {
     
     if(this->current_reg_offset1 > XREG_SIZE_END1) {
         this->current_reg_offset1 = 0; // 重置偏移量
@@ -61,7 +61,7 @@ void XRegAllocator::allocateParamSpace(Symbol* symbol) {
     
 }
 
-void XRegAllocator::allocateOtherSpace(Symbol* symbol) {
+void XRegAllocator::allocateOtherSpace(std::string symbol) {
     if (this->current_reg_offset2 > 15 && this->current_reg_offset2 < 19) {
         this->current_reg_offset2 = 19; // 跳到offset3范围的起始位置
     } else if (this->current_reg_offset2 > 28) {
@@ -73,7 +73,7 @@ void XRegAllocator::allocateOtherSpace(Symbol* symbol) {
     return;
 }
 
-std::string XRegAllocator::getRegister(Symbol* symbol) const {
+std::string XRegAllocator::getRegister(std::string symbol) const {
     auto it = this->var_to_reg.find(symbol);
     if (it != this->var_to_reg.end()) {
         size_t index = it->second;
@@ -82,7 +82,7 @@ std::string XRegAllocator::getRegister(Symbol* symbol) const {
     return ""; // 如果没有分配寄存器，返回空字符串
 }
 
-std::string XRegAllocator::accessVariable(Symbol* symbol){
+std::string XRegAllocator::accessVariable(std::string symbol){
     StackAllocator& stackAllocator = StackAllocator::getInstance();
     auto it = this->var_to_reg.find(symbol);
     bool is_in_reg = true;
@@ -91,13 +91,13 @@ std::string XRegAllocator::accessVariable(Symbol* symbol){
         this->allocateOtherSpace(symbol); // 如果没有分配寄存器，则分配
         it = this->var_to_reg.find(symbol); // 重新查找
     }
-    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
+    bool is_in_stack = stackAllocator.hasVariable(symbol);
     if (is_in_stack && !is_in_reg) {
         this->promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
         return this->getRegister(symbol); // 返回寄存器名称
     }
 
-    if(Registers[it->second] != nullptr){
+    if(!Registers[it->second].empty() && (symbol != Registers[it->second])){
         this->spillToStack(Registers[it->second]); // 如果寄存器已被占用，先溢出
     }
         Registers[it->second] = symbol; // 更新寄存器
@@ -105,7 +105,7 @@ std::string XRegAllocator::accessVariable(Symbol* symbol){
     
 }
 
-std::string XRegAllocator::accessParam(Symbol* symbol){
+std::string XRegAllocator::accessParam(std::string symbol){
     StackAllocator& stackAllocator = StackAllocator::getInstance();
     auto it = this->var_to_reg.find(symbol);
     bool is_in_reg = true;
@@ -115,13 +115,13 @@ std::string XRegAllocator::accessParam(Symbol* symbol){
         it = this->var_to_reg.find(symbol); // 重新查找
     }
 
-    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
+    bool is_in_stack = stackAllocator.hasVariable(symbol);
     if (is_in_stack && !is_in_reg) {
         this->promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
         return this->getRegister(symbol); // 返回寄存器名称
     }
 
-    if(Registers[it->second] != nullptr){
+    if(!Registers[it->second].empty() && (symbol != Registers[it->second])){
         this->spillToStack(Registers[it->second]); // 如果寄存器已被占用，先溢出
     }
         Registers[it->second] = symbol; // 更新寄存器
@@ -129,7 +129,7 @@ std::string XRegAllocator::accessParam(Symbol* symbol){
     
 }
 
-void DRegAllocator::allocateParamSpace(Symbol* symbol) {
+void DRegAllocator::allocateParamSpace(std::string symbol) {
     
     if(this->current_reg_offset1 > DREG_SIZE_END1) {
         this->current_reg_offset1 = DREG_SIZE_START1; // 重置偏移量
@@ -141,7 +141,7 @@ void DRegAllocator::allocateParamSpace(Symbol* symbol) {
     
 }
 
-void DRegAllocator::allocateOtherSpace(Symbol* symbol) {
+void DRegAllocator::allocateOtherSpace(std::string symbol) {
     if (this->current_reg_offset2 > DREG_SIZE_END2) {
         this->current_reg_offset2 = DREG_SIZE_START2; // 跳到offset3范围的起始位置
     }
@@ -151,7 +151,7 @@ void DRegAllocator::allocateOtherSpace(Symbol* symbol) {
     return;
 }
 
-std::string DRegAllocator::getRegister(Symbol* symbol) const {
+std::string DRegAllocator::getRegister(std::string symbol) const {
     auto it = this->var_to_reg.find(symbol);
     if (it != this->var_to_reg.end()) {
         size_t index = it->second;
@@ -160,7 +160,7 @@ std::string DRegAllocator::getRegister(Symbol* symbol) const {
     return ""; // 如果没有分配寄存器，返回空字符串
 }
 
-std::string DRegAllocator::accessVariable(Symbol* symbol){
+std::string DRegAllocator::accessVariable(std::string symbol){
     StackAllocator& stackAllocator = StackAllocator::getInstance();
     auto it = this->var_to_reg.find(symbol);
     bool is_in_reg = true;
@@ -170,20 +170,22 @@ std::string DRegAllocator::accessVariable(Symbol* symbol){
         it = this->var_to_reg.find(symbol); // 重新查找
     }
 
-    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
+    bool is_in_stack = stackAllocator.hasVariable(symbol);
     if (is_in_stack && !is_in_reg) {
         this->promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
         return this->getRegister(symbol); // 返回寄存器名称
     }
 
-    if(Registers[it->second] != nullptr){
+    if(!Registers[it->second].empty() && (symbol != Registers[it->second])){
         this->spillToStack(Registers[it->second]); // 如果寄存器已被占用，先溢出
-        Registers[it->second] = symbol; // 更新寄存器
-        return "D" + std::to_string(it->second); // 返回寄存器名称
-    }
+   }
+
+   Registers[it->second] = symbol; // 更新寄存器
+   return "D" + std::to_string(it->second); // 返回寄存器名称
+
 }
 
-std::string DRegAllocator::accessParam(Symbol* symbol){
+std::string DRegAllocator::accessParam(std::string symbol){
     StackAllocator& stackAllocator = StackAllocator::getInstance();
     auto it = this->var_to_reg.find(symbol);
     bool is_in_reg = true;
@@ -193,15 +195,16 @@ std::string DRegAllocator::accessParam(Symbol* symbol){
         it = this->var_to_reg.find(symbol); // 重新查找
     }
 
-    bool is_in_stack = stackAllocator.hasVariable(symbol->getName());
+    bool is_in_stack = stackAllocator.hasVariable(symbol);
     if (is_in_stack && !is_in_reg) {
         this->promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
         return this->getRegister(symbol); // 返回寄存器名称
     }
 
-    if(Registers[it->second] != nullptr){
+    if(!Registers[it->second].empty() && (symbol != Registers[it->second])){
         this->spillToStack(Registers[it->second]); // 如果寄存器已被占用，先溢出
+        }
         Registers[it->second] = symbol; // 更新寄存器
         return "D" + std::to_string(it->second); // 返回寄存器名称
-    }
+
 }
