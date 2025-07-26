@@ -654,6 +654,7 @@ Symbol* create_var_def(std::string name,std::vector<int>* idxs,Expression* exp){
 std::vector<std::pair<dataType,BasicSymbol*>>& intVectorToBasicSymbolVector(const std::vector<int>& idxs){
     static std::vector<std::pair<dataType,BasicSymbol*>> res;
     res.clear();
+    res.push_back({dataType::i32,SymbolFactory::createConstSymbol(createData(dataType::i32,0))});
     for(auto &idx:idxs){
         res.push_back({dataType::i32,SymbolFactory::createConstSymbol(createData(dataType::i32,idx))});
     }

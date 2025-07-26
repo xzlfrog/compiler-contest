@@ -369,26 +369,29 @@ void PhiLLVM::out_arm_str()  {
 
 void GlobalNonArrayVarDefination::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
-    out_Arm.globalAllocator.allocateGlobal(dest_sym);
+    out_Arm.globalAllocator.allocateGlobalNonArray(this);
 }
 
 void ConstantNonArrayVarDefination::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
-    out_Arm.globalAllocator.allocateGlobal(dest_sym);
+    out_Arm.globalAllocator.allocateConstantNonArray(this);
 }
 
 void GlobalArrayVarDefination::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
-    out_Arm.globalAllocator.allocateArray(dest_sym);
+    out_Arm.globalAllocator.allocateGlobalArray(this);
 }
 
 void ConstantArrayVarDefination::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
-    out_Arm.globalAllocator.allocateArray(dest_sym);
+    out_Arm.globalAllocator.allocateConstantArray(this);
 }
 
 //函数声明暂时不翻译？
 void FuncDeclaration::out_arm_str()  {
+    OutArm& out_Arm = OutArm::getInstance();
+    std::string func_name = this->func->getName();
+    out_Arm.globalAllocator.allocateFunc(func_name);
     // 函数声明不需要输出 ARM 汇编代码
 }
 
@@ -398,10 +401,11 @@ void FuncDefination::out_arm_str()  {
 
     // 函数定义需要输出 ARM 汇编代码
     std::string func_name = this->func->getName();
+    out_Arm.globalAllocator.allocateFunc(func_name);
     if(!func_name.empty()) {
         func_name = func_name.substr(1);  // 从第1个字符开始，取到末尾
     }
-    OutArm::outString(func_name + " :");
+    OutArm::outString(func_name + ":");
     
     int stack_size = out_Arm.stackAllocator.calculateStackSize();
     OutArm::outString(out_Arm.stackAllocator.emitPrologue(stack_size));
@@ -671,19 +675,29 @@ void out_arm(std::string outputFileName, ModuleList* module_list) {
     // 创建OutArm实例
     OutArm& Out_Arm = OutArm::getInstance();
     Out_Arm.setName(name);
+
+    bool flag = false;
     
     // 遍历模块列表
     for (Module* module = module_list->head; module != nullptr; module = module->next) {
         // 输出模块名称
-        OutArm::outString(";.module start");
+        if(auto* func_module = dynamic_cast<FuncDefination*> (module->head)){
+            flag = true;
+        }
+
+        if(flag)
+        OutArm::outString("\n;.module start");
         
         // 遍历每个llvm语句
         for (LLVM* llvm = module->head; llvm != nullptr; llvm = llvm->next) {
             llvm->out_arm_str();
         }
         
-        insertContentToFileFront(name, Out_Arm.globalAllocator.emitAssemblyToString());
+        if(flag)
+        OutArm::outString(";.endmodule\n");
 
-        OutArm::outString(";.endmodule");
+        flag = false;
     }
+    insertContentToFileFront(name, Out_Arm.globalAllocator.emitAssemblyToString());
+
 }

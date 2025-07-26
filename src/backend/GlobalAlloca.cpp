@@ -1,31 +1,9 @@
 #include "../../include/backend/GlobalAlloca.hpp"
-#include <stdexcept>
-#include <string>
+#include <ostream>
 #include <iostream>
 #include <sstream>
 
-std::string GlobalAllocator::determineSection(BasicSymbol* symbol) const {
-    if (symbol->getType() == constant_var || symbol->getType() == constant_nonvar) {
-        return ".rodata";
-    } else if (symbol->getType() == variable && symbol->data != nullptr) {
-        return ".data";
-    } else {
-        return ".bss";
-    }
-}
-
-std::string GlobalAllocator::determineSection(PointerSymbol* symbol) const {
-    if (symbol->getType() == constant_var || symbol->getType() == constant_nonvar) {
-        return ".rodata";
-    } else if (symbol->getType() == variable && symbol->data != nullptr) {
-        return ".data";
-    } else {
-        return ".bss";
-    }
-}
-
-size_t GlobalAllocator::getTypeSize(BasicSymbol* symbol) const{
-    dataType dtype = symbol->getDataType();
+size_t GlobalAllocator::getTypeSize(dataType dtype) const{
     switch(dtype) {
         case i32: return 4;
         case i64: return 8;
@@ -38,29 +16,17 @@ size_t GlobalAllocator::getTypeSize(BasicSymbol* symbol) const{
     }
 }
 
-size_t GlobalAllocator::getTypeSize(ArraySymbol* arraySymbol) const{
+size_t GlobalAllocator::getArrayTypeSize(dataType dtype,std::vector<int>& dims) const {
     size_t size = 1;
-    for (int dim : arraySymbol->getDimensions()) {
+    for (int dim : dims) {
         size *= dim;
     }
-    dataType dtype = arraySymbol->getArrayType();
     switch(dtype) {
         case i32: return size * 4;
         case i64: return size * 8;
         case f32: return size * 4;
         case f64: return size * 8;
         default: throw std::runtime_error("Unsupported array data type");
-    }
-}
-
-std::string GlobalAllocator::getAssemblyDirective(BasicSymbol* symbol) const {
-    dataType dtype = symbol->getDataType();
-    switch(dtype) {
-        case i32: case f32: return ".word";
-        case i64: case f64: return ".dword";
-        case i1: case i8: return ".byte";
-        case i16: return ".short";
-        default: return ".word";
     }
 }
 
@@ -80,80 +46,169 @@ std::string GlobalAllocator::getInitialValue(BasicSymbol* symbol) const {
     }
 }
 
-void GlobalAllocator::allocateGlobal(BasicSymbol* symbol) {
-    std::string section = determineSection(symbol);
-    globalVariables[section].push_back(symbol);
+void GlobalAllocator::allocateFunc(std::string func_name){
+    this->func.push_back(func_name);
 }
 
-void GlobalAllocator::allocateGlobal(PointerSymbol* symbol){
-    std::string section = determineSection(symbol);
-    globalVariables2[section].push_back(symbol);
+void GlobalAllocator::allocateConstantNonArray(ConstantNonArrayVarDefination* CNAVD){
+    std::string dest_str = (CNAVD->dest_sym->getName());
+    std::string value;
+    if(CNAVD->getConstType()==dataType::f32){
+        value = "\n\t.float\t" + this->getInitialValue(CNAVD->src_sym);
+    }else{
+        value = "\n\t.word\t" + this->getInitialValue(CNAVD->src_sym);
+    }
+    this->rodata[dest_str] = value;
 }
 
-void GlobalAllocator::allocateArray(ArraySymbol* arraySymbol) {
-    globalArrays.push_back(arraySymbol);
-}
-
-void GlobalAllocator::emitArrayInitialization(std::ostream& out, ArraySymbol* array) const {
-    out << "\t.global " << array->getName() << "\n";
-    out << "\t.align " << (getTypeSize(array) >= 8 ? 8 : 4) << "\n";
-    out << array->getName() << ":\n";
-    
-    if (array->isInitialized() && array->initialedData != nullptr) {
-        for (const auto& elem : array->initialedData->initializedData) {
-            out << "\t.word " << my_to_string(elem.second) << "\n";
-        }
-    } else {
-        size_t totalSize = 1;
-        for (int dim : array->getDimensions()) {
-            totalSize *= dim;
-        }
-        totalSize *= (array->getArrayType() == f32 || array->getArrayType() == i32) ? 4 : 8;
-        out << "\t.space " << totalSize << "\n";
+void GlobalAllocator::allocateGlobalNonArray(GlobalNonArrayVarDefination* GNAVD){
+    std::string dest_str = (GNAVD->dest_sym->getName());
+    std::string value ;
+    if(GNAVD->getPointedType()==dataType::f32){
+        switch (GNAVD->dest_sym->pointedData->getInitMode())
+    {
+    case initializer::zeroinitializer:
+        value = "\t.float\t0";
+        this->data[dest_str] = value;
+        break;
+    case initializer::undef:
+        value = "\t.space\t" + std::to_string(this->getTypeSize(GNAVD->getPointedType()));
+        this->bss[dest_str] = value;
+        break;
+    case initializer::assignment:
+        value = "\t.float\t" + getSymOut(GNAVD->src_sym);
+        this->data[dest_str] = value;
+        break;
+    default:
+        throw std::runtime_error("the global variable initializer is wrong");
+        break;
+    }
+    }else{
+        switch (GNAVD->dest_sym->pointedData->getInitMode())
+    {
+    case initializer::zeroinitializer:
+        value = "\t.word\t0";
+        this->data[dest_str] = value;
+        break;
+    case initializer::undef:
+        value = "\t.space\t" + std::to_string(this->getTypeSize(GNAVD->getPointedType()));
+        this->bss[dest_str] = value;
+        break;
+    case initializer::assignment:
+        value = "\t.word\t" + getSymOut(GNAVD->src_sym);
+        this->data[dest_str] = value;
+        break;
+    default:
+        throw std::runtime_error("the global variable initializer is wrong");
+        break;
+    }
     }
 }
 
+void GlobalAllocator::allocateConstantArray(ConstantArrayVarDefination* CAVD){
+    std::string dest_str = CAVD->dest_sym->getName();
+    std::string value;
+    if(CAVD->getArrayType()==dataType::f32){
+        value = "\n\t.float\t";
+    }else{
+        value = "\n\t.word\t";
+    }
+    value += this->getArrayValue(CAVD->getInitializedData(),CAVD->getDimensions());
+    this->rodata[dest_str] = value;
+}
+
+//这个没写
+void GlobalAllocator::allocateGlobalArray(GlobalArrayVarDefination* GAVD){
+    std::string dest_str = (GAVD->dest_sym->getName());
+    std::string value;
+    if(GAVD->getArrayType()==dataType::f32){
+        value = "\n\t.float\t";
+    }else{
+        value = "\n\t.word\t";
+    }
+    value += this->getArrayValue(GAVD->getInitializedData(),GAVD->getDimensions());
+    this->data[dest_str] = value;
+}
+
+std::string GlobalAllocator::getArrayValue(const std::vector<std::pair<std::vector<int>,Data*>>& value_sets, const std::vector<int>& dims){
+    int totoal_size = 1;
+    std::string res ;
+    for(auto dim: dims){
+        totoal_size *= dim; 
+    }
+    int initialed_value_count = 0;
+    for (const auto& pair : value_sets) {
+        if (pair.second) {
+            // 使用 pair.second
+            res += my_to_string(pair.second);
+            res += ", ";
+            initialed_value_count++;
+        }
+    }
+    // 移除最后的 ", "
+    if (!res.empty() && res.length() >= 2) {
+        res = res.substr(0, res.length() - 2);
+    }
+    if(initialed_value_count<totoal_size){
+        int uninitialed_size = this->getTypeSize(value_sets.front().second->getType());
+        uninitialed_size *= (totoal_size - initialed_value_count);
+        res += "\n";
+        res += "\t.space\t";
+        res += std::to_string(uninitialed_size);
+    }
+
+    return res;
+}
+
 void GlobalAllocator::emitAssembly(std::ostream& out){
+    if (!this->data.empty()){
+        for (auto varname : this->data) {
+            out << "\t.global\t" << varname.first << "\n";       
+        }
+    }
+    if (!this->bss.empty()){
+        for (auto varname : this->bss) {
+            out << "\t.global\t" << varname.first << "\n";       
+        }
+    }
+    if (!this->rodata.empty()){
+        for (auto varname : this->rodata) {
+            out << "\t.global\t" << varname.first << "\n";       
+        }
+    }
+    if (!this->func.empty()){
+        for (auto varname : func) {
+            out << "\t.global\t" << varname << "\n";       
+        }
+    }
     // .data段
-    if (globalVariables.count(".data")) {
-        out << "\t.section .data\n";
-        for (BasicSymbol* var : globalVariables.at(".data")) {
-            out << "\t.global " << var->getName() << "\n";
-            out << "\t.align " << (getTypeSize(var) >= 8 ? 8 : 4) << "\n";
-            out << var->getName() << ":\n";
-            out << "\t" << getAssemblyDirective(var) << " " << getInitialValue(var) << "\n";
+    if (!this->data.empty()) {
+        out << "\n\t.section .data\n.align\t4\n";
+        for (auto varname : this->data) {
+            out << varname.first << ":\t";
+            out << "\t" << varname.second <<"\n";       
         }
     }
     
     // .bss段
-    if (globalVariables.count(".bss")) {
-        out << "\t.section .bss\n";
-        for (BasicSymbol* var : globalVariables.at(".bss")) {
-            out << "\t.global " << var->getName() << "\n";
-            out << "\t.align " << (getTypeSize(var) >= 8 ? 8 : 4) << "\n";
-            out << var->getName() << ":\n";
-            out << "\t.space " << getTypeSize(var) << "\n";
+    if (!this->bss.empty()) {
+        out << "\n\t.section .bss\n.align\t4\n";
+        for (auto varname : this->bss) {
+            out << varname.first << ":\t";
+            out << "\t" << varname.second <<"\n";       
         }
     }
     
     // .rodata段
-    if (globalVariables.count(".rodata")) {
-        out << "\t.section .rodata\n";
-        for (BasicSymbol* var : globalVariables.at(".rodata")) {
-            out << "\t.global " << var->getName() << "\n";
-            out << "\t.align " << (getTypeSize(var) >= 8 ? 8 : 4) << "\n";
-            out << var->getName() << ":\n";
-            out << "\t" << getAssemblyDirective(var) << " " << getInitialValue(var) << "\n";
+    if (!this->rodata.empty()) {
+        out << "\n\t.section .rodata\n.align\t4\n";
+        for (auto varname : this->rodata) {
+            out << varname.first << ":\t";
+            out << "\t" << varname.second <<"\n";       
         }
     }
+       out <<   "\n.text\n";
     
-    // 处理数组
-    if (!globalArrays.empty()) {
-        out << "\t.section .data\n";
-        for (ArraySymbol* array : globalArrays) {
-            emitArrayInitialization(out, array);
-        }
-    }
 }
 
 std::string GlobalAllocator::emitAssemblyToString() {
@@ -163,30 +218,9 @@ std::string GlobalAllocator::emitAssemblyToString() {
 }
 
 void GlobalAllocator::reset() {
-    globalVariables.clear();
-    globalArrays.clear();
+    data.clear();
+    rodata.clear();
+    bss.clear();
+    func.clear();
 }
 
-void GlobalAllocator::printAllocation(std::ostream& out) const {
-    out << "Global Variables Allocation:\n";
-    
-    for (const auto& section : globalVariables) {
-        out << section.first << " section:\n";
-        for (BasicSymbol* var : section.second) {
-            out << "\t" << var->getName() << ": " 
-                << (var->getType() == constant_var ? "const " : "")
-                << var->getDataType() << " = " 
-                << getInitialValue(var) << " (" 
-                << getTypeSize(var) << " bytes)\n";
-        }
-    }
-    
-    out << "Global Arrays:\n";
-    for (ArraySymbol* array : globalArrays) {
-        out << "\t" << array->getName() << ": " << array->getArrayType() << "[";
-        for (int dim : array->getDimensions()) {
-            out << dim << ",";
-        }
-        out << "] (" << (array->isInitialized() ? "initialized" : "uninitialized") << ")\n";
-    }
-}
