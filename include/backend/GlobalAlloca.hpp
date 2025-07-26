@@ -37,6 +37,7 @@ public:
     void allocateConstantArray(ConstantArrayVarDefination* CAVD);
     void allocateConstantNonArray(ConstantNonArrayVarDefination* CNAVD);
     void allocateFunc(std::string func_name);
+    bool find_symbol(const std::string& name) const;
 
     // 段与数据处理
     std::string getArrayValue(const std::vector<std::pair<std::vector<int>,Data*>>& value_set, const std::vector<int>& dims);
@@ -49,11 +50,15 @@ public:
     void emitAssembly(std::ostream& out);
     std::string emitAssemblyToString();
 
+    //使用全局变量时候
+    void addSymbolToGlobal(std::string sym_name, std::string global_name, int offset);
 
+    std::map<std::string,std::pair<std::string,int>> symbol_to_global; //左边为变量名 右边为其对应的全局变量（及偏移 如果有数组）
 private:
     // 存储全局变量，按段分类
     std::map<std::string,std::string> data;//前名后值
     std::map<std::string,std::string> rodata;
     std::map<std::string,std::string> bss;
     std::vector<std::string> func;
+    
 };

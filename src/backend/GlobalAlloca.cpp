@@ -217,6 +217,14 @@ std::string GlobalAllocator::emitAssemblyToString() {
     return oss.str();
 }
 
+bool GlobalAllocator::find_symbol(const std::string& name) const {
+    return bss.count(name) || data.count(name) || rodata.count(name) || symbol_to_global.count(name);
+}
+
+void GlobalAllocator::addSymbolToGlobal(std::string sym_name, std::string global_name, int offset){
+    this->symbol_to_global[sym_name] = std::make_pair(global_name, offset);
+}
+
 void GlobalAllocator::reset() {
     data.clear();
     rodata.clear();

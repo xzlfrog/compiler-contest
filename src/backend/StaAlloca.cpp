@@ -206,7 +206,7 @@ void StackAllocator::addPtr(std::string symbol, int offset) {
     if (hasVariable(name)) {
         return; // 如果变量已经存在，则不需要重新添加
     }
-    
     // Store the pointer with its offset
-    localVarOffsets[name] = offset;
+    localVarOffsets[name] = this->currentOffset + offset;
+    this->currentOffset += offset;
 }

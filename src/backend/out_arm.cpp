@@ -91,8 +91,18 @@ std::string OutArm::getIntNumberOfOperands(Symbol *constvarsym){
 std::string OutArm::DispatchReg(Symbol* symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     std::string reg_name;
-    if(symbol->type == symType::constant_var || symbol->type == symType::constant_nonvar) {
-        reg_name = OutArm::getIntNumberOfOperands(symbol);
+    if(out_Arm.globalAllocator.find_symbol(symbol->getName())){
+        if(!out_Arm.globalAllocator.symbol_to_global.count(symbol->getName())){
+            reg_name = "[" + symbol->getName() +"]";
+        }else{
+            std::string reg_name1 = out_Arm.globalAllocator.symbol_to_global[symbol->getName()].first ;
+            int offset = out_Arm.globalAllocator.symbol_to_global[symbol->getName()].second ;
+            if(!offset){
+                reg_name = "[" + reg_name1 +"]";
+            }else{
+                reg_name = "[" + reg_name1 + ", #" + std::to_string(offset) + "]";
+            }
+        }
     }else if(auto* array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {       
         if (array_Symbol->getArrayType() == dataType::f32 || 
         array_Symbol->getArrayType() == dataType::f64) {
@@ -456,36 +466,47 @@ void AllocaArrayLLVM::out_arm_str()  {
 void LoadLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
-    int offset = out_Arm.stackAllocator.getOffset(this->src_sym->getName());
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
-   
-    OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
+    if(!out_Arm.globalAllocator.find_symbol(src_sym->getName())){
+        int offset = out_Arm.stackAllocator.getOffset(this->src_sym->getName());
+        OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
+    }else{
+        std::string src_str = out_Arm.DispatchReg(this->src_sym);
+        OutArm::outString("\tLDR " + dest_str + ", " + src_str);
+    }
 }
 
 void StoreLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
-    int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
-    
-    OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
+    if(!out_Arm.globalAllocator.find_symbol(dest_sym->getName())){
+        int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
+        OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
+    }else{
+        std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
+        OutArm::outString("\tSTR " + src_str + ", " + dest_str);
+    }
 }
 
-//未对齐 可能有隐患
+//直接4offset 可能有隐患
 void GetElementPtrLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
-    std::string base_ptr = out_Arm.DispatchReg(this->ptrval);
+    int offset = 1;
+    for (const auto& [data_type, symbol_ptr] : this->getTyAndIdx()) {
+        if (symbol_ptr) {
+            offset *= (std::stoi(getSymOut(symbol_ptr)) + 1);
+        }
+    }
+    offset -= 1;
+    offset *= 4; //这里！！！ 我觉得可能有bug哦。。。 
 
-    int offset = out_Arm.stackAllocator.getOffset(this->ptrval->getName());
-    // for (auto dim : ty_idx) {
-    //     if (dim.first == dataType::i32) {
-    //         offset += dim.second->data->getValue() * out_Arm.stackAllocator.getTypeSize(dim.first);
-    //     } else {
-    //         throw std::invalid_argument("Unsupported dimension type for ARM conversion");
-    //     }
-    // }
-
-    out_Arm.stackAllocator.addPtr(this->dest_sym->getName(), offset);
+    // 全局变量的情况
+    if(out_Arm.globalAllocator.find_symbol(this->ptrval->getName())){
+        out_Arm.globalAllocator.addSymbolToGlobal(this->dest_sym->getName(),this->ptrval->getName(),offset);
+    }else{
+        out_Arm.stackAllocator.addPtr(this->dest_sym->getName(), offset);
+    }
 }
 
 void TypeConversionOperation::out_arm_str()  {
