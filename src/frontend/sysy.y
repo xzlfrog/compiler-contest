@@ -24,6 +24,7 @@ extern FILE* yyin;
 
 
 void yyerror(const char *s);
+extern std::vector<int>dim_array;
 extern int yylex(void);
 extern int yylineno;
 extern ModuleList* module_list;
@@ -31,7 +32,7 @@ extern int scope;
 extern std::vector<std::unordered_map<std::string,int>> variable_rename_table;
 extern std::vector<std::unordered_map<std::string,Symbol*>> variable_table;
 extern std::stack<int>array_initial;
-extern int array_init_idx;
+extern std::vector<int> array_init_idx;
 %}
 
 %union {
@@ -136,8 +137,13 @@ var_def_list : var_def{
     }
 ;
 
-const_def : IDENTIFIER dim_list '[' const_exp ']' '=' const_init_val
-    {   $$ = create_array_const_def(*($1), $2, $4, dynamic_cast<ArrayInitial*>($7->sym->data)); }
+const_def : IDENTIFIER dim_list '[' const_exp ']' 
+    {
+        $<str>$=new std::string(*$1);
+        reduce_var_def_left($2,$4);
+    }
+    '=' const_init_val
+    {   $$ = create_array_const_def(*($<str>6), dim_array, dynamic_cast<ArrayInitial*>($8->sym->data)); }
     | IDENTIFIER '=' const_init_val{
       $$ = create_const_def(*($1), $3); 
     }
@@ -146,8 +152,13 @@ const_def : IDENTIFIER dim_list '[' const_exp ']' '=' const_init_val
 var_def : IDENTIFIER dim_list{ 
         $$ = create_var_def(*($1), $2); 
     }
-    | IDENTIFIER dim_list '=' var_init_val{ 
-        $$ = create_var_def(*($1), $2, $4); 
+    | IDENTIFIER dim_list 
+    {
+        $<str>$=new std::string(*$1);
+        reduce_var_def_left($2);
+    }
+    '=' var_init_val{ 
+        $$ = create_var_def(*($<str>3), dim_array, $5); 
     }
 ;
 
@@ -384,7 +395,7 @@ const_init_val :
     }
     | '{' 
     {
-        array_initial.push(array_init_idx);
+        var_init_list_reduce_left();
     }
     const_init_list '}'{
         reduce_var_init_list($3);
@@ -410,7 +421,7 @@ var_init_val :
     }
     | '{' 
     {
-        array_initial.push(array_init_idx);
+        var_init_list_reduce_left();
     }
     var_init_list '}'{
         reduce_var_init_list($3);

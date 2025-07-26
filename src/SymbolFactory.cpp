@@ -145,7 +145,7 @@ LabelSymbol* SymbolFactory::createTmpLabelSymbolWithScope(int scope){
 
 FuncSymbol* SymbolFactory::createFuncSymbolWithScope(std::string name,std::vector<dataType>& paramTypes,int scope,dataType returnType){
     FuncSymbol* funcSymbol=new FuncSymbol();
-    funcSymbol->name="func."+name;
+    funcSymbol->name=name;
     if(scope>=0)
         funcSymbol->setScope(scope);
     funcSymbol->paramTypes=paramTypes;
@@ -157,7 +157,7 @@ FuncSymbol* SymbolFactory::createFuncSymbolWithScope(std::string name,std::vecto
 FuncSymbol* SymbolFactory::createFuncSymbolWithScope(std::string name,int scope,dataType returnType){
     FuncSymbol* funcSymbol=new FuncSymbol();
     std::vector<dataType> paramTypes=std::vector<dataType>(0);
-    funcSymbol->name="func."+name;
+    funcSymbol->name=name;
     if(scope>=0)
         funcSymbol->setScope(scope);
     funcSymbol->paramTypes=paramTypes;

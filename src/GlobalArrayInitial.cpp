@@ -31,9 +31,17 @@ void ArrayInitial::merge(ArrayInitial* x){
     }
 }
 
-void ArrayInitial::reverse(){
+void ArrayInitial::reverse(std::vector<int>& dims){
     for(auto &a : this->initializedData){
         std::vector<int>v;
+        if(a.first.size()==1){
+            int tmp=a.first[0];
+            a.first.clear();
+            for(int i=dims.size()-1;i>=0;i--){
+                a.first.push_back(tmp%dims[i]);
+                tmp=tmp/dims[i];
+            }
+        }
         for(int i=a.first.size()-1;i>=0;i--){
             v.push_back(a.first[i]);
         }

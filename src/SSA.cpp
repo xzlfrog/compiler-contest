@@ -518,18 +518,16 @@ void insertPhi(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,std::vector<std::
                     if(storeLLVM!=nullptr){
                         phiLLVM->next=storeLLVM;
                         storeLLVM->prev=phiLLVM;
+                        llvmlist->InsertAfter(bbs[dfn]->head,phiLLVM);
                         storeLLVM->next=bbs[dfn]->head->next;
-                        if(bbs[dfn]->head->next==nullptr)
+                        if(bbs[dfn]->head==bbs[dfn]->tail)
                             bbs[dfn]->tail=storeLLVM;
-                        else
-                            bbs[dfn]->head->next->prev=storeLLVM;
                     }
                     else{
                         phiLLVM->next=bbs[dfn]->head->next;
-                        if(bbs[dfn]->head->next==nullptr)
-                            bbs[dfn]->tail=phiLLVM;
-                        else
-                            bbs[dfn]->head->next->prev=phiLLVM;
+                        llvmlist->InsertAfter(bbs[dfn]->head,phiLLVM);
+                        if(bbs[dfn]->head==bbs[dfn]->tail)
+                            bbs[dfn]->tail=storeLLVM;
                     }
                     bbs[dfn]->head->next=phiLLVM;
                     phiLLVM->prev=bbs[dfn]->head;
@@ -708,12 +706,15 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
             if(llvm->getLLVMType()==LLVMtype::store){
                 StoreLLVM* storeLLVM=dynamic_cast<StoreLLVM*>(llvm);
                 if(storeLLVM->dest_sym->scope!=GLOBAL_SCOPE&&worklists.find(storeLLVM->dest_sym->name)!=worklists.end()){
-                    if(array_item_pointer.find(storeLLVM->dest_sym->name)!=array_item_pointer.end())
+                    if(array_item_pointer.find(storeLLVM->dest_sym->name)!=array_item_pointer.end()){
+                        std::cout<<storeLLVM->dest_sym->name<<"\n";
                         continue;
+                    }
                     if(llvm==bb->tail){
                         bb->tail=llvm->prev;
                         flag_break=true;
                     }
+                    std::cout<<llvm->out_str()<<"\n";
                     llvmlist->Remove(llvm);
                     last_store[storeLLVM->dest_sym->name].push(storeLLVM->src_sym);
                     stores[storeLLVM->dest_sym->name]++;

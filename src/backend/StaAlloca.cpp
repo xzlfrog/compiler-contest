@@ -19,7 +19,11 @@ int StackAllocator::getTypeSize(Symbol* symbol) {
     dataType dtype;
     if (auto* arraySymbol = dynamic_cast<ArraySymbol*>(symbol)) {
         dtype = arraySymbol->getArrayType();
-    } else {
+    } 
+    else if(symbol->getType()==symType::pointer){
+        dtype = dynamic_cast<PointerSymbol*>(symbol)->getPointedType();
+    }
+    else {
         dtype = symbol->getDataType();
     }
     switch(dtype) {

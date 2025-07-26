@@ -33,14 +33,14 @@
 #define SINGLE_NOT 2
 
 extern int scope;
-extern int array_init_idx;
 extern ModuleList* module_list;
 extern std::vector<std::unordered_map<std::string,int>> variable_rename_table;
 extern std::vector<std::unordered_map<std::string,Symbol*>> variable_table;
 extern std::unordered_map<std::string,FuncSymbol*>func_table;
 extern std::stack<LabelSymbol*> break_st,continue_st;
 extern std::queue<Expression*>assign_queue;
-extern std::stack<int>array_initial;//在面对数组变量初始化时，维护一个大小为当前嵌套大括号数量的栈，
+extern std::vector<int>dim_array;
+//extern std::stack<int>array_initial;//在面对数组变量初始化时，维护一个大小为当前嵌套大括号数量的栈，
 //栈中每一个元素对应目前时嵌套的大括号中的第几个元素，比如int a[5]={1,2,3};
 //此时栈里元素取决于当前规约到哪一个元素,规约到1时为0,规约到2时为1,规约到3时为2
 
@@ -63,10 +63,10 @@ LLVMList* create_while(Expression* exp);//while语句的llvm ir生成
 LLVMList* create_while_stmt(LLVMList* llvmlist,LLVMList* stmt);//while语句的llvm ir生成
 LLVMList* create_return_stmt(Expression* exp);//return语句的llvm ir生成
 LLVMList* create_const_decl(int btype,std::vector<Symbol*>* syms);
-Symbol* create_array_const_def(std::string name,std::vector<int>* idxs,Expression* exp,ArrayInitial* arrayInitial);//常量数组声明
+Symbol* create_array_const_def(std::string name,std::vector<int>& idxs,ArrayInitial* arrayInitial);//常量数组声明
 Symbol* create_const_def(std::string name,Expression* exp);
 Symbol* create_var_def(std::string name,std::vector<int>* idxs);
-Symbol* create_var_def(std::string name,std::vector<int>* idxs,Expression* exp);
+Symbol* create_var_def(std::string name,std::vector<int>& idxs,Expression* exp);
 LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms);
 LLVMList* create_func_def(int btype,std::string name,std::vector<Symbol*>* syms);
 LLVMList* create_func_blk(LLVMList* decl,LLVMList* llvmlist);
@@ -82,3 +82,6 @@ void create_var_init_list(Expression* exp);
 void create_var_init_list(Expression* exp1,Expression* exp2);
 void reduce_var_init_list(Expression* exp);
 void create_null_param();
+void var_init_list_reduce_left();
+void reduce_var_def_left(const std::vector<int>*dims);
+void reduce_var_def_left(const std::vector<int>*dims,Expression* dim);

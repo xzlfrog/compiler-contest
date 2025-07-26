@@ -2,6 +2,10 @@
 #include"../../include/exp.hpp"
 #include<iostream>
 
+extern std::vector<int> array_init_idx;
+extern int cnt_array_init;
+extern std::vector<int>dim_array;
+
 bool isConst(Symbol* sym){
     if(sym->getType()==symType::constant_var||sym->getType()==symType::constant_nonvar){
         return true;
@@ -564,22 +568,21 @@ LLVMList* create_const_decl(int btype,std::vector<Symbol*>* syms){
     return llvmlist;
 }
 
-Symbol* create_array_const_def(std::string name,std::vector<int>* idxs,Expression* exp,ArrayInitial* arrayInitial){
-    idxs->push_back(std::get<int>(exp->sym->data->getValue()));
-    ArraySymbol* array=SymbolFactory::createArraySymbolWithScope(name,*idxs,scope);//注意之后要把数据类型给加上！
+Symbol* create_array_const_def(std::string name,std::vector<int>& idxs,ArrayInitial* arrayInitial){
+    ArraySymbol* array=SymbolFactory::createArraySymbolWithScope(name,idxs,scope);//注意之后要把数据类型给加上！
     array->setInitialedData(arrayInitial);
     std::stack<int> empty_stack;
-    std::swap(empty_stack,array_initial);
-    assign_queue.push(exp);
-    array_init_idx=0;
+    //std::swap(empty_stack,array_initial);
+    //assign_queue.push(exp);
+    cnt_array_init=0;
     variable_table[scope][name]=array;
     return array;
 }
 
 Symbol* create_const_def(std::string name,Expression* exp){
-    std::stack<int> empty_stack;
-    std::swap(empty_stack,array_initial);
-    array_init_idx=0;
+    //std::stack<int> empty_stack;
+    //std::swap(empty_stack,array_initial);
+    cnt_array_init=0;
     assign_queue.push(exp);
     ConstVarSymbol* constVarSymbol=SymbolFactory::createConstVarSymbolWithScope(name,scope,exp->sym->data);
     variable_table[scope][name]=constVarSymbol;
@@ -587,10 +590,11 @@ Symbol* create_const_def(std::string name,Expression* exp){
 }
 
 Symbol* create_var_def(std::string name,std::vector<int>* idxs){
-    std::stack<int> empty_stack;
-    std::swap(empty_stack,array_initial);
+    //std::stack<int> empty_stack;
+    //std::swap(empty_stack,array_initial);
+    cnt_array_init=0;
     assign_queue.push(nullptr);
-    array_init_idx=0;
+    //array_init_idx=0;
     if(variable_table[scope].find(name)!=variable_table[scope].end())
         throw std::runtime_error("the identifier was defined before!");
     if(idxs->size()==0){
@@ -606,17 +610,14 @@ Symbol* create_var_def(std::string name,std::vector<int>* idxs){
     }
 }
 
-Symbol* create_var_def(std::string name,std::vector<int>* idxs,Expression* exp){
-    std::stack<int> empty_stack;
-    std::swap(empty_stack,array_initial);
-    array_init_idx=0;
-    if(name=="i"){
-        int x=1;
-    }
+Symbol* create_var_def(std::string name,std::vector<int>& idxs,Expression* exp){
+    //std::stack<int> empty_stack;
+    //std::swap(empty_stack,array_initial);
+    cnt_array_init=0;
     assign_queue.push(exp);
     if(variable_table[scope].find(name)!=variable_table[scope].end())
         throw std::runtime_error("the identifier was defined before!");
-    if(idxs->size()==0){
+    if(idxs.size()==0){
         PointerSymbol* pointerSymbol= SymbolFactory::createPointerSymbolWithScope(name,scope);
         if(isConst(exp->sym)){
             if(pointerSymbol->data->getType()==dataType::array_data)
@@ -628,7 +629,7 @@ Symbol* create_var_def(std::string name,std::vector<int>* idxs,Expression* exp){
         return pointerSymbol;
     }
     else{
-        ArraySymbol* array=SymbolFactory::createArraySymbolWithScope(name,*idxs,scope);
+        ArraySymbol* array=SymbolFactory::createArraySymbolWithScope(name,idxs,scope);
         if(exp->sym!=nullptr){
             array->setInitialedData(dynamic_cast<ArrayInitial*>(exp->sym->data));
         }
@@ -645,6 +646,7 @@ Symbol* create_var_def(std::string name,std::vector<int>* idxs,Expression* exp){
 std::vector<std::pair<dataType,BasicSymbol*>>& intVectorToBasicSymbolVector(const std::vector<int>& idxs){
     static std::vector<std::pair<dataType,BasicSymbol*>> res;
     res.clear();
+    res.push_back({dataType::i32,SymbolFactory::createConstSymbol(createData(dataType::i32,0))});
     for(auto &idx:idxs){
         res.push_back({dataType::i32,SymbolFactory::createConstSymbol(createData(dataType::i32,idx))});
     }
@@ -850,24 +852,98 @@ Symbol* create_param_array(int btype,std::string name,std::vector<int>* dims){
 void end_parser(){
     LLVMList* llvmlist=module_list->head;
     LLVM* llvm;
-    std::ofstream outfile("output.txt");
+    std::ofstream outfile("output.ll");
     if(outfile.is_open()){
         for(;llvmlist!=nullptr;llvmlist=llvmlist->next){
             llvm=llvmlist->head;
-            // if(llvm->getLLVMType()==LLVMtype::func_def){
-            //     SSA(llvmlist);
-            // }
+            //if(llvm->getLLVMType()==LLVMtype::func_def){
+                //SSA(llvmlist);
+            //}
             outfile<<llvm->out_str();
         }
         outfile.close();
     }
 }
 
+void func_table_init(){
+    FuncSymbol* func;
+    std::vector<dataType>params;
+    std::string name;
+    name="getint";
+    func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::i32);
+    func_table[name]=func;
+
+    name="getchar";
+    func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::i32);
+    func_table[name]=func;
+
+    name="getfloat";
+    func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::f32);
+    func_table[name]=func;
+
+    name="getarray";
+    params.clear();
+    params.push_back(dataType::i32);
+    func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::i32);
+    func_table[name]=func;
+
+    name="getfarray";
+    params.clear();
+    params.push_back(dataType::f32);
+    func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::i32);
+    func_table[name]=func;
+
+    name="putint";
+    params.clear();
+    params.push_back(dataType::i32);
+    func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::void_);
+    func_table[name]=func;
+
+    name="putch";
+    params.clear();
+    params.push_back(dataType::i32);
+    func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::void_);
+    func_table[name]=func;
+
+    name="putfloat";
+    params.clear();
+    params.push_back(dataType::f32);
+    func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::void_);
+    func_table[name]=func;
+
+    name="putarray";
+    params.clear();
+    params.push_back(dataType::i32);
+    params.push_back(dataType::i32);
+    func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::void_);
+    func_table[name]=func;
+
+    name="putfarray";
+    params.clear();
+    params.push_back(dataType::i32);
+    params.push_back(dataType::f32);
+    func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::void_);
+    func_table[name]=func;
+
+    name="starttime";
+    params.clear();
+    func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::void_);
+    func_table[name]=func;
+
+    name="stoptime";
+    params.clear();
+    func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::void_);
+    func_table[name]=func;
+}
+
 void begin_parser(){
     scope=GLOBAL_SCOPE;
     module_list=new ModuleList();
     variable_table.push_back(std::unordered_map<std::string,Symbol*>());
-    array_init_idx=0;
+    func_table_init();
+    //array_init_idx=0;
+    cnt_array_init=0;
+    array_init_idx=std::vector<int>(0);
 }
 
 LLVMList* assign_array_item(Expression* LVal,Expression* exp){
@@ -886,62 +962,85 @@ LLVMList* assign_array_item(Expression* LVal,Expression* exp){
     return llvmlist;
 }
 
+void add_init_item(){
+    int n=dim_array.size();
+    int i=n-1;
+    array_init_idx[i]++;
+    while(array_init_idx[i]>=dim_array[i]){
+        array_init_idx[i]-=dim_array[i];
+        if(i==0)
+            if(array_init_idx[i]!=0)
+                throw std::runtime_error("the number of the initial data is out of the rage of the array item number");
+            else
+                break;
+        i--;
+        array_init_idx[i]++;
+    }
+}
+
 void create_var_init_list(Expression* exp){
     if(exp->sym!=nullptr){
-        if(exp->sym->data->getType()!=dataType::array_data)
+        if(exp->sym->data->getType()!=dataType::array_data){
             exp->sym->data=dataToArrayInitial(exp->sym->data);
-        ArrayInitial* arrayInitial = dynamic_cast<ArrayInitial*>(exp->sym->data);
-        int idx=array_initial.top();
-        for(auto & a : arrayInitial->initializedData)
-            a.first.push_back(idx);
-        array_initial.pop();
-        array_initial.push(idx+1);
-    }
-    else{
-        int idx=array_initial.top();
-        array_initial.pop();
-        array_initial.push(idx+1);
+            ArrayInitial* arrayInitial = dynamic_cast<ArrayInitial*>(exp->sym->data);
+            arrayInitial->initializedData[0].first=array_init_idx;
+            add_init_item();
+        }
     }
 }
 
 void create_var_init_list(Expression* exp1,Expression* exp2){
-    if(exp2->sym->data->getType()!=dataType::array_data)
-        exp2->sym->data=dataToArrayInitial(exp2->sym->data);
-    ArrayInitial* arrayInitial2=dynamic_cast<ArrayInitial*>(exp2->sym->data);
+    ArrayInitial* arrayInitial2=nullptr;
+    if(exp2->sym!=nullptr){
+        if(exp2->sym->data->getType()!=dataType::array_data){
+            exp2->sym->data=dataToArrayInitial(exp2->sym->data);
+            arrayInitial2 = dynamic_cast<ArrayInitial*>(exp2->sym->data);
+            arrayInitial2->initializedData[0].first=array_init_idx;
+            add_init_item();
+        }
+        else
+            arrayInitial2 = dynamic_cast<ArrayInitial*>(exp2->sym->data);
+    }
     ArrayInitial* arrayInitial1 = dynamic_cast<ArrayInitial*>(exp1->sym->data);
-    int idx=array_initial.top();
-    for(auto & a : arrayInitial2->initializedData)
-        a.first.push_back(idx);
-    array_initial.pop();
-    array_initial.push(idx+1);
-    arrayInitial1->merge(arrayInitial2);
+    if(arrayInitial2!=nullptr)
+        arrayInitial1->merge(arrayInitial2);
 }
 
 void reduce_var_init_list(Expression* exp){
-    array_initial.pop();
-    if(array_initial.empty())
-        return;
-    array_init_idx=array_initial.top();
-    //ArrayInitial* arrayInitial=dynamic_cast<ArrayInitial*>(exp->sym->data);
-}
-
-/*bool cmp_eq_vector_int(std::vector<int>v1,std::vector<int>v2){
-    if(v1.size()!=v2.size()){
-        return false;
-    }
-    for(int i=0;i<v1.size();i++){
-        if(v1[i]!=v2[i])
-            return false;
-    }
-    return true;
-}
-
-Data* get_const_array_element(std::vector<int>&pos,ArraySymbol* array){
-    std::vector<std::pair<std::vector<int>,Data*>> arrayInitial=array->getInitializedData();
-    for(auto & a : arrayInitial){
-        if(cmp_eq_vector_int(a.first,pos)){
-            return a.second;
+    bool flag=false;
+    for(int i=cnt_array_init-1;i<dim_array.size();i++){
+        if(array_init_idx[i]!=0){
+            flag=true;
+            array_init_idx[i]=0;
         }
     }
-    return createData(array->getArrayType(),zeroinitializer);
-}*/
+    cnt_array_init--;
+    if(flag&&cnt_array_init>0)
+        array_init_idx[cnt_array_init-1]++;
+}
+
+void reduce_var_def_left(const std::vector<int>*dims){
+    dim_array.clear();
+    dim_array=*dims;
+    array_init_idx.clear();
+    for(int i=0;i<dim_array.size();i++)
+        array_init_idx.push_back(0);
+    cnt_array_init=0;
+}
+
+void reduce_var_def_left(const std::vector<int>*dims,Expression* dim){
+    dim_array.clear();
+    dim_array=*dims;
+    dim_array.push_back(std::get<int>(dim->sym->data->getValue()));
+    cnt_array_init=0;
+    array_init_idx.clear();
+    array_init_idx.resize(dims->size());
+    std::fill(array_init_idx.begin(), array_init_idx.end(), 0);
+}
+
+void var_init_list_reduce_left(){
+    cnt_array_init++;
+    if(cnt_array_init>dim_array.size()){
+        throw std::runtime_error("the number of the { is more than the dimension of the array");
+    }
+}

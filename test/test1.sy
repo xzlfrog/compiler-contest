@@ -87,7 +87,7 @@ int ans;
 int main(){
     int n = 30000010;
 
-    //starttime();
+    starttime();
 
     radixSort(8, a, 0, n);
 
@@ -99,8 +99,8 @@ int main(){
 
     if (ans < 0)
         ans = -ans;
-    //stoptime();
-    //putint(ans);
-    //putch(10);
+    stoptime();
+    putint(ans);
+    putch(10);
     return 0;
 }

@@ -64,7 +64,7 @@ const std::vector<std::pair<std::vector<int>,Data*>>& ArraySymbol::getInitialize
 }
 
 void ArraySymbol::setInitialedData(ArrayInitial* arrayInitial){
-    arrayInitial->reverse();
+    //arrayInitial->reverse(this->dimensions);
     this->initialedData=arrayInitial;
     this->isInitialed=true;
     for(int j=0;j<arrayInitial->getInitializedData().size();j++){
