@@ -24,10 +24,32 @@ Expression* constFolding(constExpType type,Symbol* sym1,Symbol* sym2){
         return nullptr;
 }
 
+BasicSymbol* getZeroSym(dataType dtype){
+    return SymbolFactory::createConstSymbol(getZeroData(dtype));
+}
+
 Expression* create_binary_expr(int op, Expression* a, Expression* b){
-    if(a->sym->data->getType()!=b->sym->data->getType())
-        throw std::runtime_error("the type of the binary expression is wrong");
     LLVMList* llvmlist=new LLVMList();
+    if(a->sym->data->getType()!=b->sym->data->getType()){
+        if(a->sym->data->getType()==dataType::i32){
+            if(isConst(a->sym))
+                a->sym->data=typeConversion(dataType::f32,a->sym->data);
+            else{
+                BasicSymbol* new_type_a=SymbolFactory::createTmpVarSymbolWithScope(dataType::f32,scope);
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::sitofp,dynamic_cast<BasicSymbol*>(a->sym),new_type_a));
+                a->sym=new_type_a;
+            }
+        }
+        else if(b->sym->data->getType()==dataType::i32){
+            if(isConst(b->sym))
+                b->sym->data=typeConversion(dataType::f32,b->sym->data);
+            else{
+                BasicSymbol* new_type_b=SymbolFactory::createTmpVarSymbolWithScope(dataType::f32,scope);
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::sitofp,dynamic_cast<BasicSymbol*>(b->sym),new_type_b));
+                b->sym=new_type_b;
+            }
+        }
+    }
     BasicSymbol* res=SymbolFactory::createTmpVarSymbolWithScope(a->sym->data->getType(),scope);
     BasicSymbol* logical_tmp=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
     BasicSymbol* resi=SymbolFactory::createTmpVarSymbolWithScope(dataType::i32,scope);
@@ -179,11 +201,26 @@ Expression* create_binary_expr(int op, Expression* a, Expression* b){
                 }
                 llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::llvm_frem,res,dynamic_cast<BasicSymbol*>(a->sym),dynamic_cast<BasicSymbol*>(b->sym)));
                 break;
-            case BINARY_AND:
-                throw std::runtime_error("float type does not support logical calculation");
+            case BINARY_AND:{
+                BasicSymbol* tmp1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,tmp1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::f32)));
+                BasicSymbol* tmp2=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,tmp2,dynamic_cast<BasicSymbol*>(b->sym),getZeroSym(dataType::f32)));
+                BasicSymbol* tmp3=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_and,tmp3,tmp1,tmp2));
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,tmp3,res));
                 break;
-            case BINARY_OR:
-                throw std::runtime_error("float type does not support logical calculation");
+            }
+            case BINARY_OR:{
+                BasicSymbol* tmp1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,tmp1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::f32)));
+                BasicSymbol* tmp2=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,tmp2,dynamic_cast<BasicSymbol*>(b->sym),getZeroSym(dataType::f32)));
+                BasicSymbol* tmp3=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_or,tmp3,tmp1,tmp2));
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,tmp3,res));
+                break;
+            }
                 break;
             case BINARY_EQ:
                 exp=constFolding(constExpType::const_exp_fcmp_oeq,a->sym,b->sym);
@@ -257,19 +294,29 @@ Expression* create_binary_expr(int op, Expression* a, Expression* b){
 
 Expression* create_unary_expr(int op, Expression* a){
     BasicSymbol* res=SymbolFactory::createTmpVarSymbolWithScope(a->sym->data->getType(),scope);
-    if(a->sym->data->getType()!=dataType::i32)
-        throw std::runtime_error("unary calculation can only be used in int32 type");
+    //if(a->sym->data->getType()!=dataType::i32)
+        //throw std::runtime_error("unary calculation can only be used in int32 type");
     LLVMList* llvmlist=new LLVMList();
     Expression* exp;
     switch (op)
     {
         case SINGLE_NOT:
-            exp=constFolding(constExpType::const_exp_add,a->sym,SymbolFactory::createConstSymbol(createData(dataType::i32,-1)));
-            if(exp!=nullptr){
-                return exp;
+            if(a->sym->data->getType()==dataType::i32){
+                exp=constFolding(constExpType::const_exp_and,a->sym,SymbolFactory::createConstSymbol(createData(dataType::i32,-1)));
+                if(exp!=nullptr){
+                    return exp;
+                }
+                llvmlist->InsertHead(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,res,dynamic_cast<BasicSymbol*>(a->sym),SymbolFactory::createConstSymbol(createData(dataType::i32,-1))));
+                break;
             }
-            llvmlist->InsertHead(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,res,dynamic_cast<BasicSymbol*>(a->sym),SymbolFactory::createConstSymbol(createData(dataType::i32,-1))));
-            break;
+            else if(a->sym->data->getType()==dataType::f32){
+                BasicSymbol* tmp1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_oeq,tmp1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::f32)));
+                BasicSymbol* tmp2=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,tmp2,tmp1,SymbolFactory::createConstSymbol(createData(dataType::i1,true))));
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,tmp2,res));
+                break;
+            }
         case SINGLE_NEGTIVE:
             if(a->sym->data->getType()==dataType::i32){
                 exp=constFolding(constExpType::const_exp_sub,SymbolFactory::createConstSymbol(createData(dataType::i32,0)),a->sym);
@@ -279,7 +326,7 @@ Expression* create_unary_expr(int op, Expression* a){
                 llvmlist->InsertHead(LLVMfactory::createBasicOperationLLVM(LLVMtype::sub,res,SymbolFactory::createConstSymbol(createData(dataType::i32,0)),dynamic_cast<BasicSymbol*>(a->sym)));
             }
             else if(a->sym->data->getType()==dataType::f32){
-                exp=constFolding(constExpType::const_exp_fsub,SymbolFactory::createConstSymbol(createData(dataType::f32,0)),a->sym);
+                exp=constFolding(constExpType::const_exp_fsub,SymbolFactory::createConstSymbol(createData(dataType::f32,0.0f)),a->sym);
                 if(exp!=nullptr){
                     return exp;
                 }
@@ -360,8 +407,20 @@ Expression* create_func_call(std::string name, Expression* exp){
                 }
             }
             else if(exp->sym->data->getType()!=fs->getParamTypes()[i]){
-                throw std::invalid_argument("error occurs at create_func_call."
-                "the function parameters type is wrong!");
+                if(exp->sym->data->getType()==dataType::i32&&fs->getParamTypes()[i]==dataType::f32){
+                    BasicSymbol* bs_f=SymbolFactory::createTmpVarSymbolWithScope(dataType::f32,scope);
+                    exp->llvmlist->InsertHead(LLVMfactory::createTypeConversionOperation(LLVMtype::sitofp,dynamic_cast<BasicSymbol*>(exp->sym),bs_f));
+                    exp->sym=bs_f;
+                }
+                else if(exp->sym->data->getType()==dataType::f32&&fs->getParamTypes()[i]==dataType::i32){
+                    BasicSymbol* bs_f=SymbolFactory::createTmpVarSymbolWithScope(dataType::i32,scope);
+                    exp->llvmlist->InsertHead(LLVMfactory::createTypeConversionOperation(LLVMtype::fptosi,dynamic_cast<BasicSymbol*>(exp->sym),bs_f));
+                    exp->sym=bs_f;
+                }
+                else{
+                    throw std::invalid_argument("error occurs at create_func_call."
+                    "the function parameters type is wrong!");
+                }
             }
             llvmlist->InsertTail(exp->llvmlist);
             args.push_back(exp->sym);
@@ -388,8 +447,35 @@ std::vector<std::pair<dataType,BasicSymbol*>>& getIdxFromExp(std::vector<Express
     return res;
 }
 
+bool cmp_vector_int(const std::vector<int>&a,const std::vector<int>&b){
+    if(a.size()!=b.size()){
+        return false;
+    }
+    for(int i=0;i<a.size();i++){
+        if(a[i]!=b[i])
+            return false;
+    }
+    return true;
+}
+
+Data* getZeroData(dataType dtype){
+    switch (dtype)
+    {
+    case dataType::i32:
+        return createData(dtype,0);
+        break;
+    case dataType::f32:
+        return createData(dtype,0.0f);
+    default:
+        break;
+    }
+    return nullptr;
+}
+
 Expression* get_element(std::string name,std::vector<Expression*>* exps){
     Symbol* sym=findVar(name);
+    if(sym->getType()==symType::variable)
+        sym=copy(dynamic_cast<VarSymbol*>(sym));
     LLVMList* llvmlist=new LLVMList();
     BasicSymbol* bs;
     if(sym!=nullptr){
@@ -399,6 +485,25 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
                     "the identifer is not a array symbol.");
             }
             ArraySymbol* array=dynamic_cast<ArraySymbol*>(sym);
+            if(array->isConst==true){
+                std::vector<int> idxs;
+                bool flag=true;
+                for(const auto & exp : *exps){
+                    if(exp->sym->getType()==symType::constant_nonvar||exp->sym->getType()==symType::constant_var){
+                        idxs.push_back(std::get<int>(exp->sym->data->getValue()));
+                    }
+                    else
+                        flag=false;
+                }
+                if(flag){
+                    for(const auto & a : array->getInitializedData()){
+                        if(cmp_vector_int(a.first,idxs)){
+                            return new Expression(llvmlist,SymbolFactory::createConstSymbol(a.second));
+                        }
+                    }
+                    return new Expression(llvmlist,SymbolFactory::createConstSymbol(getZeroData(array->getArrayType())));
+                }
+            }
             bs=SymbolFactory::createTmpVarSymbolWithScope(array->getArrayType(),scope);
             PointerSymbol* ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
             ps->isConst=array->isConst;
@@ -438,6 +543,12 @@ LLVMList* create_if_stmt(Expression* exp,LLVMList* llvmlist){
     if(condi->getDataType()==dataType::i32){
         condi=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
         res->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::llvm_trunc,dynamic_cast<BasicSymbol*>(exp->sym),condi));
+    }
+    else if(condi->getDataType()==dataType::f32){
+        condi=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+        BasicSymbol* tmp=SymbolFactory::createTmpVarSymbolWithScope(dataType::i32,scope);
+        res->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::fptosi,dynamic_cast<BasicSymbol*>(exp->sym),tmp));
+        res->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::llvm_trunc,tmp,condi));
     }
     LabelSymbol* label1=SymbolFactory::createTmpLabelSymbolWithScope(scope);
     LabelSymbol* label2=SymbolFactory::createTmpLabelSymbolWithScope(scope);
@@ -522,6 +633,19 @@ LLVMList* create_return_stmt(Expression* exp){
     }
     else{
         llvmlist->InsertHead(exp->llvmlist);
+        if(exp->sym->getDataType()!=func_ret_type){
+            VarSymbol* var_tmp=SymbolFactory::createTmpVarSymbolWithScope(func_ret_type,scope);
+            if(exp->sym->getDataType()==dataType::i32){
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::sitofp,dynamic_cast<BasicSymbol*>(exp->sym),var_tmp));
+                llvmlist->InsertTail(LLVMfactory::createReturnLLVM(var_tmp));
+                return llvmlist;
+            }
+            else if(exp->sym->getDataType()==dataType::f32){
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::fptosi,dynamic_cast<BasicSymbol*>(exp->sym),var_tmp));
+                llvmlist->InsertTail(LLVMfactory::createReturnLLVM(var_tmp));
+                return llvmlist;
+            }
+        }
         llvmlist->InsertTail(LLVMfactory::createReturnLLVM(dynamic_cast<BasicSymbol*>(exp->sym)));
     }
     return llvmlist;
@@ -530,9 +654,10 @@ LLVMList* create_return_stmt(Expression* exp){
 LLVMList* create_const_decl(int btype,std::vector<Symbol*>* syms){
     LLVMList* llvmlist=new LLVMList();
     dataType dtype=btype==INT_TYPE?dataType::i32:dataType::f32;
-    dataType ty=assign_queue.front()->sym->data->getType();
-    if((btype==INT_TYPE && ty==dataType::i32)||(btype==FLOAT_TYPE && ty==dataType::f32)){
-        for(auto &a : (*syms)){
+    dataType ty;;
+    for(auto &a : (*syms)){
+        ty=assign_queue.front()->sym->data->getType();
+        if((btype==INT_TYPE && ty==dataType::i32)||(btype==FLOAT_TYPE && ty==dataType::f32)||ty==dataType::array_data){
             if(a->getType()==symType::array){
                 ArraySymbol* array=dynamic_cast<ArraySymbol*>(a);
                 array->arrayType=dtype;
@@ -546,9 +671,7 @@ LLVMList* create_const_decl(int btype,std::vector<Symbol*>* syms){
                 llvmlist->InsertTail(LLVMfactory::createConstantNonArrayVarDefination(constVarSymbol,SymbolFactory::createConstSymbol(constVarSymbol->data)));
             }
         }
-    }
-    else{
-        for(auto &a : (*syms)){
+        else{
             if(a->getType()==symType::array){
                 ArraySymbol* array=dynamic_cast<ArraySymbol*>(a);
                 array->arrayType=dtype;
@@ -563,18 +686,21 @@ LLVMList* create_const_decl(int btype,std::vector<Symbol*>* syms){
                 llvmlist->InsertTail(LLVMfactory::createConstantNonArrayVarDefination(constSymbol,SymbolFactory::createConstSymbol(constSymbol->data)));
             }
         }
+        assign_queue.pop();
     }
-    assign_queue.pop();
     return llvmlist;
 }
 
 Symbol* create_array_const_def(std::string name,std::vector<int>& idxs,ArrayInitial* arrayInitial){
     ArraySymbol* array=SymbolFactory::createArraySymbolWithScope(name,idxs,scope);//注意之后要把数据类型给加上！
     array->setInitialedData(arrayInitial);
+    array->isConst=true;
     std::stack<int> empty_stack;
     //std::swap(empty_stack,array_initial);
-    //assign_queue.push(exp);
+    assign_queue.push(new Expression(new LLVMList(),SymbolFactory::createConstSymbol(arrayInitial)));
     cnt_array_init=0;
+    if(variable_table[scope].find(name)!=variable_table[scope].end())
+        throw std::runtime_error("the identifier was defined before!");
     variable_table[scope][name]=array;
     return array;
 }
@@ -585,7 +711,9 @@ Symbol* create_const_def(std::string name,Expression* exp){
     cnt_array_init=0;
     assign_queue.push(exp);
     ConstVarSymbol* constVarSymbol=SymbolFactory::createConstVarSymbolWithScope(name,scope,exp->sym->data);
-    variable_table[scope][name]=constVarSymbol;
+    if(variable_table[scope].find(name)!=variable_table[scope].end())
+        throw std::runtime_error("the identifier was defined before!");
+    variable_table[scope][name]=copy(constVarSymbol);
     return constVarSymbol;
 }
 
@@ -620,10 +748,9 @@ Symbol* create_var_def(std::string name,std::vector<int>& idxs,Expression* exp){
     if(idxs.size()==0){
         PointerSymbol* pointerSymbol= SymbolFactory::createPointerSymbolWithScope(name,scope);
         if(isConst(exp->sym)){
-            if(pointerSymbol->data->getType()==dataType::array_data)
-                pointerSymbol->data=arrayInitialToData(dynamic_cast<ArrayInitial*>(exp->sym->data));
-            else
-                pointerSymbol->data=exp->sym->data;
+            if(exp->sym->data->getType()==dataType::array_data){
+                exp->sym->data=arrayInitialToData(dynamic_cast<ArrayInitial*>(exp->sym->data));
+            }
         }  
         variable_table[scope][name]=pointerSymbol;
         return pointerSymbol;
@@ -683,16 +810,15 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
             else if(a->getType()==symType::pointer){
                 PointerSymbol* pointerSymbol=dynamic_cast<PointerSymbol*>(a);
                 pointerSymbol->PointedType=dtype;
-                if(assign_queue.front()!=nullptr&&pointerSymbol->data!=nullptr){
+                if(assign_queue.front()!=nullptr){
                     if(pointerSymbol->scope==GLOBAL_SCOPE){
-                        llvmlist->InsertTail(LLVMfactory::createGlobalNonArrayVarDefination(pointerSymbol,SymbolFactory::createConstSymbol(pointerSymbol->data)));
+                        llvmlist->InsertTail(LLVMfactory::createGlobalNonArrayVarDefination(pointerSymbol,SymbolFactory::createConstSymbol(assign_queue.front()->sym->data)));
                     }
                     else{
                         llvmlist->InsertTail(LLVMfactory::createAllocaNonArrayLLVM(pointerSymbol));
                         if(assign_queue.front()->llvmlist->head==nullptr){
-                            if(pointerSymbol->data!=nullptr&&pointerSymbol->getType()!=dataType::data_undefined)
-                                llvmlist->InsertTail(LLVMfactory::createStoreLLVM(dynamic_cast<BasicSymbol*>(assign_queue.front()->sym),pointerSymbol));
-                            }
+                            llvmlist->InsertTail(LLVMfactory::createStoreLLVM(dynamic_cast<BasicSymbol*>(assign_queue.front()->sym),pointerSymbol));
+                        }
                         else{
                             llvmlist->InsertTail(assign_queue.front()->llvmlist);
                             llvmlist->InsertTail(LLVMfactory::createStoreLLVM(dynamic_cast<BasicSymbol*>(assign_queue.front()->sym),pointerSymbol));
@@ -743,10 +869,13 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
                     }
                     else{
                         llvmlist->InsertTail(LLVMfactory::createAllocaNonArrayLLVM(pointerSymbol));
-                        if(pointerSymbol->data!=nullptr&&pointerSymbol->getType()!=dataType::data_undefined)
-                            llvmlist->InsertTail(LLVMfactory::createStoreLLVM(SymbolFactory::createConstSymbol(pointerSymbol->data),pointerSymbol));
+                        llvmlist->InsertTail(assign_queue.front()->llvmlist);
+                        VarSymbol* var_tmp=SymbolFactory::createTmpVarSymbolWithScope(dtype,scope);
+                        if(dtype==dataType::f32)
+                            llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::sitofp,dynamic_cast<BasicSymbol*>(assign_queue.front()->sym),var_tmp));
                         else
-                            throw std::runtime_error("the constant do not have a value");
+                            llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::fptosi,dynamic_cast<BasicSymbol*>(assign_queue.front()->sym),var_tmp));
+                        llvmlist->InsertTail(LLVMfactory::createStoreLLVM(var_tmp,pointerSymbol));
                     }
                 }
                 else{
@@ -785,6 +914,7 @@ dataType intToDataType(int btype){
 
 LLVMList* create_func_def(int btype,std::string name,std::vector<Symbol*>* syms){
     dataType dtype=intToDataType(btype);
+    func_ret_type=dtype;
     std::vector<dataType> param_types;
     for(auto &a : (*syms)){
         if(a->getType()==symType::variable)
@@ -828,7 +958,7 @@ Symbol* create_param_nonarray(int btype,std::string name){
         variable_rename_table.push_back(std::unordered_map<std::string,int>());
     }
     VarSymbol* param=SymbolFactory::createVarSymbolWithScope(name,intToDataType(btype),scope);
-    variable_table[1][name]=param;
+    variable_table[1][name]=copy(param);
     return param;
 }
 
@@ -873,7 +1003,7 @@ void func_table_init(){
     func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::i32);
     func_table[name]=func;
 
-    name="getchar";
+    name="getch";
     func=SymbolFactory::createFuncSymbolWithScope(name,params,GLOBAL_SCOPE,dataType::i32);
     func_table[name]=func;
 
@@ -1001,9 +1131,13 @@ void create_var_init_list(Expression* exp1,Expression* exp2){
         else
             arrayInitial2 = dynamic_cast<ArrayInitial*>(exp2->sym->data);
     }
-    ArrayInitial* arrayInitial1 = dynamic_cast<ArrayInitial*>(exp1->sym->data);
-    if(arrayInitial2!=nullptr)
+    ArrayInitial* arrayInitial1 = nullptr;
+    if(exp1->sym!=nullptr)
+        arrayInitial1 = dynamic_cast<ArrayInitial*>(exp1->sym->data);
+    if(arrayInitial2!=nullptr&&arrayInitial1!=nullptr)
         arrayInitial1->merge(arrayInitial2);
+    else if(arrayInitial1==nullptr&&arrayInitial2!=nullptr)
+        arrayInitial1=arrayInitial2;
 }
 
 void reduce_var_init_list(Expression* exp){
@@ -1034,7 +1168,7 @@ void reduce_var_def_left(const std::vector<int>*dims,Expression* dim){
     dim_array.push_back(std::get<int>(dim->sym->data->getValue()));
     cnt_array_init=0;
     array_init_idx.clear();
-    array_init_idx.resize(dims->size());
+    array_init_idx.resize(dim_array.size());
     std::fill(array_init_idx.begin(), array_init_idx.end(), 0);
 }
 

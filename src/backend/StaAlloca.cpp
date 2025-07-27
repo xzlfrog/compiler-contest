@@ -59,6 +59,7 @@ bool StackAllocator::isTmpVar(std::string symbol){
 }
 
 int StackAllocator::getOffset(std::string symbol) {
+    
     const std::string& varName = symbol;
     auto it = this->localVarOffsets.find(varName);
     if (it != this->localVarOffsets.end()) {

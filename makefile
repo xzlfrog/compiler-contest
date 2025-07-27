@@ -74,6 +74,6 @@ test:
 	./build/bin/compiler -S -o ./test/test1.s ./test/test1.sy
 
 debug:
-	gdb --args ./build/bin/compiler ./test/test1.sy
+	gdb --args ./build/bin/compiler ./test/test3.sy
 
 .PHONY: all clean parser test debug

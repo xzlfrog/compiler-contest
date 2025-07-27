@@ -16,6 +16,7 @@ std::queue<Expression*>assign_queue;
 std::vector<int>dim_array;
 std::vector<int> array_init_idx;
 int cnt_array_init;
+dataType func_ret_type;
 //std::stack<int>array_initial;
 
 //compiler -S -o testcase.s testcase.sy

@@ -48,9 +48,9 @@ extern std::vector<int> array_init_idx;
 
 %token INT FLOAT CONST VOID
 %token IF ELSE WHILE BREAK CONTINUE RETURN
-%token EQ NE LT GT LE GE AND OR NOT IDENTIFIER INT_CONST FLOAT_CONST
+%token EQ NE LT GT LE GE AND OR NOT IDENTIFIER INT_CONST FLOAT_CONST INT_OCTAL_CONST INT_HEX_CONST
 
-%type <str> IDENTIFIER INT_CONST FLOAT_CONST
+%type <str> IDENTIFIER INT_CONST FLOAT_CONST INT_OCTAL_CONST INT_HEX_CONST
 
 %type <llvm> block_items block_item block stmt decl_or_func func_def decl var_decl const_decl
 %type <sym_vector> func_params const_def_list func_param_list var_def_list
@@ -63,6 +63,13 @@ extern std::vector<int> array_init_idx;
 
 %start comp_unit
 
+%left OR
+%left AND
+%left EQ NE
+%left LT GT LE GE
+%left '+' '-'
+%left '*' '/' '%'
+%right NOT
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -139,11 +146,10 @@ var_def_list : var_def{
 
 const_def : IDENTIFIER dim_list '[' const_exp ']' 
     {
-        $<str>$=new std::string(*$1);
         reduce_var_def_left($2,$4);
     }
     '=' const_init_val
-    {   $$ = create_array_const_def(*($<str>6), dim_array, dynamic_cast<ArrayInitial*>($8->sym->data)); }
+    {   $$ = create_array_const_def(*($1), dim_array, dynamic_cast<ArrayInitial*>($8->sym->data)); }
     | IDENTIFIER '=' const_init_val{
       $$ = create_const_def(*($1), $3); 
     }
@@ -154,11 +160,10 @@ var_def : IDENTIFIER dim_list{
     }
     | IDENTIFIER dim_list 
     {
-        $<str>$=new std::string(*$1);
         reduce_var_def_left($2);
     }
     '=' var_init_val{ 
-        $$ = create_var_def(*($<str>3), dim_array, $5); 
+        $$ = create_var_def(*($1), dim_array, $5); 
     }
 ;
 
@@ -306,11 +311,13 @@ or_expr : and_expr
 ;
 
 and_expr : eq_expr
+    { $$=$1; }
     | and_expr AND eq_expr
     { $$ = create_binary_expr(BINARY_AND, $1, $3); }
 ;
 
 eq_expr : rel_expr
+    { $$=$1; }
     | eq_expr EQ rel_expr
     { $$ = create_binary_expr(BINARY_EQ, $1, $3); }
     | eq_expr NE rel_expr
@@ -318,6 +325,7 @@ eq_expr : rel_expr
 ;
 
 rel_expr : add_expr
+    { $$=$1; }
     | rel_expr LT add_expr
     { $$ = create_binary_expr(BINARY_LT, $1, $3); }
     | rel_expr GT add_expr
@@ -329,6 +337,7 @@ rel_expr : add_expr
 ;
 
 add_expr : mul_expr
+    { $$=$1; }
     | add_expr '+' mul_expr
     { $$ = create_binary_expr(BINARY_ADD, $1, $3); }
     | add_expr '-' mul_expr
@@ -336,6 +345,7 @@ add_expr : mul_expr
 ;
 
 mul_expr : unary_expr
+    { $$=$1; }
     | mul_expr '*' unary_expr
     { $$ = create_binary_expr(BINARY_MUL, $1, $3); }
     | mul_expr '/' unary_expr
@@ -358,8 +368,12 @@ primary_expr : LVal
     { $$ = $1;}
     | INT_CONST
     { $$ = create_primary_INTCONST(stoi(*($1)));  }
+    | INT_OCTAL_CONST
+    { $$ = create_primary_INTCONST(std::stoi(*($1),nullptr,0));  }
+    | INT_HEX_CONST
+    { $$ = create_primary_INTCONST(std::stoi(*($1),nullptr,0));  }
     | FLOAT_CONST
-    { $$ = create_primary_FLOATCONST(stof(*($1)));  }
+    { $$ = create_primary_FLOATCONST(std::stof(*($1)));}
     | '(' expr ')'
     { $$ = $2; }
     | func_call

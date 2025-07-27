@@ -135,6 +135,10 @@
     "thread": "cpp",
     "cinttypes": "cpp",
     "typeindex": "cpp",
-    "semaphore": "cpp"
+    "semaphore": "cpp",
+    "__tree": "cpp",
+    "stack": "cpp",
+    "bitset": "cpp",
+    "print": "cpp"
   }
 }

@@ -508,7 +508,7 @@ void StoreLLVM::out_arm_str()  {
 void GetElementPtrLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     const auto& container = this->getTyAndIdx();
-    int array_offset = out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName());
+
 
     bool index_allnumber = true;//判断逻辑 是否为[1][1] 还是[a][b]
     for (const auto& [data_type, symbol_ptr] : this->getTyAndIdx()) {
