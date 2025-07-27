@@ -17,6 +17,7 @@ std::vector<int>dim_array;
 std::vector<int> array_init_idx;
 int cnt_array_init;
 dataType func_ret_type;
+Symbol* sym_defining;
 //std::stack<int>array_initial;
 
 //compiler -S -o testcase.s testcase.sy

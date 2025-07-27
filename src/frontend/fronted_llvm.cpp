@@ -5,6 +5,7 @@
 extern std::vector<int> array_init_idx;
 extern int cnt_array_init;
 extern std::vector<int>dim_array;
+extern Symbol* sym_defining;
 
 bool isConst(Symbol* sym){
     if(sym->getType()==symType::constant_var||sym->getType()==symType::constant_nonvar){
@@ -441,6 +442,7 @@ Expression* create_func_call(std::string name, Expression* exp){
 std::vector<std::pair<dataType,BasicSymbol*>>& getIdxFromExp(std::vector<Expression*>* exps){
     static std::vector<std::pair<dataType,BasicSymbol*>> res;
     res.clear();
+    res.push_back({dataType::i32,getZeroSym(dataType::i32)});
     for(auto &exp : (*exps)){
         res.push_back({exp->sym->data->getType(),dynamic_cast<BasicSymbol*>(exp->sym)});
     }
@@ -474,7 +476,7 @@ Data* getZeroData(dataType dtype){
 
 Expression* get_element(std::string name,std::vector<Expression*>* exps){
     Symbol* sym=findVar(name);
-    if(sym->getType()==symType::variable)
+    if(sym->getType()==symType::variable)//函数参数！！！
         sym=copy(dynamic_cast<VarSymbol*>(sym));
     LLVMList* llvmlist=new LLVMList();
     BasicSymbol* bs;
@@ -485,7 +487,7 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
                     "the identifer is not a array symbol.");
             }
             ArraySymbol* array=dynamic_cast<ArraySymbol*>(sym);
-            if(array->isConst==true){
+            /*if(array->isConst==true){
                 std::vector<int> idxs;
                 bool flag=true;
                 for(const auto & exp : *exps){
@@ -503,12 +505,17 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
                     }
                     return new Expression(llvmlist,SymbolFactory::createConstSymbol(getZeroData(array->getArrayType())));
                 }
-            }
+            }*/
             bs=SymbolFactory::createTmpVarSymbolWithScope(array->getArrayType(),scope);
             PointerSymbol* ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
             ps->isConst=array->isConst;
             llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM(ps,array,getIdxFromExp(exps)));
             llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
+            if(cnt_array_init>0){
+                PointerSymbol* ps_store=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
+                llvmlist->InsertTail(LLVMfactory::createGetElementPtrLLVM(ps_store,dynamic_cast<ArraySymbol*>(sym_defining),intVectorToBasicSymbolVector(array_init_idx)));
+                llvmlist->InsertTail(LLVMfactory::createStoreLLVM(bs,ps_store));
+            }
             for(auto &exp : (*exps)){
                 llvmlist->InsertHead(exp->llvmlist);
             }
@@ -520,7 +527,13 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
             PointerSymbol* ps=dynamic_cast<PointerSymbol*>(sym);
             bs=SymbolFactory::createVarSymbolWithScope(name+".loader",scope,createInitialedData(ps->PointedType));
             llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
+            if(cnt_array_init>0){
+                PointerSymbol* ps_store=SymbolFactory::createTmpPointerSymbolWithScope(ps->PointedType,scope);
+                llvmlist->InsertTail(LLVMfactory::createGetElementPtrLLVM(ps_store,dynamic_cast<ArraySymbol*>(sym_defining),intVectorToBasicSymbolVector(array_init_idx)));
+                llvmlist->InsertTail(LLVMfactory::createStoreLLVM(bs,ps_store));
+            }
         }
+        //函数参数！！！
         else if(sym->getType()==symType::variable){
             bs=dynamic_cast<VarSymbol*>(sym);
         }
@@ -691,17 +704,16 @@ LLVMList* create_const_decl(int btype,std::vector<Symbol*>* syms){
     return llvmlist;
 }
 
-Symbol* create_array_const_def(std::string name,std::vector<int>& idxs,ArrayInitial* arrayInitial){
-    ArraySymbol* array=SymbolFactory::createArraySymbolWithScope(name,idxs,scope);//注意之后要把数据类型给加上！
+Symbol* create_array_const_def(ArrayInitial* arrayInitial){
+    if(sym_defining->getType()!=symType::array)
+        throw std::runtime_error("the symbol is not array type");
+    ArraySymbol* array=dynamic_cast<ArraySymbol*>(sym_defining);//注意之后要把数据类型给加上！
     array->setInitialedData(arrayInitial);
     array->isConst=true;
     std::stack<int> empty_stack;
     //std::swap(empty_stack,array_initial);
     assign_queue.push(new Expression(new LLVMList(),SymbolFactory::createConstSymbol(arrayInitial)));
     cnt_array_init=0;
-    if(variable_table[scope].find(name)!=variable_table[scope].end())
-        throw std::runtime_error("the identifier was defined before!");
-    variable_table[scope][name]=array;
     return array;
 }
 
@@ -738,25 +750,22 @@ Symbol* create_var_def(std::string name,std::vector<int>* idxs){
     }
 }
 
-Symbol* create_var_def(std::string name,std::vector<int>& idxs,Expression* exp){
+Symbol* create_var_def(Expression* exp){
     //std::stack<int> empty_stack;
     //std::swap(empty_stack,array_initial);
     cnt_array_init=0;
     assign_queue.push(exp);
-    if(variable_table[scope].find(name)!=variable_table[scope].end())
-        throw std::runtime_error("the identifier was defined before!");
-    if(idxs.size()==0){
-        PointerSymbol* pointerSymbol= SymbolFactory::createPointerSymbolWithScope(name,scope);
+    if(sym_defining->getType()==symType::pointer){
+        PointerSymbol* pointerSymbol= dynamic_cast<PointerSymbol*>(sym_defining);
         if(isConst(exp->sym)){
             if(exp->sym->data->getType()==dataType::array_data){
                 exp->sym->data=arrayInitialToData(dynamic_cast<ArrayInitial*>(exp->sym->data));
             }
         }  
-        variable_table[scope][name]=pointerSymbol;
         return pointerSymbol;
     }
     else{
-        ArraySymbol* array=SymbolFactory::createArraySymbolWithScope(name,idxs,scope);
+        ArraySymbol* array= dynamic_cast<ArraySymbol*>(sym_defining);
         if(exp->sym!=nullptr){
             array->setInitialedData(dynamic_cast<ArrayInitial*>(exp->sym->data));
         }
@@ -765,7 +774,6 @@ Symbol* create_var_def(std::string name,std::vector<int>& idxs,Expression* exp){
             arrayInitial->setInitMode(zeroinitializer);
             array->setInitialedData(arrayInitial);
         }
-        variable_table[scope][name]=array;
         return array;
     }
 }
@@ -888,6 +896,8 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
             else
                 throw std::runtime_error("error occurs in the create_var_decl.the symbol is neither a pointer nor array");
         }
+        if(assign_queue.front()!=nullptr)
+            llvmlist->InsertTail(assign_queue.front()->llvmlist);
         assign_queue.pop();
     }
     return llvmlist;
@@ -1110,7 +1120,7 @@ void add_init_item(){
 
 void create_var_init_list(Expression* exp){
     if(exp->sym!=nullptr){
-        if(exp->sym->data->getType()!=dataType::array_data){
+        if(exp->sym->data!=nullptr&&exp->sym->data->getType()!=dataType::array_data){
             exp->sym->data=dataToArrayInitial(exp->sym->data);
             ArrayInitial* arrayInitial = dynamic_cast<ArrayInitial*>(exp->sym->data);
             arrayInitial->initializedData[0].first=array_init_idx;
@@ -1121,8 +1131,9 @@ void create_var_init_list(Expression* exp){
 
 void create_var_init_list(Expression* exp1,Expression* exp2){
     ArrayInitial* arrayInitial2=nullptr;
+    int cnt=0;
     if(exp2->sym!=nullptr){
-        if(exp2->sym->data->getType()!=dataType::array_data){
+        if(exp2->sym->data!=nullptr&&exp2->sym->data->getType()!=dataType::array_data){
             exp2->sym->data=dataToArrayInitial(exp2->sym->data);
             arrayInitial2 = dynamic_cast<ArrayInitial*>(exp2->sym->data);
             arrayInitial2->initializedData[0].first=array_init_idx;
@@ -1132,6 +1143,7 @@ void create_var_init_list(Expression* exp1,Expression* exp2){
             arrayInitial2 = dynamic_cast<ArrayInitial*>(exp2->sym->data);
     }
     ArrayInitial* arrayInitial1 = nullptr;
+    exp1->llvmlist->InsertTail(exp2->llvmlist);
     if(exp1->sym!=nullptr)
         arrayInitial1 = dynamic_cast<ArrayInitial*>(exp1->sym->data);
     if(arrayInitial2!=nullptr&&arrayInitial1!=nullptr)
@@ -1153,16 +1165,28 @@ void reduce_var_init_list(Expression* exp){
         array_init_idx[cnt_array_init-1]++;
 }
 
-void reduce_var_def_left(const std::vector<int>*dims){
+void reduce_var_def_left(std::string name,const std::vector<int>*dims){
     dim_array.clear();
     dim_array=*dims;
     array_init_idx.clear();
     for(int i=0;i<dim_array.size();i++)
         array_init_idx.push_back(0);
     cnt_array_init=0;
+    if(dim_array.size()==0){
+        sym_defining=SymbolFactory::createPointerSymbolWithScope(name,scope);
+        if(variable_table[scope].find(name)!=variable_table[scope].end())
+            throw std::runtime_error("the identifier was defined before!");
+        variable_table[scope][name]=sym_defining;
+    }
+    else{
+        sym_defining=SymbolFactory::createArraySymbolWithScope(name,dim_array,scope);
+        if(variable_table[scope].find(name)!=variable_table[scope].end())
+            throw std::runtime_error("the identifier was defined before!");
+        variable_table[scope][name]=sym_defining;
+    }
 }
 
-void reduce_var_def_left(const std::vector<int>*dims,Expression* dim){
+void reduce_var_def_left(std::string name,const std::vector<int>*dims,Expression* dim){
     dim_array.clear();
     dim_array=*dims;
     dim_array.push_back(std::get<int>(dim->sym->data->getValue()));
@@ -1170,6 +1194,10 @@ void reduce_var_def_left(const std::vector<int>*dims,Expression* dim){
     array_init_idx.clear();
     array_init_idx.resize(dim_array.size());
     std::fill(array_init_idx.begin(), array_init_idx.end(), 0);
+    sym_defining=SymbolFactory::createArraySymbolWithScope(name,dim_array,scope);
+    if(variable_table[scope].find(name)!=variable_table[scope].end())
+        throw std::runtime_error("the identifier was defined before!");
+    variable_table[scope][name]=sym_defining;
 }
 
 void var_init_list_reduce_left(){
