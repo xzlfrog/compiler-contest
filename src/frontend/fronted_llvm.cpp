@@ -1005,8 +1005,6 @@ void end_parser(){
             }
             outfile.close();
         }
-    }else{
-        return;
     }
 }
 

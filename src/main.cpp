@@ -63,7 +63,7 @@ int main(int argc,char* argv[]){
     yyin = inputFile;
     begin_parser();
     yyparse();
-    //out_arm(outputFileName,module_list);
+    out_arm(outputFileName,module_list);
 
     return 0;
 }
