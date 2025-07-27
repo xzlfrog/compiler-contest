@@ -6,6 +6,7 @@ extern std::vector<int> array_init_idx;
 extern int cnt_array_init;
 extern std::vector<int>dim_array;
 extern Symbol* sym_defining;
+extern bool Make_llvm;
 
 bool isConst(Symbol* sym){
     if(sym->getType()==symType::constant_var||sym->getType()==symType::constant_nonvar){
@@ -990,6 +991,7 @@ Symbol* create_param_array(int btype,std::string name,std::vector<int>* dims){
 }
 
 void end_parser(){
+    if(Make_llvm){
     LLVMList* llvmlist=module_list->head;
     LLVM* llvm;
     std::ofstream outfile("output.ll");
@@ -1002,6 +1004,7 @@ void end_parser(){
             outfile<<llvm->out_str();
         }
         outfile.close();
+    }
     }
 }
 
