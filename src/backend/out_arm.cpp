@@ -198,9 +198,15 @@ void ArithmeticOperationLLVM::out_arm_str(){
         case icmp_sge:
         case icmp_slt:
         case icmp_sle:
+        case fcmp_oeq:
+        case fcmp_oge:
+        case fcmp_ogt:
+        case fcmp_olt:
+        case fcmp_ole:
+        case fcmp_one:
             OutArm::outString("\t"+OutArm::ComparisonOperation(this));
             break;
-
+        
         default:
             throw std::invalid_argument("Unsupported LLVM type for ARM conversion");
     }
@@ -257,36 +263,64 @@ std::string OutArm::ASMDOperation(ArithmeticOperationLLVM* ASMDllvm){
 
 std::string OutArm::ComparisonOperation(ArithmeticOperationLLVM* cmpllvm) {
     OutArm& out_Arm = OutArm::getInstance();
-    std::string a_str, b_str, c_str, tmp_str, op0, op1, op2;
-    VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
-    op0 = "CMP";
+    std::string a_str, b_str, c_str, op0, op1, op2;
+
     op1 = "CSET";
 
     switch(cmpllvm->llvmType) {
         case icmp_eq:
+            op0 = "CMP";
             op2 = "EQ";
             break;
         case icmp_ne:
+            op0 = "CMP";
             op2 = "NE";
             break;
         case icmp_sgt:
+            op0 = "CMP";
             op2 = "GT";
             break;
         case icmp_sge:
+            op0 = "CMP";
             op2 = "GE";
             break;
         case icmp_slt:
+            op0 = "CMP";
             op2 = "LT";
             break;
         case icmp_sle:
+            op0 = "CMP";
             op2 = "LE";
+            break;
+            case fcmp_oeq:
+            op0 = "FCMP";
+            op2 = "EQ";
+            break;
+        case fcmp_ogt:
+            op0 = "FCMP";
+            op2 = "GT";
+            break;
+        case fcmp_oge:
+            op0 = "FCMP";
+            op2 = "GE";
+            break;
+        case fcmp_olt:
+            op0 = "FCMP";
+            op2 = "LT";
+            break;
+        case fcmp_ole:
+            op0 = "FCMP";
+            op2 = "LE";
+            break;
+        case fcmp_one:
+            op0 = "FCMP";
+            op2 = "NE";
             break;
         default:
             throw std::invalid_argument("Unsupported comparison type for ARM conversion");
     }
 
     a_str = out_Arm.DispatchReg(cmpllvm->a);
-    tmp_str = out_Arm.DispatchReg(tmp);
     b_str = out_Arm.DispatchReg(cmpllvm->b);
     c_str = out_Arm.DispatchReg(cmpllvm->c);
 
@@ -567,10 +601,13 @@ void GetElementPtrLLVM::out_arm_str()  {
         
         //获取其所在地址
         std::string arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
-        
-        std::string arr_offset_str = std::to_string(out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName()));
-        OutArm::outString("\tADD " + arr_str + ", SP, #" + arr_offset_str);
+        out_Arm.stackAllocator.Tmp_StackAddress_InReg[this->getSrcSymbol()->getName()] = arr_str;
 
+        std::string arr_offset_str;
+        if(!out_Arm.globalAllocator.find_symbol(this->ptrval->getName()) && out_Arm.stackAllocator.hasVariable(this->getSrcSymbol()->getName())){
+            arr_offset_str = std::to_string(out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName()));
+            OutArm::outString("\tADD " + arr_str + ", SP, #" + arr_offset_str);
+        }
         // N维数组偏移量计算（通用方法）
         int offset = 0;
         int multiplier = 4;
@@ -605,8 +642,8 @@ void GetElementPtrLLVM::out_arm_str()  {
         }
             out_Arm.stackAllocator.Tmp_StackAddress_InReg[this->getDestSymbol()->getName()] = arr_str;
     }
-  
 }
+
 
 void TypeConversionOperation::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
@@ -732,14 +769,20 @@ void XRegAllocator::promoteToRegister(std::string symbol) {
 
 void XRegAllocator::spillToStack(std::string symbol) {
     StackAllocator& stackAllocator = StackAllocator::getInstance();
-    if(stackAllocator.isTmpVar(symbol)){
+    //临时的直接不管了 溢出的干活
+    if(stackAllocator.isTmpVar(symbol) || stackAllocator.Tmp_StackAddress_InReg.count(symbol)){
         return ;
     }
     std::string reg_name = this->getRegister(symbol);
+    int stack_offset;
 
-    std::string symbol_stack = stackAllocator.RegVar_StackVar[symbol];
-    int stack_offset = stackAllocator.getOffset(symbol_stack);
-    
+    if(stackAllocator.RegVar_StackVar.count(symbol)){
+        std::string symbol_stack = stackAllocator.RegVar_StackVar[symbol];
+        stack_offset = stackAllocator.getOffset(symbol_stack);
+    }else{
+        stack_offset = stackAllocator.getOffset(symbol);
+    }
+
     if (reg_name.empty()) {
         throw std::runtime_error("No register allocated for spilling");
     }
@@ -778,12 +821,20 @@ void DRegAllocator::promoteToRegister(std::string symbol) {
 
 void DRegAllocator::spillToStack(std::string symbol) {
     StackAllocator& stackAllocator = StackAllocator::getInstance();
-    if(stackAllocator.isTmpVar(symbol)){
+    if(stackAllocator.isTmpVar(symbol) || stackAllocator.Tmp_StackAddress_InReg.count(symbol)){
         return ;
     }
     std::string reg_name = this->getRegister(symbol);
-    std::string symbol_stack = stackAllocator.RegVar_StackVar[symbol];
-    int stack_offset = stackAllocator.getOffset(symbol_stack);
+
+    int stack_offset;
+
+    if(stackAllocator.RegVar_StackVar.count(symbol)){
+        std::string symbol_stack = stackAllocator.RegVar_StackVar[symbol];
+        stack_offset = stackAllocator.getOffset(symbol_stack);
+    }else{
+        stack_offset = stackAllocator.getOffset(symbol);
+    }
+    
     if (reg_name.empty()) {
         throw std::runtime_error("No register allocated for spilling");
     }

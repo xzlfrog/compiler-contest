@@ -25,7 +25,7 @@ class StackAllocator {
         
     public:
         std::map<std::string, std::string> RegVar_StackVar; //寄存器 栈帧 映射
-        std::map<std::string, std::string> Tmp_StackAddress_InReg;
+        std::map<std::string, std::string> Tmp_StackAddress_InReg; //前变量 后 寄存器 ；getelem时候 临时存一下  
 
         std::set<std::string> usedFloatRegisters;
         std::set<std::string> usedRegisters;
