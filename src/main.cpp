@@ -16,6 +16,7 @@ std::queue<Expression*>assign_queue;
 std::vector<int>dim_array;
 std::vector<int> array_init_idx;
 int cnt_array_init;
+dataType func_ret_type;
 //std::stack<int>array_initial;
 
 //compiler -S -o testcase.s testcase.sy
@@ -59,7 +60,7 @@ int main(int argc,char* argv[]){
     yyin = inputFile;
     begin_parser();
     yyparse();
-    out_arm(outputFileName,module_list);
+    //out_arm(outputFileName,module_list);
 
     return 0;
 }

@@ -40,6 +40,7 @@ extern std::unordered_map<std::string,FuncSymbol*>func_table;
 extern std::stack<LabelSymbol*> break_st,continue_st;
 extern std::queue<Expression*>assign_queue;
 extern std::vector<int>dim_array;
+extern dataType func_ret_type;
 //extern std::stack<int>array_initial;//在面对数组变量初始化时，维护一个大小为当前嵌套大括号数量的栈，
 //栈中每一个元素对应目前时嵌套的大括号中的第几个元素，比如int a[5]={1,2,3};
 //此时栈里元素取决于当前规约到哪一个元素,规约到1时为0,规约到2时为1,规约到3时为2
@@ -85,3 +86,5 @@ void create_null_param();
 void var_init_list_reduce_left();
 void reduce_var_def_left(const std::vector<int>*dims);
 void reduce_var_def_left(const std::vector<int>*dims,Expression* dim);
+Data* getZeroData(dataType dtype);
+BasicSymbol* getZeroSym(dataType dtype);
