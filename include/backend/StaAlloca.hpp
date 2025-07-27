@@ -24,6 +24,9 @@ class StackAllocator {
         StackAllocator() = default;
         
     public:
+        std::map<std::string, std::string> RegVar_StackVar; //寄存器 栈帧 映射
+        std::map<std::string, std::string> Tmp_StackAddress_InReg;
+
         std::set<std::string> usedFloatRegisters;
         std::set<std::string> usedRegisters;
         
@@ -45,6 +48,7 @@ class StackAllocator {
 
         int calculateStackSize();
         int getOffset(std::string symbol);
+        bool isTmpVar(std::string symbol);
         std::string emitPrologue(int stackSize) ;
         std::string emitEpilogue(int stackSize) ;
         int getCurrentOffset() const;

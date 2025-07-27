@@ -50,11 +50,19 @@ int StackAllocator::calculateRegisterSaveAreaSize() {
     return align(size, 16);
 }
 
+bool StackAllocator::isTmpVar(std::string symbol){
+    auto it = this->localVarOffsets.find(symbol);
+    if (it != this->localVarOffsets.end()) {
+        return false;
+    }
+    return true;
+}
+
 int StackAllocator::getOffset(std::string symbol) {
     const std::string& varName = symbol;
-    auto it = localVarOffsets.find(varName);
-    if (it != localVarOffsets.end()) {
-        return it->second;
+    auto it = this->localVarOffsets.find(varName);
+    if (it != this->localVarOffsets.end()) {
+        return it->second ;
     }
     // }else if(is_array) {
     //     return allocateArray(symbol);
@@ -208,5 +216,5 @@ void StackAllocator::addPtr(std::string symbol, int offset) {
     }
     // Store the pointer with its offset
     localVarOffsets[name] = this->currentOffset + offset;
-    this->currentOffset += offset;
+    this->currentOffset += offset; //加减指针要打印出来吧。。。 这里不是真正的栈帧顶啦！
 }

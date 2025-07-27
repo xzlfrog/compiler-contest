@@ -130,9 +130,10 @@ void GlobalAllocator::allocateGlobalArray(GlobalArrayVarDefination* GAVD){
     this->data[dest_str] = value;
 }
 
+//默认space为4 硬编码了！！！
 std::string GlobalAllocator::getArrayValue(const std::vector<std::pair<std::vector<int>,Data*>>& value_sets, const std::vector<int>& dims){
     int totoal_size = 1;
-    std::string res ;
+    std::string res = "";
     for(auto dim: dims){
         totoal_size *= dim; 
     }
@@ -150,7 +151,7 @@ std::string GlobalAllocator::getArrayValue(const std::vector<std::pair<std::vect
         res = res.substr(0, res.length() - 2);
     }
     if(initialed_value_count<totoal_size){
-        int uninitialed_size = this->getTypeSize(value_sets.front().second->getType());
+        int uninitialed_size = 4 ; //可能是巨大的隐患
         uninitialed_size *= (totoal_size - initialed_value_count);
         res += "\n";
         res += "\t.space\t";
@@ -221,6 +222,7 @@ bool GlobalAllocator::find_symbol(const std::string& name) const {
     return bss.count(name) || data.count(name) || rodata.count(name) || symbol_to_global.count(name);
 }
 
+//
 void GlobalAllocator::addSymbolToGlobal(std::string sym_name, std::string global_name, int offset){
     this->symbol_to_global[sym_name] = std::make_pair(global_name, offset);
 }

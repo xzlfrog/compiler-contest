@@ -48,7 +48,10 @@ public:
     XRegAllocator xRegAllocator ;
     DRegAllocator dRegAllocator ;
     // 构造函数打开输出文件
+
+    std::unordered_map<std::string,std::vector<std::string>> func_Params_Regs; //前为函数名 后为参数所有寄存器
     
+    void resetReg();
     static void outString(const std::string &str);
 
     static int getDataSize(Symbol* symbol);

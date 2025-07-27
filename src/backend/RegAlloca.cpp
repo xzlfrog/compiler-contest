@@ -43,10 +43,20 @@ void RegisterAllocator::freeRegister(std::string reg_name){
     }
 }
 
-void RegisterAllocator::reset() {
+void XRegAllocator::reset() {
     Registers.clear();
     var_to_reg.clear();
+    this->current_reg_offset1 = 0; // 当前偏移量 0-7
+    this->current_reg_offset2 = 9; // 当前偏移量 9-15
+    this->current_reg_offset3 = 19; // 当前偏移量 19-28 暂时不用3 因为未区分临时变量
     
+}
+
+void DRegAllocator::reset() {
+    Registers.clear();
+    var_to_reg.clear();
+    this->current_reg_offset1 = 0; // 当前偏移量 0-7
+    this->current_reg_offset2 = 8;
 }
 
 void XRegAllocator::allocateParamSpace(std::string symbol) {

@@ -54,6 +54,7 @@ public:
     void addSymbolToGlobal(std::string sym_name, std::string global_name, int offset);
 
     std::map<std::string,std::pair<std::string,int>> symbol_to_global; //左边为变量名 右边为其对应的全局变量（及偏移 如果有数组）
+    //代表某符号实际需读取全局变量
 private:
     // 存储全局变量，按段分类
     std::map<std::string,std::string> data;//前名后值

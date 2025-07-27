@@ -60,7 +60,7 @@ class RegisterAllocator {
         // 恢复调用后需恢复的寄存器
         //void restoreRegisters(std::ostream &out);
 
-        void reset();
+        virtual void reset() = 0 ;
 
         // 内部方法
     virtual void promoteToRegister( std::string symbol) = 0;
@@ -93,6 +93,8 @@ class XRegAllocator : public RegisterAllocator {
         
         void promoteToRegister(std::string symbol) override ;
         void spillToStack(std::string symbol) override ;
+
+        void reset() override;
 };
 
 class DRegAllocator : public RegisterAllocator {
@@ -106,7 +108,7 @@ class DRegAllocator : public RegisterAllocator {
                                               }
 
         int current_reg_offset1 = 0; // 当前偏移量 0-7
-        int current_reg_offset2 = 0; // 当前偏移量 8-31
+        int current_reg_offset2 = 8; // 当前偏移量 8-31
         void allocateParamSpace(std::string symbol) override ;
         void allocateOtherSpace(std::string symbol) override ;
         std::string getRegister(std::string symbol) const override;;
@@ -118,6 +120,8 @@ class DRegAllocator : public RegisterAllocator {
 
         void promoteToRegister(std::string symbol) override ;
         void spillToStack(std::string symbol) override ;
+
+        void reset() override;
 };
 
 class ZERORegAllocator : public RegisterAllocator {

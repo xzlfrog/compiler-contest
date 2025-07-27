@@ -91,6 +91,7 @@ std::string OutArm::getIntNumberOfOperands(Symbol *constvarsym){
 std::string OutArm::DispatchReg(Symbol* symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     std::string reg_name;
+    //全局变量情况
     if(out_Arm.globalAllocator.find_symbol(symbol->getName())){
         if(!out_Arm.globalAllocator.symbol_to_global.count(symbol->getName())){
             reg_name = "[" + symbol->getName() +"]";
@@ -103,7 +104,14 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
                 reg_name = "[" + reg_name1 + ", #" + std::to_string(offset) + "]";
             }
         }
-    }else if(auto* array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {       
+    }//计算数组offset情况
+    else if(out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(symbol->getName())){
+            reg_name = out_Arm.stackAllocator.Tmp_StackAddress_InReg[symbol->getName()];
+    }//常数情况
+    else if(symbol->getType() == symType::constant_nonvar || symbol->getType() == symType::constant_var){
+            reg_name = "#" + getSymOut(symbol);
+    }//数组情况
+    else if(auto* array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {       
         if (array_Symbol->getArrayType() == dataType::f32 || 
         array_Symbol->getArrayType() == dataType::f64) {
         reg_name = out_Arm.dRegAllocator.accessVariable(array_Symbol->getName());
@@ -335,18 +343,20 @@ void CallLLVM::out_arm_str()  {
         dest_str= out_Arm.DispatchReg(this->dest_sym);
     }
     std::string arg_str;
-    std::string ori_str;
-
+    std::string ori_str;//目的地 （源参数说是）
+    std::vector<std::string> ori_strs = out_Arm.func_Params_Regs[func_name];
+    int i = 0;
     for (const auto& arg : this->arguments) {
         if (auto* array_symbol = dynamic_cast<ArraySymbol*>(arg)) {
-            ori_str = out_Arm.DispatchReg(array_symbol);
-            arg_str = out_Arm.DispatchRegParam(array_symbol);
+            ori_str = ori_strs[i];
+            arg_str = out_Arm.DispatchReg(array_symbol);
         }
         else if (auto* var_symbol = dynamic_cast<VarSymbol*>(arg)) {
-            ori_str = out_Arm.DispatchReg(var_symbol);
-            arg_str = out_Arm.DispatchRegParam(var_symbol);
+            ori_str = ori_strs[i];
+            arg_str = out_Arm.DispatchReg(var_symbol);
         } 
-        OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
+        OutArm::outString("\tMOV " + arg_str + ", " + ori_str);
+        ++i;
     }  
     
     std::string call_str = "BL " + func_name;
@@ -408,6 +418,7 @@ void FuncDeclaration::out_arm_str()  {
 //没有写出函数的emit
 void FuncDefination::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
+    out_Arm.resetReg();
 
     // 函数定义需要输出 ARM 汇编代码
     std::string func_name = this->func->getName();
@@ -421,6 +432,7 @@ void FuncDefination::out_arm_str()  {
     OutArm::outString(out_Arm.stackAllocator.emitPrologue(stack_size));
 
     std::string param_str;
+    std::vector<std::string> param_strs;
     // 输出函数参数
         
     for (const auto& param : this->params) {
@@ -430,22 +442,21 @@ void FuncDefination::out_arm_str()  {
         else if (auto* var_symbol = dynamic_cast<VarSymbol*>(param)) {
             param_str = out_Arm.DispatchRegParam(var_symbol);
         }
+            param_strs.push_back(param_str);
     }
-    // 输出函数体的 LLVM 指令
-    //for (LLVM* llvm = this->block_tail; llvm != nullptr; llvm = llvm->next) {
-    //
-    //    llvm->out_arm_str();
+    
+    out_Arm.func_Params_Regs[func_name] = param_strs;
 }
 
 void AllocaNonArrayLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
-    std::string var_str = out_Arm.DispatchReg(this->sym);
-    if(this->sym->getPointedType()==dataType::f32 || this->sym->getPointedType()==dataType::f64) {
-       out_Arm.dRegAllocator.allocateOtherSpace(this->sym->getName());
-    }else{
-         out_Arm.xRegAllocator.allocateOtherSpace(this->sym->getName());
-    }
+    // std::string var_str = out_Arm.DispatchReg(this->sym);
+    // if(this->sym->getPointedType()==dataType::f32 || this->sym->getPointedType()==dataType::f64) {
+    //    out_Arm.dRegAllocator.allocateOtherSpace(this->sym->getName());
+    // }else{
+    //      out_Arm.xRegAllocator.allocateOtherSpace(this->sym->getName());
+    // }
     int datasize = OutArm::getDataSize(this->sym);
     int size = out_Arm.stackAllocator.allocateLocal(datasize,this->sym->getName());
     
@@ -453,34 +464,37 @@ void AllocaNonArrayLLVM::out_arm_str()  {
 
 void AllocaArrayLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
-    std::string array_str = out_Arm.DispatchReg(this->array);
-    if(this->array->getArrayType() == dataType::f32 || this->array->getArrayType() == dataType::f64) {
-        out_Arm.dRegAllocator.allocateOtherSpace(this->array->getName());
-    } else{
-        out_Arm.xRegAllocator.allocateOtherSpace(this->array->getName());
-    }
+    // std::string array_str = out_Arm.DispatchReg(this->array);
+    // if(this->array->getArrayType() == dataType::f32 || this->array->getArrayType() == dataType::f64) {
+    //     out_Arm.dRegAllocator.allocateOtherSpace(this->array->getName());
+    // } else{
+    //     out_Arm.xRegAllocator.allocateOtherSpace(this->array->getName());
+    // }
     int datasize = OutArm::getDataSize(this->array);
     int size = out_Arm.stackAllocator.allocateArray(datasize,this->getDimensions(),this->array->getName());
 }
 
 void LoadLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
+    out_Arm.stackAllocator.RegVar_StackVar[dest_sym->getName()] = src_sym->getName();
 
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
-    if(!out_Arm.globalAllocator.find_symbol(src_sym->getName())){
+    if(!out_Arm.globalAllocator.find_symbol(src_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(src_sym->getName())){
         int offset = out_Arm.stackAllocator.getOffset(this->src_sym->getName());
         OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
     }else{
         std::string src_str = out_Arm.DispatchReg(this->src_sym);
         OutArm::outString("\tLDR " + dest_str + ", " + src_str);
     }
+    
 }
 
 void StoreLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
+    out_Arm.stackAllocator.RegVar_StackVar[src_sym->getName()] = dest_sym->getName();
 
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
-    if(!out_Arm.globalAllocator.find_symbol(dest_sym->getName())){
+    if(!out_Arm.globalAllocator.find_symbol(dest_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(dest_sym->getName())){
         int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
         OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
     }else{
@@ -490,23 +504,107 @@ void StoreLLVM::out_arm_str()  {
 }
 
 //直接4offset 可能有隐患
+//此处未给[a][b]数组设置那个啥溢出去的地方 默认后面用不到
 void GetElementPtrLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
-    int offset = 1;
+    const auto& container = this->getTyAndIdx();
+    int array_offset = out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName());
+
+    bool index_allnumber = true;//判断逻辑 是否为[1][1] 还是[a][b]
     for (const auto& [data_type, symbol_ptr] : this->getTyAndIdx()) {
-        if (symbol_ptr) {
-            offset *= (std::stoi(getSymOut(symbol_ptr)) + 1);
+        if (!symbol_ptr) {
+            index_allnumber = false;
+            break;
+        }
+        
+        bool is_number_type = false;
+        switch (symbol_ptr->getType()) {
+            case symType::constant_nonvar:
+                is_number_type = true;
+                break;
+            default:
+                is_number_type = false;
+                break;
+        }
+        
+        if (!is_number_type) {
+            index_allnumber = false;
+            break;
         }
     }
-    offset -= 1;
-    offset *= 4; //这里！！！ 我觉得可能有bug哦。。。 
 
-    // 全局变量的情况
-    if(out_Arm.globalAllocator.find_symbol(this->ptrval->getName())){
-        out_Arm.globalAllocator.addSymbolToGlobal(this->dest_sym->getName(),this->ptrval->getName(),offset);
-    }else{
-        out_Arm.stackAllocator.addPtr(this->dest_sym->getName(), offset);
+    //全是数字数组的情况
+    if(index_allnumber){
+        
+        // N维数组偏移量计算（通用方法）
+        int offset = 0;
+        int multiplier = 1;
+        std::vector<int> dims = this->getDimensions();
+        int i = this->getDimensions().size() - 1;
+        
+        for (auto it = container.rbegin(); it != container.rend(); ++it) {
+            const auto& [data_type, symbol_ptr] = *it;
+                if (i >= 0) {
+                    offset += (std::stoi(getSymOut(symbol_ptr))) * multiplier;                   
+                    // 更新乘数和索引
+                    if (i > 0) {
+                        multiplier *= dims[i];
+                    }
+                    i--;
+                }
+        }   
+        offset *= 4; //这里！！！ 我觉得可能有bug哦。。。 
+
+        // 全局变量的情况
+        if(out_Arm.globalAllocator.find_symbol(this->ptrval->getName())){
+            out_Arm.globalAllocator.addSymbolToGlobal(this->dest_sym->getName(),this->ptrval->getName(),offset);
+        }else{
+            out_Arm.stackAllocator.addPtr(this->dest_sym->getName(), offset);
+            
+        }
+        out_Arm.stackAllocator.RegVar_StackVar[this->getSrcSymbol()->getName()] = this->getDestSymbol()->getName();
+    }else{//这里是[][]含有变量的情况
+        
+        //获取其所在地址
+        std::string arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
+        std::string arr_offset_str = std::to_string(out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName()));
+        OutArm::outString("\tADD " + arr_str + ", SP, #" + arr_offset_str);
+
+        // N维数组偏移量计算（通用方法）
+        int offset = 0;
+        int multiplier = 4;
+        std::vector<int> dims = this->getDimensions();
+        int i = this->getDimensions().size() - 1;
+        
+        for (auto it = container.rbegin(); it != container.rend(); ++it) {
+            const auto& [data_type, symbol_ptr] = *it;
+                if (i >= 0) {
+                    if(it->second->getType() == symType::constant_nonvar){
+                        offset += (std::stoi(getSymOut(symbol_ptr))) * multiplier;
+                    }else{
+                        std::string tmp_str = out_Arm.DispatchReg(symbol_ptr);
+                        std::string tmp_num_str = std::to_string(multiplier * 4);
+                        if(multiplier == 1){
+                            out_Arm.outString("\tMOV "+ tmp_str + ", #" + tmp_num_str);
+                        }else{
+                            out_Arm.outString("\tMUL "+ tmp_str + ", " + tmp_str + ", #" + tmp_num_str);
+                        }
+                            OutArm::outString("\tADD " + arr_str + ", " + arr_str + ", " + tmp_str);
+                    }                   
+                    // 更新乘数和索引
+                    if (i > 0) {
+                        multiplier *= dims[i] ;
+                    }
+                    i--;
+                }
+        }
+        if(offset!=0){
+            std::string tmp_num_str = std::to_string(offset * 4);
+            OutArm::outString("\tADD " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
+        }
+            out_Arm.stackAllocator.Tmp_StackAddress_InReg[this->getDestSymbol()->getName()] = arr_str;
     }
+  
 }
 
 void TypeConversionOperation::out_arm_str()  {
@@ -633,8 +731,14 @@ void XRegAllocator::promoteToRegister(std::string symbol) {
 
 void XRegAllocator::spillToStack(std::string symbol) {
     StackAllocator& stackAllocator = StackAllocator::getInstance();
-    int stack_offset = stackAllocator.getOffset(symbol);
+    if(stackAllocator.isTmpVar(symbol)){
+        return ;
+    }
     std::string reg_name = this->getRegister(symbol);
+
+    std::string symbol_stack = stackAllocator.RegVar_StackVar[symbol];
+    int stack_offset = stackAllocator.getOffset(symbol_stack);
+    
     if (reg_name.empty()) {
         throw std::runtime_error("No register allocated for spilling");
     }
@@ -673,8 +777,12 @@ void DRegAllocator::promoteToRegister(std::string symbol) {
 
 void DRegAllocator::spillToStack(std::string symbol) {
     StackAllocator& stackAllocator = StackAllocator::getInstance();
+    if(stackAllocator.isTmpVar(symbol)){
+        return ;
+    }
     std::string reg_name = this->getRegister(symbol);
-    int stack_offset = stackAllocator.getOffset(symbol);
+    std::string symbol_stack = stackAllocator.RegVar_StackVar[symbol];
+    int stack_offset = stackAllocator.getOffset(symbol_stack);
     if (reg_name.empty()) {
         throw std::runtime_error("No register allocated for spilling");
     }
@@ -688,6 +796,12 @@ void DRegAllocator::spillToStack(std::string symbol) {
    
     // 清除寄存器映射
     //this->freeRegister(reg_name);
+}
+
+void OutArm::resetReg(){
+    OutArm& Out_Arm = OutArm::getInstance();
+    Out_Arm.dRegAllocator.reset();
+    Out_Arm.xRegAllocator.reset();
 }
 
 void out_arm(std::string outputFileName, ModuleList* module_list) {
