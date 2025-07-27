@@ -64,10 +64,10 @@ LLVMList* create_while(Expression* exp);//while语句的llvm ir生成
 LLVMList* create_while_stmt(LLVMList* llvmlist,LLVMList* stmt);//while语句的llvm ir生成
 LLVMList* create_return_stmt(Expression* exp);//return语句的llvm ir生成
 LLVMList* create_const_decl(int btype,std::vector<Symbol*>* syms);
-Symbol* create_array_const_def(std::string name,std::vector<int>& idxs,ArrayInitial* arrayInitial);//常量数组声明
+Symbol* create_array_const_def(ArrayInitial* arrayInitial);//常量数组声明
 Symbol* create_const_def(std::string name,Expression* exp);
 Symbol* create_var_def(std::string name,std::vector<int>* idxs);
-Symbol* create_var_def(std::string name,std::vector<int>& idxs,Expression* exp);
+Symbol* create_var_def(Expression* exp);
 LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms);
 LLVMList* create_func_def(int btype,std::string name,std::vector<Symbol*>* syms);
 LLVMList* create_func_blk(LLVMList* decl,LLVMList* llvmlist);
@@ -84,7 +84,8 @@ void create_var_init_list(Expression* exp1,Expression* exp2);
 void reduce_var_init_list(Expression* exp);
 void create_null_param();
 void var_init_list_reduce_left();
-void reduce_var_def_left(const std::vector<int>*dims);
-void reduce_var_def_left(const std::vector<int>*dims,Expression* dim);
+void reduce_var_def_left(std::string name,const std::vector<int>*dims);
+void reduce_var_def_left(std::string name,const std::vector<int>*dims,Expression* dim);
 Data* getZeroData(dataType dtype);
 BasicSymbol* getZeroSym(dataType dtype);
+std::vector<std::pair<dataType,BasicSymbol*>>& intVectorToBasicSymbolVector(const std::vector<int>& idxs);

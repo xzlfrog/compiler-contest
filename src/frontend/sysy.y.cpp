@@ -1428,14 +1428,14 @@ yyreduce:
   case 18: /* $@1: %empty  */
 #line 148 "src/frontend/sysy.y"
     {
-        reduce_var_def_left((yyvsp[-3].int_vector),(yyvsp[-1].exp));
+        reduce_var_def_left(*((yyvsp[-4].str)),(yyvsp[-3].int_vector),(yyvsp[-1].exp));
     }
 #line 1434 "src/frontend/sysy.y.cpp"
     break;
 
   case 19: /* const_def: IDENTIFIER dim_list '[' const_exp ']' $@1 '=' const_init_val  */
 #line 152 "src/frontend/sysy.y"
-    {   (yyval.sym) = create_array_const_def(*((yyvsp[-7].str)), dim_array, dynamic_cast<ArrayInitial*>((yyvsp[0].exp)->sym->data)); }
+    {   (yyval.sym) = create_array_const_def(dynamic_cast<ArrayInitial*>((yyvsp[0].exp)->sym->data)); }
 #line 1440 "src/frontend/sysy.y.cpp"
     break;
 
@@ -1458,7 +1458,7 @@ yyreduce:
   case 22: /* $@2: %empty  */
 #line 162 "src/frontend/sysy.y"
     {
-        reduce_var_def_left((yyvsp[0].int_vector));
+        reduce_var_def_left((*(yyvsp[-1].str)),(yyvsp[0].int_vector));
     }
 #line 1464 "src/frontend/sysy.y.cpp"
     break;
@@ -1466,7 +1466,7 @@ yyreduce:
   case 23: /* var_def: IDENTIFIER dim_list $@2 '=' var_init_val  */
 #line 165 "src/frontend/sysy.y"
                     { 
-        (yyval.sym) = create_var_def(*((yyvsp[-4].str)), dim_array, (yyvsp[0].exp)); 
+        (yyval.sym) = create_var_def((yyvsp[0].exp)); 
     }
 #line 1472 "src/frontend/sysy.y.cpp"
     break;

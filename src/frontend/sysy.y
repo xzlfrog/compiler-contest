@@ -146,10 +146,10 @@ var_def_list : var_def{
 
 const_def : IDENTIFIER dim_list '[' const_exp ']' 
     {
-        reduce_var_def_left($2,$4);
+        reduce_var_def_left(*($1),$2,$4);
     }
     '=' const_init_val
-    {   $$ = create_array_const_def(*($1), dim_array, dynamic_cast<ArrayInitial*>($8->sym->data)); }
+    {   $$ = create_array_const_def(dynamic_cast<ArrayInitial*>($8->sym->data)); }
     | IDENTIFIER '=' const_init_val{
       $$ = create_const_def(*($1), $3); 
     }
@@ -160,10 +160,10 @@ var_def : IDENTIFIER dim_list{
     }
     | IDENTIFIER dim_list 
     {
-        reduce_var_def_left($2);
+        reduce_var_def_left((*$1),$2);
     }
     '=' var_init_val{ 
-        $$ = create_var_def(*($1), dim_array, $5); 
+        $$ = create_var_def($5); 
     }
 ;
 
