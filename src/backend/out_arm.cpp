@@ -567,6 +567,7 @@ void GetElementPtrLLVM::out_arm_str()  {
         
         //获取其所在地址
         std::string arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
+        
         std::string arr_offset_str = std::to_string(out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName()));
         OutArm::outString("\tADD " + arr_str + ", SP, #" + arr_offset_str);
 
