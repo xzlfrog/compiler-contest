@@ -13,17 +13,14 @@ std::stack<LabelSymbol*> break_st,continue_st;
 extern FILE* yyin;
 extern std::ofstream outputArmFile;
 std::queue<Expression*>assign_queue;
-std::stack<int>array_initial;
-int array_init_idx;
+std::vector<int>dim_array;
+std::vector<int> array_init_idx;
+int cnt_array_init;
+//std::stack<int>array_initial;
 
 //compiler -S -o testcase.s testcase.sy
 int main(int argc,char* argv[]){
     //if(argc != 2) printf("usage: %s filename\n", argv[0]);
-    FILE* inputFile=fopen(argv[4],"r");
-    if (!inputFile) {
-        printf("Error: Unable to open input file %s\n", argv[4]);
-        return 1;
-    }
 
     std::string inputFileName ;
     std::string outputFileName ;
@@ -35,6 +32,13 @@ int main(int argc,char* argv[]){
             outputFileName = arg;
         }
     }
+
+    FILE* inputFile=fopen(inputFileName.c_str(),"r");
+    if (!inputFile) {
+        printf("Error: Unable to open input file %s\n", inputFileName.c_str());
+        return 1;
+    }
+
     // 如果没有指定输出文件，自动生成（在输入文件同目录下）
     if (outputFileName.empty()) {
         size_t dotPos = inputFileName.find_last_of('.');

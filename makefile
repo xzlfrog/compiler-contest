@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX := clang++
-CXXFLAGS := -std=c++17 -O2 -g -Iinclude -Isrc/frontend -I/extlibs -I/opt/homebrew/Cellar/boost/1.88.0/include -w
+CXXFLAGS := -std=c++17 -O0 -g -Iinclude -Isrc/frontend -I/extlibs -I/opt/homebrew/Cellar/boost/1.88.0/include -w
 LDFLAGS := -lm -L/extlibs  -Wl #,-rpath=/extlibs -lantlr4-runtime
 
 # Build directories
@@ -71,9 +71,9 @@ clean:
 	rm -rf $(BUILD_DIR) $(YACC_CPP) $(YACC_HPP) $(LEX_CPP)
 
 test:
-	lldb --args ./build/bin/compiler -S -o ./test/test1.s ./test/test1.sy
+	./build/bin/compiler -S -o ./test/test1.s ./test/test1.sy
 
 debug:
-	lldb ./build/bin/compiler
+	gdb --args ./build/bin/compiler ./test/test1.sy
 
 .PHONY: all clean parser test debug

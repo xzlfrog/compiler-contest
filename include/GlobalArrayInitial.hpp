@@ -38,7 +38,7 @@ public:
     //合并两个ArrayInitial类
     void merge(ArrayInitial* x);
 
-    void reverse();
+    void reverse(std::vector<int>& dims);
 };
 
 ArrayInitial* dataToArrayInitial(Data* data);

@@ -92,6 +92,8 @@ void LLVMList::Remove(LLVM* llvm){
         this->tail=before;
     if(after!=nullptr)
         after->prev=before;
+    llvm->prev=nullptr;
+    llvm->next=nullptr;
 } 
 
 
