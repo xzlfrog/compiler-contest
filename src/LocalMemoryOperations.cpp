@@ -100,6 +100,7 @@ std::string GetElementPtrLLVM::out_str() const {
             cnt++;
         }
         result+=" x ";
+
         result += Data::getTypeStr(ptrval->getArrayType()) ;
         for(int i=0;i<cnt;i++){
             result+="]";
@@ -112,12 +113,14 @@ std::string GetElementPtrLLVM::out_str() const {
             cnt++;
         }
         result+=" x ";
+
         result += Data::getTypeStr(ptrval->getArrayType()) ;
         for(int i=0;i<cnt;i++){
             result+="]";
         }
 
         result+="*";
+
         result += " "+ptrval->getName();
         //result += ", " + Data::getTypeStr(dataType::i32) + " " + getSymOut(SymbolFactory::createConstSymbol(createData(dataType::i32,0)));
         for (const auto& pair : ty_idx) {
