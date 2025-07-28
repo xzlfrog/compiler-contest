@@ -813,6 +813,8 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
                         else
                             throw std::runtime_error("the constant do not have a value");
                     }
+                    if(assign_queue.front()!=nullptr)
+                        llvmlist->InsertTail(assign_queue.front()->llvmlist);
                 }
             }
             else if(a->getType()==symType::pointer){
@@ -866,6 +868,8 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
                         else
                             throw std::runtime_error("the constant do not have a value");
                     }
+                    if(assign_queue.front()!=nullptr)
+                        llvmlist->InsertTail(assign_queue.front()->llvmlist);
                 }
             }
             else if(a->getType()==symType::pointer){
@@ -896,8 +900,6 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
             else
                 throw std::runtime_error("error occurs in the create_var_decl.the symbol is neither a pointer nor array");
         }
-        if(assign_queue.front()!=nullptr)
-            llvmlist->InsertTail(assign_queue.front()->llvmlist);
         assign_queue.pop();
     }
     return llvmlist;
