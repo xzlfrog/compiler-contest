@@ -55,7 +55,7 @@ std::string OutArm::ArithmeticOpConvert(LLVMtype op) {
         case sdiv: return "SDIV";
 
         case logical_and: return "AND";
-        case logical_or: return "OR";
+        case logical_or: return "ORR";
         case logical_xor: return "EOR"; // 异或在ARM中用EOR指令实现
         
         default: throw std::invalid_argument("Unsupported LLVM type for ARM conversion");
@@ -94,21 +94,12 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
     std::string reg_name;
     //全局变量情况
     if(out_Arm.globalAllocator.find_symbol(symbol->getName())){
-        reg_name = symbol->getName() ;
-        reg_name = reg_name.substr(1);
-        // //正常读取全局变量时候
-        // if(!out_Arm.globalAllocator.symbol_to_global.count(symbol->getName())){
-        //     reg_name = symbol->getName() ;
-        // }else{
-        //     //有偏移时候
-        //     std::string reg_name1 = out_Arm.globalAllocator.symbol_to_global[symbol->getName()].first ;
-        //     reg_name1 = reg_name1.substr(1);
-        //     int offset = out_Arm.globalAllocator.symbol_to_global[symbol->getName()].second ;
-        //     if(!offset){
-        //         reg_name = "[" + reg_name1 +"]";
-        //     }else{
-        //         reg_name = "[" + reg_name1 + ", #" + std::to_string(offset) + "]";
-        //     }
+        if(out_Arm.globalAllocator.rodata.count(symbol->getName())){
+            reg_name = "#" + my_to_string(out_Arm.globalAllocator.rodata[symbol->getName()].front());
+        }else{
+            reg_name = symbol->getName() ;
+            reg_name = reg_name.substr(1);
+        }
         // }
     }//计算数组offset情况
     else if(out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(symbol->getName())){
@@ -248,6 +239,20 @@ std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
     b_str = out_Arm.DispatchReg(REMllvm->b);
     c_str = out_Arm.DispatchReg(REMllvm->c);
 
+    if(b_str.front()== '#'){
+        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
+        std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+        OutArm::outString("\tMOV " + tmp_tmp_str + ", " + b_str);
+        b_str = tmp_tmp_str;
+    }
+
+    if(c_str.front()== '#'){
+        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
+        std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+        OutArm::outString("\tMOV " + tmp_tmp_str + ", " + c_str);
+        c_str = tmp_tmp_str;
+    }
+
     return op1 + " " + tmp_str + ", " + b_str + ", " + c_str + "\n\t" +
            op2 + " " + tmp_str + ", " + tmp_str + ", " + c_str + "\n\t" +
            op3 + " " + a_str + ", " + a_str + ", " + tmp_str;
@@ -263,7 +268,21 @@ std::string OutArm::ASMDOperation(ArithmeticOperationLLVM* ASMDllvm){
     a_str = out_Arm.DispatchReg(ASMDllvm->a);
     b_str = out_Arm.DispatchReg(ASMDllvm->b);
     c_str = out_Arm.DispatchReg(ASMDllvm->c);
+    
+        if(b_str.front()== '#'){
+            VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
+            std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+            OutArm::outString("\tMOV " + tmp_tmp_str + ", " + b_str);
+            b_str = tmp_tmp_str;
+        }
 
+        if(c_str.front()== '#'){
+            VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
+            std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+            OutArm::outString("\tMOV " + tmp_tmp_str + ", " + c_str);
+            c_str = tmp_tmp_str;
+        }
+    
     return op + " " + a_str + ", " + b_str + ", " + c_str;
 }
 
@@ -708,10 +727,10 @@ void TypeConversionOperation::out_arm_str()  {
 
     switch (this->llvmType) {
         case llvm_trunc:
-            OutArm::outString("\tTRUNC " + dest_str + ", " + src_str);
+            //OutArm::outString("\tTRUNC " + dest_str + ", " + src_str);
             break;
         case zext:
-            OutArm::outString("\tZEXT " + dest_str + ", " + src_str);
+            //OutArm::outString("\tZEXT " + dest_str + ", " + src_str);
             break;
         case sext:
             OutArm::outString("\tSEXT " + dest_str + ", " + src_str);
