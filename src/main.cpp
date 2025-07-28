@@ -45,12 +45,8 @@ int main(int argc,char* argv[]){
 
     // 如果没有指定输出文件，自动生成（在输入文件同目录下）
     if (outputFileName.empty()) {
-        size_t dotPos = inputFileName.find_last_of('.');
-        if (dotPos != std::string::npos) {
-            outputFileName = inputFileName.substr(0, dotPos) + ".s";
-        } else {
-            outputFileName = inputFileName + ".s";
-        }
+        printf("Error: No output File %s\n", inputFileName.c_str());
+        return 100;
     }
     
     outputArmFile.open(outputFileName, std::ios::out | std::ios::trunc);
