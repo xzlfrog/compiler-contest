@@ -40,7 +40,7 @@ int main(int argc,char* argv[]){
     FILE* inputFile=fopen(inputFileName.c_str(),"r");
     if (!inputFile) {
         printf("Error: Unable to open input file %s\n", inputFileName.c_str());
-        return 1;
+        return 101;
     }
 
     // 如果没有指定输出文件，自动生成（在输入文件同目录下）
@@ -57,7 +57,7 @@ int main(int argc,char* argv[]){
     
     if (!outputArmFile.is_open()) {
         printf("Error: Unable to create output file %s\n", outputFileName.c_str ());
-        return 1;
+        return 102;
     }
     
     yyin = inputFile;
