@@ -14,16 +14,17 @@ class StackAllocator {
     private:
         static StackAllocator* stackInstance; // 单例模式
         std::map<std::string, int> localVarOffsets; // 变量名 -> 栈偏移
-        int currentOffset = 0;                      // 当前栈指针偏移值
+        int currentTop = 0;                      // 栈顶
         
         // 辅助函数
-        int align(int value, int alignment);
+        //int align(int value, int alignment);
         int getTypeSize(Symbol* symbol);
 
         // 构造函数
         StackAllocator() = default;
         
     public:
+        int stack_currentOffset = 0;    // 栈帧指针；
         std::map<std::string, std::string> RegVar_StackVar; //寄存器 栈帧 映射
         std::map<std::string, std::string> Tmp_StackAddress_InReg; //前变量 后 寄存器 ；getelem时候 临时存一下  
 
@@ -51,7 +52,7 @@ class StackAllocator {
         bool isTmpVar(std::string symbol);
         std::string emitPrologue(int stackSize) ;
         std::string emitEpilogue(int stackSize) ;
-        int getCurrentOffset() const;
+        int getCurrentTop() const;
         
         // 辅助功能x
         void addUsedRegister(std::string& reg);

@@ -4,12 +4,13 @@
 // 静态成员定义（唯一一份）
 StackAllocator* StackAllocator::stackInstance = nullptr;
 
-int StackAllocator::align(int value, int alignment) {
-    if (alignment <= 0 || (alignment & (alignment - 1))) {
-        throw std::invalid_argument("Alignment must be a power of 2");
-    }
-    return (value + alignment - 1) & ~(alignment - 1);
-}
+//应该是暂时 不用对齐了 统一X0 D0为 8
+// int StackAllocator::align(int value, int alignment) {
+//     if (alignment <= 0 || (alignment & (alignment - 1))) {
+//         throw std::invalid_argument("Alignment must be a power of 2");
+//     }
+//     return (value + alignment - 1) & ~(alignment - 1);
+// }
 
 void StackAllocator::addUsedRegister(std::string& reg) {
     if (reg.size() < 2 || reg[0] != 'X') return;
@@ -47,7 +48,7 @@ int StackAllocator::calculateRegisterSaveAreaSize() {
     size += usedFloatRegisters.size() * 8;
     
     // 确保16字节对齐
-    return align(size, 16);
+    return size;
 }
 
 bool StackAllocator::isTmpVar(std::string symbol){
@@ -63,31 +64,32 @@ int StackAllocator::getOffset(std::string symbol) {
     const std::string& varName = symbol;
     auto it = this->localVarOffsets.find(varName);
     if (it != this->localVarOffsets.end()) {
-        return it->second ;
+        return this->stack_currentOffset - it->second;
     }
-    // }else if(is_array) {
-    //     return allocateArray(symbol);
-    // }else{
-    //     return allocateLocal(symbol);
-    //x}
+    
     throw std::runtime_error("Variable not found: " + varName);
 }   
 
+//返回地址后 偏移量变了 下面数组同理
 int StackAllocator::allocateLocal(int size, std::string symbol) {
+    int address = currentTop;
     std::string name = symbol;
     if (hasVariable(name)) {
         throw std::runtime_error("Duplicate variable: " + name);
     }
     
-    int alignment = size >= 8 ? 8 : 4;
+    //int alignment = size >= 8 ? 8 : 4;
     
-    currentOffset = align(currentOffset - size, alignment);
-    localVarOffsets[name] = currentOffset;
+    //currentOffset = align(currentOffset - size, alignment);
+    this->currentTop += size;
+    this->localVarOffsets[name] = this->currentTop;
     
-    return currentOffset;
+    return address;
 }
 
+//返回的是头地址
 int StackAllocator::allocateArray(int elementSize, const std::vector<int>& dimensions ,std::string arraySymbol) {
+    int address = currentTop;
     const std::string& name = arraySymbol;
     if (hasVariable(name)) {
         throw std::runtime_error("Duplicate variable: " + name);
@@ -101,17 +103,19 @@ int StackAllocator::allocateArray(int elementSize, const std::vector<int>& dimen
     }
 
     // Align the total size to the largest element size
-    int alignment = elementSize >= 8 ? 8 : 4;
-    currentOffset = align(currentOffset - totalSize, alignment);
-    localVarOffsets[name] = currentOffset;
+    //int alignment = elementSize >= 8 ? 8 : 4;
+    //currentOffset = align(currentOffset - totalSize, alignment);
+    this->localVarOffsets[name] = this->currentTop;
+    this->currentTop += totalSize;
 
-    return currentOffset;
+    return address;
 }
 
 int StackAllocator::calculateStackSize() {
     int registerSaveSize = calculateRegisterSaveAreaSize();
-    int totalSize = -currentOffset + registerSaveSize;
-    return align(totalSize, 16);
+    int totalSize = -currentTop + registerSaveSize;
+    //return align(totalSize, 16);
+    return totalSize;
 }
 
 void StackAllocator::emitRegisterSave(std::ostream& out, int offset) const {
@@ -142,18 +146,18 @@ std::string StackAllocator::emitPrologue(int stackSize) {
     int registerSaveSize = calculateRegisterSaveAreaSize();
     int variableAreaSize = stackSize - registerSaveSize;
     
-    out << "\t; Function prologue\n";
-    out << "\tSTP X29, X30, [SP, #-" << registerSaveSize << "]!\n\t; Save FP and LR\n";
-    out << "\tMOV X29, SP\n\t; Set new FP\n";
+    //out << "\t; Function prologue\n";
+    out << "\tSTP X29, X30, [SP, #-" << registerSaveSize << "]\n";
+    out << "\tMOV X29, SP\n";
     
-    if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
-        out << "\t; Save callee-saved registers\n";
-        emitRegisterSave(out, 16);
-    }
+    // if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
+    //     out << "\t; Save callee-saved registers\n";
+    //     emitRegisterSave(out, 16);
+    // }
     
-    if (variableAreaSize > 0) {
-        out << "\tSUB SP, SP, #" << variableAreaSize << "      // Allocate stack space\n";
-    }
+    // if (variableAreaSize > 0) {
+    //     out << "\tSUB SP, SP, #" << variableAreaSize << "      // Allocate stack space\n";
+    // }
     
     return out.str();
 }
@@ -169,10 +173,10 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
         out << "\tADD SP, SP, #" << variableAreaSize << "\n\t; Deallocate stack space\n";
     }
     
-    if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
-        out << "\t; Restore callee-saved registers\n";
-        emitRegisterRestore(out, 16);
-    }
+    // if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
+    //     out << "\t; Restore callee-saved registers\n";
+    //     emitRegisterRestore(out, 16);
+    // }
     
     out << "\tLDP X29, X30, [SP], #" << registerSaveSize << "\n\t; Restore FP and LR\n";  
     return out.str();
@@ -180,14 +184,14 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
 
 void StackAllocator::reset() {
     localVarOffsets.clear();
-    currentOffset = 0;
+    currentTop = 0;
     usedRegisters.clear();
     usedFloatRegisters.clear();
 }
 
 void StackAllocator::printAllocation(std::ostream& out) const {
     out << "Stack Allocation:\n";
-    out << "Total size: " << (-currentOffset) << " bytes\n";
+    out << "Total size: " << (-currentTop) << " bytes\n";
     out << "Variables:\n";
     for (const auto& entry : localVarOffsets) {
         out << "  " << entry.first << ": " << entry.second << "\n";
@@ -205,8 +209,8 @@ bool StackAllocator::hasVariable(const std::string& varName) {
     return localVarOffsets.find(varName) != localVarOffsets.end();
 }
 
-int StackAllocator::getCurrentOffset() const {
-    return currentOffset;
+int StackAllocator::getCurrentTop() const {
+    return currentTop;
 }
 
 //未对齐可能有隐患
@@ -216,6 +220,6 @@ void StackAllocator::addPtr(std::string symbol, int offset) {
         return; // 如果变量已经存在，则不需要重新添加
     }
     // Store the pointer with its offset
-    localVarOffsets[name] = this->currentOffset + offset;
-    this->currentOffset += offset; //加减指针要打印出来吧。。。 这里不是真正的栈帧顶啦！
+    localVarOffsets[name] = this->currentTop + offset;
+    this->currentTop += offset; //加减指针要打印出来吧。。。 这里不是真正的栈帧顶啦！
 }

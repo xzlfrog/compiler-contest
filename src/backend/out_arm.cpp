@@ -7,6 +7,7 @@
 OutArm* OutArm::instance = nullptr; 
 std::ofstream outputArmFile;
 
+// 暂时不用了 因为我们统一用X寄存器 D寄存器
 int OutArm::getDataSize(Symbol* symbol){
     int size ;
     if(auto * arraySymbol = dynamic_cast<ArraySymbol*>(symbol)) {
@@ -456,10 +457,11 @@ void FuncDefination::out_arm_str()  {
 
     // 函数定义需要输出 ARM 汇编代码
     std::string func_name = this->func->getName();
-    out_Arm.globalAllocator.allocateFunc(func_name);
+    
     if(!func_name.empty()) {
         func_name = func_name.substr(1);  // 从第1个字符开始，取到末尾
     }
+    out_Arm.globalAllocator.allocateFunc(func_name);
     OutArm::outString(func_name + ":");
     
     int stack_size = out_Arm.stackAllocator.calculateStackSize();
@@ -485,27 +487,17 @@ void FuncDefination::out_arm_str()  {
 void AllocaNonArrayLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
-    // std::string var_str = out_Arm.DispatchReg(this->sym);
-    // if(this->sym->getPointedType()==dataType::f32 || this->sym->getPointedType()==dataType::f64) {
-    //    out_Arm.dRegAllocator.allocateOtherSpace(this->sym->getName());
-    // }else{
-    //      out_Arm.xRegAllocator.allocateOtherSpace(this->sym->getName());
-    // }
-    int datasize = OutArm::getDataSize(this->sym);
-    int size = out_Arm.stackAllocator.allocateLocal(datasize,this->sym->getName());
+    //int datasize = OutArm::getDataSize(this->sym); 暂时不用了 我们统一用x寄存器 所以偏移量为8
+    int size = out_Arm.stackAllocator.allocateLocal( 8 ,this->sym->getName());
     
 }
 
 void AllocaArrayLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
-    // std::string array_str = out_Arm.DispatchReg(this->array);
-    // if(this->array->getArrayType() == dataType::f32 || this->array->getArrayType() == dataType::f64) {
-    //     out_Arm.dRegAllocator.allocateOtherSpace(this->array->getName());
-    // } else{
-    //     out_Arm.xRegAllocator.allocateOtherSpace(this->array->getName());
-    // }
-    int datasize = OutArm::getDataSize(this->array);
-    int size = out_Arm.stackAllocator.allocateArray(datasize,this->getDimensions(),this->array->getName());
+
+    //好吧 数组还是需要的哈  额额 实际不需要
+    //int datasize = OutArm::getDataSize(this->array);
+    int size = out_Arm.stackAllocator.allocateArray( 8 ,this->getDimensions(),this->array->getName());
 }
 
 void LoadLLVM::out_arm_str()  {
@@ -526,11 +518,26 @@ void LoadLLVM::out_arm_str()  {
 void StoreLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     out_Arm.stackAllocator.RegVar_StackVar[src_sym->getName()] = dest_sym->getName();
-
+    
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
+    //store语句特殊处理下
+    if(src_str.front() == '#' && this->src_sym->getDataType()==dataType::i32){
+        std::string tmp_num_str = src_str;
+        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
+        src_str = out_Arm.DispatchReg(tmp);
+        OutArm::outString("\tMOV " + src_str + ", " + tmp_num_str);
+    }else if(src_str.front() == '#' && this->src_sym->getDataType()==dataType::f32){
+        std::string tmp_num_str = src_str;
+        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
+        src_str = out_Arm.DispatchReg(tmp);
+        OutArm::outString("\tMOV " + src_str + ", " + tmp_num_str);
+    }
+
     if(!out_Arm.globalAllocator.find_symbol(dest_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(dest_sym->getName())){
         int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
-        OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]");
+        //store 是否 只存 -8 的情况？ 还真是好像 。。。
+        OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]!");
+        out_Arm.stackAllocator.stack_currentOffset -= offset; 
     }else{
         std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
         OutArm::outString("\tSTR " + src_str + ", " + dest_str);
@@ -600,7 +607,7 @@ void GetElementPtrLLVM::out_arm_str()  {
     }else{//这里是[][]含有变量的情况
         
         //获取其所在地址
-        std::string arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
+        std::string arr_str = "X8";
         out_Arm.stackAllocator.Tmp_StackAddress_InReg[this->getSrcSymbol()->getName()] = arr_str;
 
         std::string arr_offset_str;
@@ -873,7 +880,7 @@ void out_arm(std::string outputFileName, ModuleList* module_list) {
         }
 
         if(flag)
-        OutArm::outString("\n;.module start");
+        OutArm::outString("\n");
         
         // 遍历每个llvm语句
         for (LLVM* llvm = module->head; llvm != nullptr; llvm = llvm->next) {
@@ -881,7 +888,7 @@ void out_arm(std::string outputFileName, ModuleList* module_list) {
         }
         
         if(flag)
-        OutArm::outString(";.endmodule\n");
+        OutArm::outString("\n");
 
         flag = false;
     }

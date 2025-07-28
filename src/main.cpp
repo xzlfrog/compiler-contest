@@ -20,7 +20,7 @@ dataType func_ret_type;
 Symbol* sym_defining;
 //std::stack<int>array_initial;
 
-bool Make_llvm = false;//不输出
+bool Make_llvm = true;//不输出
 
 //compiler -S -o testcase.s testcase.sy
 int main(int argc,char* argv[]){
