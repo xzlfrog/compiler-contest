@@ -167,10 +167,10 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
     int registerSaveSize = calculateRegisterSaveAreaSize();
     int variableAreaSize = stackSize - registerSaveSize;
     
-    out << "\n\t; Function epilogue\n";
+    //out << "\n\t; Function epilogue\n";
     
     if (variableAreaSize > 0) {
-        out << "\tADD SP, SP, #" << variableAreaSize << "\n\t; Deallocate stack space\n";
+        out << "\tADD SP, SP, #" << variableAreaSize << "\n";
     }
     
     // if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
@@ -178,7 +178,7 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
     //     emitRegisterRestore(out, 16);
     // }
     
-    out << "\tLDP X29, X30, [SP], #" << registerSaveSize << "\n\t; Restore FP and LR\n";  
+    out << "\tLDP X29, X30, [SP], #" << registerSaveSize << "\n";  
     return out.str();
 }
 

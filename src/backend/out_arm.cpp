@@ -507,7 +507,12 @@ void LoadLLVM::out_arm_str()  {
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
     if(!out_Arm.globalAllocator.find_symbol(src_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(src_sym->getName())){
         int offset = out_Arm.stackAllocator.getOffset(this->src_sym->getName());
-        OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
+        if (offset == 0){
+            OutArm::outString("\tLDR " + dest_str + ", SP");
+        }
+        else{
+            OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
+        }
     }else{
         std::string src_str = out_Arm.DispatchReg(this->src_sym);
         OutArm::outString("\tLDR " + dest_str + ", " + src_str);
@@ -535,9 +540,13 @@ void StoreLLVM::out_arm_str()  {
 
     if(!out_Arm.globalAllocator.find_symbol(dest_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(dest_sym->getName())){
         int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
-        //store 是否 只存 -8 的情况？ 还真是好像 。。。
-        OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]!");
-        out_Arm.stackAllocator.stack_currentOffset -= offset; 
+        //store 是否 只存 -8 的情况？ 并不是！！！
+        if(offset == 0){
+            OutArm::outString("\tSTR " + src_str + ", SP");
+        }else{
+            OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]!");
+            out_Arm.stackAllocator.stack_currentOffset -= offset; 
+        }
     }else{
         std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
         OutArm::outString("\tSTR " + src_str + ", " + dest_str);
