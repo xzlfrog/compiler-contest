@@ -147,7 +147,7 @@ std::string StackAllocator::emitPrologue(int stackSize) {
     int variableAreaSize = stackSize - registerSaveSize;
     
     //out << "\t; Function prologue\n";
-    out << "\tSTP X29, X30, [SP, #-" << registerSaveSize << "]\n";
+    out << "\tSTP X29, X30, [SP, #-" << registerSaveSize << "]!\n";
     out << "\tMOV X29, SP\n";
     
     // if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
