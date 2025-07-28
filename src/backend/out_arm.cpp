@@ -94,23 +94,27 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
     std::string reg_name;
     //全局变量情况
     if(out_Arm.globalAllocator.find_symbol(symbol->getName())){
-        if(!out_Arm.globalAllocator.symbol_to_global.count(symbol->getName())){
-            reg_name = symbol->getName() ;
-        }else{
-            std::string reg_name1 = out_Arm.globalAllocator.symbol_to_global[symbol->getName()].first ;
-            reg_name1 = reg_name1.substr(1);
-            int offset = out_Arm.globalAllocator.symbol_to_global[symbol->getName()].second ;
-            if(!offset){
-                reg_name = "[" + reg_name1 +"]";
-            }else{
-                reg_name = "[" + reg_name1 + ", #" + std::to_string(offset) + "]";
-            }
-        }
+        reg_name = symbol->getName() ;
+        reg_name = reg_name.substr(1);
+        // //正常读取全局变量时候
+        // if(!out_Arm.globalAllocator.symbol_to_global.count(symbol->getName())){
+        //     reg_name = symbol->getName() ;
+        // }else{
+        //     //有偏移时候
+        //     std::string reg_name1 = out_Arm.globalAllocator.symbol_to_global[symbol->getName()].first ;
+        //     reg_name1 = reg_name1.substr(1);
+        //     int offset = out_Arm.globalAllocator.symbol_to_global[symbol->getName()].second ;
+        //     if(!offset){
+        //         reg_name = "[" + reg_name1 +"]";
+        //     }else{
+        //         reg_name = "[" + reg_name1 + ", #" + std::to_string(offset) + "]";
+        //     }
+        // }
     }//计算数组offset情况
     else if(out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(symbol->getName())){
             reg_name = out_Arm.stackAllocator.Tmp_StackAddress_InReg[symbol->getName()];
     }//常数情况
-    else if(symbol->getType() == symType::constant_nonvar || symbol->getType() == symType::constant_var){
+    else if(symbol->getType() == symType::constant_nonvar){
             reg_name = "#" + getSymOut(symbol);
     }//数组情况
     else if(auto* array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {       
@@ -358,6 +362,10 @@ void ReturnLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
         if (this->returnValue) {
             std::string return_value_str = out_Arm.DispatchReg(this->returnValue);
+            if(out_Arm.globalAllocator.rodata.count(this->returnValue->getName())){
+                //虽然有bug 隐患 但是先这样吧。。。
+                return_value_str = "#" + my_to_string(out_Arm.globalAllocator.rodata[this->returnValue->getName()].front());
+            }
             if(this->getReturnType() == dataType::f32 || this->getReturnType() == dataType::f64) 
             {OutArm::outString("\tMOV D0, " + return_value_str); 
             }else{
@@ -525,9 +533,13 @@ void LoadLLVM::out_arm_str()  {
     }else{
         std::string src_str = out_Arm.DispatchReg(this->src_sym);
         if(out_Arm.globalAllocator.find_symbol(src_sym->getName())){
-            src_str = src_str.substr(1);
             OutArm::outString("\tADRP " + dest_str + ", " + src_str);
             OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", :lo12:" + src_str);
+            //有偏移情况
+            if(out_Arm.globalAllocator.symbol_to_global.count(src_sym->getName())){
+                int offset = out_Arm.globalAllocator.symbol_to_global[src_sym->getName()].second ;
+                OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", #" + std::to_string(offset));
+            }
             OutArm::outString("\tLDR " + dest_str + ", " + "[" + dest_str + "]");
         }else{
             OutArm::outString("\tLDR " + dest_str + ", " + src_str);
@@ -566,9 +578,13 @@ void StoreLLVM::out_arm_str()  {
     }else{
         std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
         if(out_Arm.globalAllocator.find_symbol(src_sym->getName())){
-            src_str = src_str.substr(1);
             OutArm::outString("\tADRP " + dest_str + ", " + src_str);
             OutArm::outString("\tADD " + dest_str + ", " + dest_str +  ", :lo12:" + src_str);
+            //有偏移情况
+            if(out_Arm.globalAllocator.symbol_to_global.count(src_sym->getName())){
+                int offset = out_Arm.globalAllocator.symbol_to_global[src_sym->getName()].second ;
+                OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", #" + std::to_string(offset));
+            }
             OutArm::outString("\tSTR " + src_str + ", " + "[" + dest_str + "]");
         }else{
             OutArm::outString("\tSTR " + src_str + ", " + dest_str);
@@ -626,7 +642,7 @@ void GetElementPtrLLVM::out_arm_str()  {
                     i--;
                 }
         }   
-        offset *= 4; //这里！！！ 我觉得可能有bug哦。。。 
+        offset *= 16; //这里！！！ 我觉得可能有bug哦。。。 
 
         // 全局变量的情况
         if(out_Arm.globalAllocator.find_symbol(this->ptrval->getName())){
@@ -635,6 +651,7 @@ void GetElementPtrLLVM::out_arm_str()  {
             out_Arm.stackAllocator.addPtr(this->dest_sym->getName(), offset);
             
         }
+        //
         out_Arm.stackAllocator.RegVar_StackVar[this->getSrcSymbol()->getName()] = this->getDestSymbol()->getName();
     }else{//这里是[][]含有变量的情况
         
@@ -649,7 +666,7 @@ void GetElementPtrLLVM::out_arm_str()  {
         }
         // N维数组偏移量计算（通用方法）
         int offset = 0;
-        int multiplier = 4;
+        int multiplier = 16;
         std::vector<int> dims = this->getDimensions();
         int i = this->getDimensions().size() - 1;
         

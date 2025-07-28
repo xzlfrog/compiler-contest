@@ -55,10 +55,12 @@ public:
 
     std::map<std::string,std::pair<std::string,int>> symbol_to_global; //左边为变量名 右边为其对应的全局变量（及偏移 如果有数组）
     //代表某符号实际需读取全局变量
+
+    std::map<std::string,std::vector<Data*>> rodata;
 private:
     // 存储全局变量，按段分类
     std::map<std::string,std::string> data;//前名后值
-    std::map<std::string,std::string> rodata;
+    
     std::map<std::string,std::string> bss;
     std::vector<std::string> func;
     
