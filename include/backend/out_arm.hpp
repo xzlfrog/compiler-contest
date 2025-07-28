@@ -3,6 +3,9 @@
 #include "RegAlloca.hpp"
 #include "StaAlloca.hpp"
 
+#include "../BasicOperations.hpp"
+#include "../LocalMemoryOperations.hpp"
+#include "../LLVMFactory.hpp"
 #include "../llvm.hpp"
 #include "../sym.hpp"
 #include "../SSA.hpp"
@@ -27,6 +30,7 @@ private:
 
 
 public:
+    bool exit = false;
 
     static OutArm& getInstance() {
         if (!instance) {
@@ -45,9 +49,27 @@ public:
     XRegAllocator xRegAllocator ;
     DRegAllocator dRegAllocator ;
     // 构造函数打开输出文件
-    
+
+    //前为函数名 后为参数所有寄存器
+    std::unordered_map<std::string,std::vector<std::string>> func_Params_Regs = {
+        {"getint", {}},
+        {"getch", {}},
+        {"getfloat", {}},
+        {"getarray", {"X1"}},
+        {"putint", {"X1"}},
+        {"putch", {"X1"}},
+        {"putfloat", {"D1"}},
+        {"putarray", {"X1","X2"}},
+        {"putfarray", {"X1","X2"}},
+
+        {"starttime", {}},
+        {"stoptime", {}}
+    };
+
+    void resetReg();
     static void outString(const std::string &str);
 
+    static int getDataSize(Symbol* symbol);
     static std::string ArithmeticOpConvert(LLVMtype op);
     static std::string ASMDOperation(ArithmeticOperationLLVM* ASMDllvm);
     static std::string ComparisonOperation(ArithmeticOperationLLVM* cmpllvm);

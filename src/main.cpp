@@ -2,6 +2,7 @@
 #include"frontend/sysy.y.hpp"
 #include"../include/backend/out_arm.hpp"
 #include<stdio.h>
+#include<filesystem>
 
 int scope;
 ModuleList* module_list;
@@ -19,6 +20,8 @@ int cnt_array_init;
 dataType func_ret_type;
 Symbol* sym_defining;
 //std::stack<int>array_initial;
+
+bool Make_llvm = false;//不输出
 
 //compiler -S -o testcase.s testcase.sy
 int main(int argc,char* argv[]){
@@ -38,30 +41,27 @@ int main(int argc,char* argv[]){
     FILE* inputFile=fopen(inputFileName.c_str(),"r");
     if (!inputFile) {
         printf("Error: Unable to open input file %s\n", inputFileName.c_str());
-        return 1;
+        return 101;
     }
 
-    // 如果没有指定输出文件，自动生成（在输入文件同目录下）
+    // 如果未指定输出文件，自动生成：项目根目录下的 xxx.s
     if (outputFileName.empty()) {
-        size_t dotPos = inputFileName.find_last_of('.');
-        if (dotPos != std::string::npos) {
-            outputFileName = inputFileName.substr(0, dotPos) + ".s";
-        } else {
-            outputFileName = inputFileName + ".s";
-        }
+        std::string filename = std::filesystem::path(inputFileName).filename().string();
+        std::string stem = std::filesystem::path(inputFileName).stem().string();  // 去掉 .sy
+        outputFileName = stem + ".s";  // 直接输出到当前目录（项目根目录）
     }
     
     outputArmFile.open(outputFileName, std::ios::out | std::ios::trunc);
     
     if (!outputArmFile.is_open()) {
         printf("Error: Unable to create output file %s\n", outputFileName.c_str ());
-        return 1;
+        return 102;
     }
     
     yyin = inputFile;
     begin_parser();
     yyparse();
-    //out_arm(outputFileName,module_list);
+    out_arm(outputFileName,module_list);
 
     return 0;
 }
