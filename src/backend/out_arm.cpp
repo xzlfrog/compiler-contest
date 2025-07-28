@@ -355,16 +355,20 @@ void ConditionalBranchLLVM::out_arm_str()  {
 
 void ReturnLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
-    if (this->returnValue) {
-        std::string return_value_str = out_Arm.DispatchReg(this->returnValue);
-        if(this->getReturnType() == dataType::f32 || this->getReturnType() == dataType::f64) 
-        {OutArm::outString("\tMOV D0, " + return_value_str); 
-        }else{
-            OutArm::outString("\tMOV X0, " + return_value_str);
+        if (this->returnValue) {
+            std::string return_value_str = out_Arm.DispatchReg(this->returnValue);
+            if(this->getReturnType() == dataType::f32 || this->getReturnType() == dataType::f64) 
+            {OutArm::outString("\tMOV D0, " + return_value_str); 
+            }else{
+                OutArm::outString("\tMOV X0, " + return_value_str);
+            }
         }
-    }
-    OutArm::outString(out_Arm.stackAllocator.emitEpilogue(out_Arm.stackAllocator.calculateStackSize()));
-    OutArm::outString("\tRET");
+        if(out_Arm.exit){
+            OutArm::outString("\tMOV X8, #93\n\tSVC #0");
+        }else{
+            OutArm::outString(out_Arm.stackAllocator.emitEpilogue(out_Arm.stackAllocator.calculateStackSize()));
+            OutArm::outString("\tRET");
+        }
 }
 
 void CallLLVM::out_arm_str()  {
@@ -460,6 +464,10 @@ void FuncDefination::out_arm_str()  {
     
     if(!func_name.empty()) {
         func_name = func_name.substr(1);  // 从第1个字符开始，取到末尾
+    }
+    if(func_name == "main"){
+        func_name = "_start";
+        out_Arm.exit = true;
     }
     out_Arm.globalAllocator.allocateFunc(func_name);
     OutArm::outString(func_name + ":");

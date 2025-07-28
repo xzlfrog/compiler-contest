@@ -30,6 +30,7 @@ private:
 
 
 public:
+    bool exit = false;
 
     static OutArm& getInstance() {
         if (!instance) {
