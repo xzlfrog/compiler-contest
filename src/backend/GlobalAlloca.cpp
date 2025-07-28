@@ -52,6 +52,10 @@ void GlobalAllocator::allocateFunc(std::string func_name){
 
 void GlobalAllocator::allocateConstantNonArray(ConstantNonArrayVarDefination* CNAVD){
     std::string dest_str = (CNAVD->dest_sym->getName());
+     
+    if (!dest_str .empty()) {
+        dest_str = dest_str.substr(1);  // 从第1个字符开始，取到末尾
+    }
     std::string value;
     if(CNAVD->getConstType()==dataType::f32){
         value = "\n\t.float\t" + this->getInitialValue(CNAVD->src_sym);
@@ -164,17 +168,23 @@ std::string GlobalAllocator::getArrayValue(const std::vector<std::pair<std::vect
 void GlobalAllocator::emitAssembly(std::ostream& out){
     if (!this->data.empty()){
         for (auto varname : this->data) {
-            out << "\t.global\t" << varname.first << "\n";       
+            std::string varnametmp = varname.first;
+            varnametmp = varnametmp.substr(1);
+            out << "\t.global\t" << varnametmp << "\n";       
         }
     }
     if (!this->bss.empty()){
         for (auto varname : this->bss) {
-            out << "\t.global\t" << varname.first << "\n";       
+            std::string varnametmp = varname.first;
+            varnametmp = varnametmp.substr(1);
+            out << "\t.global\t" << varnametmp << "\n";        
         }
     }
     if (!this->rodata.empty()){
         for (auto varname : this->rodata) {
-            out << "\t.global\t" << varname.first << "\n";       
+            std::string varnametmp = varname.first;
+            varnametmp = varnametmp.substr(1);
+            out << "\t.global\t" << varnametmp << "\n";         
         }
     }
     if (!this->func.empty()){
@@ -186,7 +196,9 @@ void GlobalAllocator::emitAssembly(std::ostream& out){
     if (!this->data.empty()) {
         out << "\n\t.section .data\n.align\t4\n";
         for (auto varname : this->data) {
-            out << varname.first << ":\t";
+            std::string varnametmp = varname.first;
+            varnametmp = varnametmp.substr(1);  
+            out << varnametmp << ":\t";
             out << "\t" << varname.second <<"\n";       
         }
     }
@@ -195,7 +207,9 @@ void GlobalAllocator::emitAssembly(std::ostream& out){
     if (!this->bss.empty()) {
         out << "\n\t.section .bss\n.align\t4\n";
         for (auto varname : this->bss) {
-            out << varname.first << ":\t";
+            std::string varnametmp = varname.first;
+            varnametmp = varnametmp.substr(1);  
+            out << varnametmp << ":\t";
             out << "\t" << varname.second <<"\n";       
         }
     }
@@ -204,7 +218,9 @@ void GlobalAllocator::emitAssembly(std::ostream& out){
     if (!this->rodata.empty()) {
         out << "\n\t.section .rodata\n.align\t4\n";
         for (auto varname : this->rodata) {
-            out << varname.first << ":\t";
+            std::string varnametmp = varname.first;
+            varnametmp = varnametmp.substr(1);  
+            out << varnametmp << ":\t";
             out << "\t" << varname.second <<"\n";       
         }
     }

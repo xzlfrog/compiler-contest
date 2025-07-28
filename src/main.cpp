@@ -2,6 +2,7 @@
 #include"frontend/sysy.y.hpp"
 #include"../include/backend/out_arm.hpp"
 #include<stdio.h>
+#include<filesystem>
 
 int scope;
 ModuleList* module_list;
@@ -43,11 +44,10 @@ int main(int argc,char* argv[]){
         return 101;
     }
 
-    // 如果没有指定输出文件，自动生成（在输入文件同目录下）
-    if (outputFileName.empty()) {
-        printf("Error: No output File %s\n", inputFileName.c_str());
-        return 100;
-    }
+        std::string filename = std::filesystem::path(inputFileName).filename().string();
+        std::string stem = std::filesystem::path(inputFileName).stem().string();  // 去掉 .sy
+        outputFileName = stem + ".s";  // 直接输出到当前目录（项目根目录）
+    
     
     outputArmFile.open(outputFileName, std::ios::out | std::ios::trunc);
     

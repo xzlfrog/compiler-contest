@@ -95,9 +95,10 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
     //全局变量情况
     if(out_Arm.globalAllocator.find_symbol(symbol->getName())){
         if(!out_Arm.globalAllocator.symbol_to_global.count(symbol->getName())){
-            reg_name = "[" + symbol->getName() +"]";
+            reg_name = symbol->getName() ;
         }else{
             std::string reg_name1 = out_Arm.globalAllocator.symbol_to_global[symbol->getName()].first ;
+            reg_name1 = reg_name1.substr(1);
             int offset = out_Arm.globalAllocator.symbol_to_global[symbol->getName()].second ;
             if(!offset){
                 reg_name = "[" + reg_name1 +"]";
@@ -495,8 +496,8 @@ void FuncDefination::out_arm_str()  {
 void AllocaNonArrayLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
-    //int datasize = OutArm::getDataSize(this->sym); 暂时不用了 我们统一用x寄存器 所以偏移量为8
-    int size = out_Arm.stackAllocator.allocateLocal( 8 ,this->sym->getName());
+    //int datasize = OutArm::getDataSize(this->sym); 暂时不用了 我们统一用x寄存器 所以偏移量为16.
+    int size = out_Arm.stackAllocator.allocateLocal( 16 ,this->sym->getName());
     
 }
 
@@ -505,7 +506,7 @@ void AllocaArrayLLVM::out_arm_str()  {
 
     //好吧 数组还是需要的哈  额额 实际不需要
     //int datasize = OutArm::getDataSize(this->array);
-    int size = out_Arm.stackAllocator.allocateArray( 8 ,this->getDimensions(),this->array->getName());
+    int size = out_Arm.stackAllocator.allocateArray( 16 ,this->getDimensions(),this->array->getName());
 }
 
 void LoadLLVM::out_arm_str()  {
@@ -516,14 +517,21 @@ void LoadLLVM::out_arm_str()  {
     if(!out_Arm.globalAllocator.find_symbol(src_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(src_sym->getName())){
         int offset = out_Arm.stackAllocator.getOffset(this->src_sym->getName());
         if (offset == 0){
-            OutArm::outString("\tLDR " + dest_str + ", SP");
+            OutArm::outString("\tLDR " + dest_str + ", [SP]");
         }
         else{
             OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
         }
     }else{
         std::string src_str = out_Arm.DispatchReg(this->src_sym);
-        OutArm::outString("\tLDR " + dest_str + ", " + src_str);
+        if(out_Arm.globalAllocator.find_symbol(src_sym->getName())){
+            src_str = src_str.substr(1);
+            OutArm::outString("\tADRP " + dest_str + ", " + src_str);
+            OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", :lo12:" + src_str);
+            OutArm::outString("\tLDR " + dest_str + ", " + "[" + dest_str + "]");
+        }else{
+            OutArm::outString("\tLDR " + dest_str + ", " + src_str);
+        }
     }
     
 }
@@ -550,14 +558,21 @@ void StoreLLVM::out_arm_str()  {
         int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
         //store 是否 只存 -8 的情况？ 并不是！！！
         if(offset == 0){
-            OutArm::outString("\tSTR " + src_str + ", SP");
+            OutArm::outString("\tSTR " + src_str + ", [SP]");
         }else{
             OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]!");
             out_Arm.stackAllocator.stack_currentOffset -= offset; 
         }
     }else{
         std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
-        OutArm::outString("\tSTR " + src_str + ", " + dest_str);
+        if(out_Arm.globalAllocator.find_symbol(src_sym->getName())){
+            src_str = src_str.substr(1);
+            OutArm::outString("\tADRP " + dest_str + ", " + src_str);
+            OutArm::outString("\tADD " + dest_str + ", " + dest_str +  ", :lo12:" + src_str);
+            OutArm::outString("\tSTR " + src_str + ", " + "[" + dest_str + "]");
+        }else{
+            OutArm::outString("\tSTR " + src_str + ", " + dest_str);
+        }
     }
 }
 
