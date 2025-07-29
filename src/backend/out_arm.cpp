@@ -1101,6 +1101,7 @@ void XRegAllocator::spillToStack(std::string symbol) {
     }
 
     if (reg_name.empty()) {
+        return;//默认不用存进栈帧
         //throw std::runtime_error("No register allocated for spilling");
     }
     // bool is_in_stack = stackAllocator.hasVariable(symbol);
