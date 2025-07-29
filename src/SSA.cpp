@@ -104,18 +104,6 @@ void getDom(std::vector<BasicBlock*>&bbs){
             }
         }
     }while(flag);
-    /*for(int i=0;i<n;i++){
-        std::vector<int>dom;
-        std::cout<<"dom["<<i<<"] = ";
-        for(int j=0;j<n;j++){
-            if(bbs[i]->out[j]==1){
-                dom.push_back(j);
-                std::cout<<j<<" , ";
-            }
-        }
-        std::cout<<"\n";
-    }
-    std::cout<<"getDom is done\n";*/
 }
 
 std::vector<int> getIdom(std::vector<BasicBlock*>&bbs){
@@ -165,10 +153,6 @@ std::vector<int> getIdom(std::vector<BasicBlock*>&bbs){
         if(runner==-1)
             ret[i]=-1;
     }
-    /*for(int i=0;i<n;i++){
-        std::cout<<"idom["<<i<<"] = "<<ret[i]<<"\n";
-    }
-    std::cout<<"getIdom is done!\n";*/
     return ret;
 }
 
@@ -191,7 +175,6 @@ std::vector<std::vector<int>> getDF(std::vector<BasicBlock*>&bbs,std::vector<int
     for(int i=0;i<n;i++){
         df[i].assign(df_set[i].begin(), df_set[i].end());
     }
-    //std::cout<<"getDF is done"<<"\n";
     return df;
 }
 
@@ -473,6 +456,16 @@ std::string remove_scope_idx_from_name(std::string name){
     return "";
 }
 
+int getScope(std::string name){
+    int len=name.length();
+    const std::string str_scope="scope";
+    for(int i=0;i<len-5;i++){
+        if(name.substr(i,5)==str_scope){
+            return std::stoi(name.substr(i+5,1));
+        }
+    }
+}
+
 void insertPhi(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,std::vector<std::vector<int>>&df){
     std::unordered_map<std::string,std::vector<BasicBlock*>>w;
     mem2reg_pass_pre(llvmlist,bbs);
@@ -514,12 +507,13 @@ void insertPhi(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,std::vector<std::
                     ps->pointedData=bs->data;
                     ps->name=sym_name;
                     ps->PointedType=bs->getDataType();
+                    ps->scope=getScope(sym_name);
                     storeLLVM=LLVMfactory::createStoreLLVM(bs,ps);
                     if(storeLLVM!=nullptr){
                         phiLLVM->next=storeLLVM;
                         storeLLVM->prev=phiLLVM;
                         llvmlist->InsertAfter(bbs[dfn]->head,phiLLVM);
-                        storeLLVM->next=bbs[dfn]->head->next;
+                        //storeLLVM->next=bbs[dfn]->head->next;
                         if(bbs[dfn]->head==bbs[dfn]->tail)
                             bbs[dfn]->tail=storeLLVM;
                     }
@@ -540,7 +534,6 @@ void insertPhi(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,std::vector<std::
             }
         }
     }
-    std::cout<<"insert Phi is done"<<"\n";
 }
 
 void replace_symbol(LLVM* llvm){
@@ -576,8 +569,8 @@ void replace_symbol(LLVM* llvm){
     case LLVMtype::fcmp_one:
     case LLVMtype::fcmp_ord:{
         ArithmeticOperationLLVM* ir =dynamic_cast<ArithmeticOperationLLVM*>(llvm);
-        if(bs_to_ps.end()!=bs_to_ps.find(ir->a->name)){
-            ir->a=copy(last_load[ir->a->name].top());
+        if(bs_to_ps.end()!=bs_to_ps.find(ir->c->name)){
+            ir->c=copy(last_load[ir->c->name].top());
         }
         if(bs_to_ps.end()!=bs_to_ps.find(ir->b->name)){
             ir->b=copy(last_load[ir->b->name].top());
@@ -682,7 +675,8 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
                     }
                     llvmlist->Remove(llvm);
                     bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
-                    last_load[loadLLVM->dest_sym->name].push(last_store[loadLLVM->src_sym->name].top());
+                    if(!last_store[loadLLVM->src_sym->name].empty())
+                        last_load[loadLLVM->dest_sym->name].push(last_store[loadLLVM->src_sym->name].top());
                     //replace_symbol(llvmlist,llvm,last_store[loadLLVM->src_sym->name].top(),loadLLVM->src_sym);
                     loads[loadLLVM->dest_sym->name]++;
                 }
@@ -707,14 +701,12 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
                 StoreLLVM* storeLLVM=dynamic_cast<StoreLLVM*>(llvm);
                 if(storeLLVM->dest_sym->scope!=GLOBAL_SCOPE&&worklists.find(storeLLVM->dest_sym->name)!=worklists.end()){
                     if(array_item_pointer.find(storeLLVM->dest_sym->name)!=array_item_pointer.end()){
-                        std::cout<<storeLLVM->dest_sym->name<<"\n";
                         continue;
                     }
                     if(llvm==bb->tail){
                         bb->tail=llvm->prev;
                         flag_break=true;
                     }
-                    std::cout<<llvm->out_str()<<"\n";
                     llvmlist->Remove(llvm);
                     last_store[storeLLVM->dest_sym->name].push(storeLLVM->src_sym);
                     stores[storeLLVM->dest_sym->name]++;
@@ -856,5 +848,4 @@ void SSA(LLVMList* llvmlist){
     rename(llvmlist,bbs,0);
     delete_alloca(llvmlist);
     dead_code_eliminate(bbs,llvmlist,idom);
-    //std::cout<<"ssa is done!"<<"\n";
 }

@@ -48,9 +48,9 @@ extern std::vector<int> array_init_idx;
 
 %token INT FLOAT CONST VOID
 %token IF ELSE WHILE BREAK CONTINUE RETURN
-%token EQ NE LT GT LE GE AND OR NOT IDENTIFIER INT_CONST FLOAT_CONST INT_OCTAL_CONST INT_HEX_CONST
+%token EQ NE LT GT LE GE AND OR NOT IDENTIFIER INT_CONST FLOAT_CONST
 
-%type <str> IDENTIFIER INT_CONST FLOAT_CONST INT_OCTAL_CONST INT_HEX_CONST
+%type <str> IDENTIFIER INT_CONST FLOAT_CONST
 
 %type <llvm> block_items block_item block stmt decl_or_func func_def decl var_decl const_decl
 %type <sym_vector> func_params const_def_list func_param_list var_def_list
@@ -367,11 +367,7 @@ unary_expr : primary_expr
 primary_expr : LVal
     { $$ = $1;}
     | INT_CONST
-    { $$ = create_primary_INTCONST(stoi(*($1)));  }
-    | INT_OCTAL_CONST
-    { $$ = create_primary_INTCONST(std::stoi(*($1),nullptr,0));  }
-    | INT_HEX_CONST
-    { $$ = create_primary_INTCONST(std::stoi(*($1),nullptr,0));  }
+    { $$ = create_primary_INTCONST(std::stoi((*$1), nullptr, 0));  }
     | FLOAT_CONST
     { $$ = create_primary_FLOATCONST(std::stof(*($1)));}
     | '(' expr ')'

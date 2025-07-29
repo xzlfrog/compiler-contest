@@ -87,9 +87,7 @@ class LLVMList;
     IDENTIFIER = 277,              /* IDENTIFIER  */
     INT_CONST = 278,               /* INT_CONST  */
     FLOAT_CONST = 279,             /* FLOAT_CONST  */
-    INT_OCTAL_CONST = 280,         /* INT_OCTAL_CONST  */
-    INT_HEX_CONST = 281,           /* INT_HEX_CONST  */
-    IFX = 282                      /* IFX  */
+    IFX = 280                      /* IFX  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -109,7 +107,7 @@ union YYSTYPE
     std::vector<Expression*>* exp_vector;
     LLVMList* llvm;
 
-#line 113 "src/frontend/sysy.y.hpp"
+#line 111 "src/frontend/sysy.y.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
