@@ -212,7 +212,11 @@ void GlobalAllocator::emitAssembly(std::ostream& out){
         for (auto varname : this->rodata) {
             std::string varnametmp = varname.first;
             varnametmp = varnametmp.substr(1);  
-            out << varnametmp << ":\t.word\t";
+            if(varname.second.front()->getType() == dataType::i32){
+                out << varnametmp << ":\t.word\t";
+            }else{
+                out << varnametmp << ":\t.float\t";
+            }    
             auto data_value = varname.second.begin();
             out << my_to_string(*data_value);
             ++data_value;
