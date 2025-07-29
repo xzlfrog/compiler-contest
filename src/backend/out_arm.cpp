@@ -547,7 +547,27 @@ void LoadLLVM::out_arm_str()  {
             OutArm::outString("\tLDR " + dest_str + ", [SP]");
         }
         else{
-            OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
+            if(offset >= -512 && offset <= 504){
+                OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
+            }else if(offset < -512){
+                if( offset >= -4095 ){
+                    OutArm::outString("\tMOV X8, #" + std::to_string(-offset));
+                }else{
+                    OutArm::outString("\tMOVZ X8, #" + std::to_string(-offset));
+                }
+                OutArm::outString("\tSUB SP, SP, X8");
+                OutArm::outString("\tLDR " + dest_str + ", [SP]");
+                out_Arm.stackAllocator.stack_currentOffset -= offset;
+            }else if(offset > 504){
+                if( offset <=4095 ){
+                    OutArm::outString("\tMOV X8, #" + std::to_string(offset));
+                }else{
+                    OutArm::outString("\tMOVZ X8, #" + std::to_string(offset));
+                }
+                OutArm::outString("\tADD SP, SP, X8");
+                OutArm::outString("\tLDR " + dest_str + ", [SP]");
+                out_Arm.stackAllocator.stack_currentOffset -= offset;
+            }
         }
     }else{
         std::string src_str = out_Arm.DispatchReg(this->src_sym);
@@ -608,14 +628,35 @@ void StoreLLVM::out_arm_str()  {
         OutArm::outString("\tMOV " + src_str + ", " + tmp_num_str);
     }
 
+    //非全局变量 或 数组情况
     if(!out_Arm.globalAllocator.find_symbol(dest_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(dest_sym->getName())){
         int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
         //store 是否 只存 -8 的情况？ 并不是！！！
         if(offset == 0){
             OutArm::outString("\tSTR " + src_str + ", [SP]");
         }else{
-            OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]!");
-            out_Arm.stackAllocator.stack_currentOffset -= offset; 
+            if(offset >= -512 && offset <= 504){
+                OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]!");
+                out_Arm.stackAllocator.stack_currentOffset -= offset; 
+            }else if(offset < -512){
+                if( offset >= -4095 ){
+                    OutArm::outString("\tMOV X8, #" + std::to_string(-offset));
+                }else{
+                    OutArm::outString("\tMOVZ X8, #" + std::to_string(-offset));
+                }
+                OutArm::outString("\tSUB SP, SP, X8");
+                OutArm::outString("\tSTR " + src_str + ", [SP]");
+                out_Arm.stackAllocator.stack_currentOffset -= offset; 
+            }else if(offset > 504){
+                if( offset <=4095 ){
+                    OutArm::outString("\tMOV X8, #" + std::to_string(offset));
+                }else{
+                    OutArm::outString("\tMOVZ X8, #" + std::to_string(offset));
+                }
+                OutArm::outString("\tADD SP, SP, X8");
+                OutArm::outString("\tSTR " + src_str + ", [SP]");
+                out_Arm.stackAllocator.stack_currentOffset -= offset; 
+            }
         }
     }else{
         std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
@@ -706,7 +747,8 @@ void GetElementPtrLLVM::out_arm_str()  {
         if(out_Arm.globalAllocator.find_symbol(this->ptrval->getName())){
             out_Arm.globalAllocator.addSymbolToGlobal(this->dest_sym->getName(),this->ptrval->getName(),offset);
         }else{
-            out_Arm.stackAllocator.addPtr(this->dest_sym->getName(), offset);
+            //等一下这里没把 非数组的情况考虑进去吗？
+            out_Arm.stackAllocator.addArrayPtrwithOffset(this->dest_sym->getName(), this->ptrval->getName(), offset);
             
         }
         //
@@ -718,9 +760,29 @@ void GetElementPtrLLVM::out_arm_str()  {
         out_Arm.stackAllocator.Tmp_StackAddress_InReg[this->getSrcSymbol()->getName()] = arr_str;
 
         std::string arr_offset_str;
+        //先把数组的首地址正确传递
         if(!out_Arm.globalAllocator.find_symbol(this->ptrval->getName()) && out_Arm.stackAllocator.hasVariable(this->getSrcSymbol()->getName())){
-            arr_offset_str = std::to_string(out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName()));
-            OutArm::outString("\tADD " + arr_str + ", SP, #" + arr_offset_str);
+            int offset = out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName());
+            arr_offset_str = std::to_string(offset);
+            if(offset == 0){
+                OutArm::outString("\tMOV " + arr_str + ", SP");
+            }else{
+                if(offset > 0 && offset <= 4095){
+                    OutArm::outString("\tADD " + arr_str + ", SP, #" + arr_offset_str );
+                }else if(offset > 4095){
+                    VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                    std::string tmp_str = out_Arm.DispatchReg(tmp);
+                    OutArm::outString("\tMOVZ " + tmp_str + ", #" + arr_offset_str);
+                    OutArm::outString("\tADD " + arr_str + ", SP, " + tmp_str );
+                }else if(offset < 0 && offset >= -4095){
+                    OutArm::outString("\tSUB " + arr_str + ", SP, #" + arr_offset_str );
+                }else{
+                    VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                    std::string tmp_str = out_Arm.DispatchReg(tmp);
+                    OutArm::outString("\tMOVZ " + tmp_str + ", #" + std::to_string(-offset));
+                    OutArm::outString("\tSUB " + arr_str + ", SP, " + tmp_str);
+                }
+            }
         }
         // N维数组偏移量计算（通用方法）
         int offset = 0;
@@ -758,8 +820,22 @@ void GetElementPtrLLVM::out_arm_str()  {
                 }
         }
         if(offset!=0){
-            std::string tmp_num_str = std::to_string(offset * 4);
-            OutArm::outString("\tADD " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
+            std::string tmp_num_str = std::to_string(offset * 16);//巨大隐患 究竟是4 还是 16 宏定义考虑之后
+            if(offset > 0 && offset <= 4095){
+                OutArm::outString("\tADD " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
+            }else if(offset > 4095){
+                VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                std::string tmp_str = out_Arm.DispatchReg(tmp);
+                OutArm::outString("\tMOVZ " + tmp_str + ", #" + tmp_num_str);
+                OutArm::outString("\tADD " + arr_str + ", " + arr_str  + ", #" + tmp_str);
+            }else if(offset < 0 && offset >= -4095){
+                OutArm::outString("\tSUB " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
+            }else{
+                VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                std::string tmp_str = out_Arm.DispatchReg(tmp);
+                OutArm::outString("\tMOVZ " + tmp_str + ", #" + std::to_string(-offset));
+                OutArm::outString("\tSUB " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
+            }
         }
             out_Arm.stackAllocator.Tmp_StackAddress_InReg[this->getDestSymbol()->getName()] = arr_str;
     }
@@ -889,6 +965,7 @@ void XRegAllocator::promoteToRegister(std::string symbol) {
 }
 
 void XRegAllocator::spillToStack(std::string symbol) {
+    OutArm& out_Arm = OutArm::getInstance();
     StackAllocator& stackAllocator = StackAllocator::getInstance();
     //临时的直接不管了 溢出的干活
     if(stackAllocator.isTmpVar(symbol) || stackAllocator.Tmp_StackAddress_InReg.count(symbol)){
@@ -905,7 +982,7 @@ void XRegAllocator::spillToStack(std::string symbol) {
     }
 
     if (reg_name.empty()) {
-        throw std::runtime_error("No register allocated for spilling");
+        //throw std::runtime_error("No register allocated for spilling");
     }
     // bool is_in_stack = stackAllocator.hasVariable(symbol);
     // if(is_in_stack) {
@@ -913,7 +990,32 @@ void XRegAllocator::spillToStack(std::string symbol) {
     // }else{
     //     stack_offset = stackAllocator.allocateLocal(symbol);
     // }
-        OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+    if(stack_offset == 0){
+        OutArm::outString("\tSTR " + reg_name + ", [SP]");
+    }else{
+        if(-512 <= stack_offset <= 504){
+            OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]!");
+            out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+        }else if(stack_offset < -512){
+            if( -4095 <= stack_offset ){
+                OutArm::outString("\tMOV X8, #" + std::to_string(-stack_offset));
+            }else{
+                OutArm::outString("\tMOVZ X8, #" + std::to_string(-stack_offset));
+            }
+            OutArm::outString("\tSUB SP, SP, X8");
+            OutArm::outString("\tSTR " + reg_name + ", [SP]");
+            out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+        }else if(stack_offset > 504){
+            if( stack_offset <=4095 ){
+                OutArm::outString("\tMOV X8, #" + std::to_string(stack_offset));
+            }else{
+                OutArm::outString("\tMOVZ X8, #" + std::to_string(stack_offset));
+            }
+            OutArm::outString("\tADD SP, SP, X8");
+            OutArm::outString("\tSTR " + reg_name + ", [SP]");
+            out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+        }
+    }
    
     // 清除寄存器映射
     //this->freeRegister(reg_name);
@@ -941,6 +1043,7 @@ void DRegAllocator::promoteToRegister(std::string symbol) {
 }
 
 void DRegAllocator::spillToStack(std::string symbol) {
+    OutArm& out_Arm = OutArm::getInstance();
     StackAllocator& stackAllocator = StackAllocator::getInstance();
     if(stackAllocator.isTmpVar(symbol) || stackAllocator.Tmp_StackAddress_InReg.count(symbol)){
         return ;
@@ -959,13 +1062,33 @@ void DRegAllocator::spillToStack(std::string symbol) {
     if (reg_name.empty()) {
         throw std::runtime_error("No register allocated for spilling");
     }
-    // bool is_in_stack = stackAllocator.hasVariable(symbol);
-    // if(is_in_stack) {
-    //     stack_offset = stackAllocator.getOffset(symbol);
-    // }else{
-    //     stack_offset = stackAllocator.allocateLocal(symbol);
-    // }
-          OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+
+    if(stack_offset == 0){
+        OutArm::outString("\tSTR " + reg_name + ", [SP]");
+    }else{
+        if(-512 <= stack_offset <= 504){
+            OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]!");
+            out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+        }else if(stack_offset < -512){
+            if( -4095 <= stack_offset ){
+                OutArm::outString("\tMOV X8, #" + std::to_string(-stack_offset));
+            }else{
+                OutArm::outString("\tMOVZ X8, #" + std::to_string(-stack_offset));
+            }
+            OutArm::outString("\tSUB SP, SP, X8");
+            OutArm::outString("\tSTR " + reg_name + ", [SP]");
+            out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+        }else if(stack_offset > 504){
+            if( stack_offset <=4095 ){
+                OutArm::outString("\tMOV X8, #" + std::to_string(stack_offset));
+            }else{
+                OutArm::outString("\tMOVZ X8, #" + std::to_string(stack_offset));
+            }
+            OutArm::outString("\tADD SP, SP, X8");
+            OutArm::outString("\tSTR " + reg_name + ", [SP]");
+            out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+        }
+    }
    
     // 清除寄存器映射
     //this->freeRegister(reg_name);

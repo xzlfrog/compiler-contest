@@ -41,7 +41,7 @@ class StackAllocator {
         // 核心功能函数
         int allocateLocal(int size, std::string symbol);
         int allocateArray(int elementSize, const std::vector<int>& dimensions ,std::string arraySymbol);
-        void addPtr(std::string symbol, int offset);
+        void addArrayPtrwithOffset(std::string symbol, std::string array_symbol, int offset);
 
         int calculateRegisterSaveAreaSize();
         void emitRegisterSave(std::ostream& out, int offset) const;

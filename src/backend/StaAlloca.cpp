@@ -214,12 +214,12 @@ int StackAllocator::getCurrentTop() const {
 }
 
 //未对齐可能有隐患
-void StackAllocator::addPtr(std::string symbol, int offset) {
+void StackAllocator::addArrayPtrwithOffset(std::string symbol, std::string array_symbol, int offset) {
     const std::string& name = symbol;
     if (hasVariable(name)) {
         return; // 如果变量已经存在，则不需要重新添加
     }
     // Store the pointer with its offset
-    localVarOffsets[name] = this->currentTop + offset;
-    this->currentTop += offset; //加减指针要打印出来吧。。。 这里不是真正的栈帧顶啦！
+    localVarOffsets[name] = this->currentTop - localVarOffsets[array_symbol] + offset;
+     //加减指针要打印出来吧。。。 这里不是真正的栈帧顶啦！
 }
