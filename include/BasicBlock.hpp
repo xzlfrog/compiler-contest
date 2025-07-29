@@ -35,4 +35,4 @@ public:
 };
 
 std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist);//划分基本块
-void connectBasicBlocks(std::vector<BasicBlock*>);//得到数据流图
+void connectBasicBlocks(const std::vector<BasicBlock*>& bbs);//得到数据流图

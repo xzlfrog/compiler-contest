@@ -197,6 +197,9 @@ BasicSymbol* getDestSym(LLVM* llvm){
         case LLVMtype::llvm_fmul:
         case LLVMtype::llvm_fdiv:
         case LLVMtype::llvm_frem:
+        case LLVMtype::logical_or:
+        case LLVMtype::logical_and:
+        case LLVMtype::logical_xor:
         case LLVMtype::srem:
         case LLVMtype::urem:
         case LLVMtype::icmp_slt:
@@ -280,6 +283,9 @@ std::vector<Symbol*> getSrcSym(LLVM* llvm){
         case LLVMtype::llvm_frem:
         case LLVMtype::srem:
         case LLVMtype::urem:
+        case LLVMtype::logical_or:
+        case LLVMtype::logical_and:
+        case LLVMtype::logical_xor:
         case LLVMtype::icmp_slt:
         case LLVMtype::icmp_uge:
         case LLVMtype::icmp_ugt:
@@ -554,6 +560,9 @@ void replace_symbol(LLVM* llvm){
     case LLVMtype::llvm_fmul:
     case LLVMtype::llvm_fdiv:
     case LLVMtype::llvm_frem:
+    case LLVMtype::logical_and:
+    case LLVMtype::logical_or:
+    case LLVMtype::logical_xor:
     case LLVMtype::srem:
     case LLVMtype::urem:
     case LLVMtype::icmp_slt:
@@ -627,7 +636,7 @@ void replace_symbol(LLVM* llvm){
         }
         break;
     }
-    case LLVMtype::phi:{
+    /*case LLVMtype::phi:{
         PhiLLVM* ir=dynamic_cast<PhiLLVM*>(llvm);
         for(auto & a : ir->vals_srcs){
             if(bs_to_ps.find(a.first->name)!=bs_to_ps.end()){
@@ -635,9 +644,22 @@ void replace_symbol(LLVM* llvm){
             }
         }
         break;
-    }
+    }*/
     default:
         break;
+    }
+}
+
+void replace_llvm_phi(LLVM* llvm,Label* label){
+    if(llvm->getLLVMType()!=LLVMtype::phi){
+        throw std::runtime_error("error occurs at the replace_llvm_phi,the llvm is not a phi instruction!");
+    }
+    PhiLLVM* phiLLVM=dynamic_cast<PhiLLVM*>(llvm);
+    std::vector<std::pair<BasicSymbol*,LabelSymbol*>>& valAndSrc=phiLLVM->vals_srcs;
+    for(auto &a : valAndSrc){
+        if(a.second==label->getLabel()&&a.first->getType()==symType::variable){
+            a.first=last_store[bs_to_ps[a.first->name]->name].top();
+        }
     }
 }
 
@@ -677,7 +699,6 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
                     bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
                     if(!last_store[loadLLVM->src_sym->name].empty())
                         last_load[loadLLVM->dest_sym->name].push(last_store[loadLLVM->src_sym->name].top());
-                    //replace_symbol(llvmlist,llvm,last_store[loadLLVM->src_sym->name].top(),loadLLVM->src_sym);
                     loads[loadLLVM->dest_sym->name]++;
                 }
             }
@@ -729,6 +750,7 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
     for(auto nxt_bb : bb->nextNode){
         for(LLVM* llvm=nxt_bb->head;llvm!=nullptr&&llvm->prev!=nxt_bb->tail;llvm=llvm->next){
             if(llvm->getLLVMType()==LLVMtype::phi){
+                replace_llvm_phi(llvm,dynamic_cast<Label*>(bb->head));
                 PhiLLVM* phiLLVM=dynamic_cast<PhiLLVM*>(llvm);
                 std::vector<std::pair<BasicSymbol*,LabelSymbol*>> srcAndLabel=phiLLVM->getValAndSrc();
                 for(auto &p : srcAndLabel){

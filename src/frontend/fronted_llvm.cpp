@@ -299,6 +299,7 @@ Expression* create_unary_expr(int op, Expression* a){
     //if(a->sym->data->getType()!=dataType::i32)
         //throw std::runtime_error("unary calculation can only be used in int32 type");
     LLVMList* llvmlist=new LLVMList();
+    llvmlist->InsertHead(a->llvmlist);
     Expression* exp;
     switch (op)
     {
@@ -308,7 +309,7 @@ Expression* create_unary_expr(int op, Expression* a){
                 if(exp!=nullptr){
                     return exp;
                 }
-                llvmlist->InsertHead(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,res,dynamic_cast<BasicSymbol*>(a->sym),SymbolFactory::createConstSymbol(createData(dataType::i32,-1))));
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,res,dynamic_cast<BasicSymbol*>(a->sym),SymbolFactory::createConstSymbol(createData(dataType::i32,-1))));
                 break;
             }
             else if(a->sym->data->getType()==dataType::f32){
@@ -325,15 +326,19 @@ Expression* create_unary_expr(int op, Expression* a){
                 if(exp!=nullptr){
                     return exp;
                 }
-                llvmlist->InsertHead(LLVMfactory::createBasicOperationLLVM(LLVMtype::sub,res,SymbolFactory::createConstSymbol(createData(dataType::i32,0)),dynamic_cast<BasicSymbol*>(a->sym)));
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::sub,res,SymbolFactory::createConstSymbol(createData(dataType::i32,0)),dynamic_cast<BasicSymbol*>(a->sym)));
             }
             else if(a->sym->data->getType()==dataType::f32){
                 exp=constFolding(constExpType::const_exp_fsub,SymbolFactory::createConstSymbol(createData(dataType::f32,0.0f)),a->sym);
                 if(exp!=nullptr){
                     return exp;
                 }
-                llvmlist->InsertHead(LLVMfactory::createUnaryOperationLLVM(res,dynamic_cast<BasicSymbol*>(a->sym),LLVMtype::llvm_fneg));
+                llvmlist->InsertTail(LLVMfactory::createUnaryOperationLLVM(res,dynamic_cast<BasicSymbol*>(a->sym),LLVMtype::llvm_fneg));
             }
+            break;
+        case SINGLE_POSITIVE:
+            res=dynamic_cast<BasicSymbol*>(a->sym);
+            break;
     }
     exp=new Expression(llvmlist,res);
     return exp;
@@ -999,9 +1004,9 @@ void end_parser(){
     if(outfile.is_open()){
         for(;llvmlist!=nullptr;llvmlist=llvmlist->next){
             llvm=llvmlist->head;
-            // if(llvm->getLLVMType()==LLVMtype::func_def){
-            //     SSA(llvmlist);
-            // }
+            //if(llvm->getLLVMType()==LLVMtype::func_def){
+                //SSA(llvmlist);
+            //}
             outfile<<llvm->out_str();
         }
         outfile.close();
