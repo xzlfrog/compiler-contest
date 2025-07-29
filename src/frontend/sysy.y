@@ -69,7 +69,7 @@ extern std::vector<int> array_init_idx;
 %left LT GT LE GE
 %left '+' '-'
 %left '*' '/' '%'
-%right NOT
+%right UMINUS
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -356,11 +356,11 @@ mul_expr : unary_expr
 
 unary_expr : primary_expr
     { $$ = $1; }
-    | '+' unary_expr
+    | '+' unary_expr %prec UMINUS
     { $$ = create_unary_expr(SINGLE_POSITIVE, $2); }
-    | '-' unary_expr
+    | '-' unary_expr %prec UMINUS
     { $$ = create_unary_expr(SINGLE_NEGTIVE, $2); }
-    | NOT unary_expr
+    | NOT unary_expr %prec UMINUS
     { $$ = create_unary_expr(SINGLE_NOT, $2); }
 ;
 

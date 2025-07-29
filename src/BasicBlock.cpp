@@ -58,7 +58,7 @@ void connect(BasicBlock* bb1,BasicBlock* bb2){
 }
 
 //得到数据流图
-void connectBasicBlocks(const std::vector<BasicBlock*> bbs){
+void connectBasicBlocks(const std::vector<BasicBlock*>& bbs){
     for(int i=0;i<bbs.size();i++){
         auto & l= bbs[i];
         switch(l->tail->getLLVMType()){
@@ -74,8 +74,8 @@ void connectBasicBlocks(const std::vector<BasicBlock*> bbs){
                 break;
             }
             case LLVMtype::label:{
-                if(l==bbs[0])
-                    connect(l,bbs[1]);
+                if(i!=bbs.size()-1)
+                    connect(l,bbs[i+1]);
                 break;
             }
             case LLVMtype::ret:{
