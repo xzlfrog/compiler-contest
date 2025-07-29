@@ -551,21 +551,40 @@ void LoadLLVM::out_arm_str()  {
         }
     }else{
         std::string src_str = out_Arm.DispatchReg(this->src_sym);
-        if(out_Arm.globalAllocator.find_symbol(src_sym->getName())){
-            OutArm::outString("\tADRP " + dest_str + ", " + src_str);
-            OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", :lo12:" + src_str);
+        if(out_Arm.globalAllocator.find_symbol(src_sym->getName())) {
+            //全局变量 而不是临时变量
+            if(!out_Arm.globalAllocator.symbol_to_global.count(src_sym->getName())){
+                //这里也要添加因为 store 无法直接取全局变量
+                out_Arm.stackAllocator.Tmp_StackAddress_InReg[src_str] = dest_str;
+                OutArm::outString("\tADRP " + dest_str + ", " + src_str);
+                OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", :lo12:" + src_str);
+            }else{//临时变量
+                std::string tmp_src_str = out_Arm.globalAllocator.symbol_to_global[src_sym->getName()].first;
+                out_Arm.stackAllocator.Tmp_StackAddress_InReg[tmp_src_str] = dest_str;
+                tmp_src_str = tmp_src_str.substr(1);
+                OutArm::outString("\tADRP " + dest_str + ", " + tmp_src_str);
+                OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", :lo12:" + tmp_src_str);
+            }
             //有偏移情况
             if(out_Arm.globalAllocator.symbol_to_global.count(src_sym->getName())){
                 int offset = out_Arm.globalAllocator.symbol_to_global[src_sym->getName()].second ;
-                OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", #" + std::to_string(offset));
+                if(offset > 4095){
+                    VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                    std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
+                    OutArm::outString("\tMOVZ " + tmp_tmp_str + ", #" + std::to_string(offset));
+                    OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", " + tmp_tmp_str);
+                }else{
+                    OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", #" + std::to_string(offset));
+                }
             }
             OutArm::outString("\tLDR " + dest_str + ", " + "[" + dest_str + "]");
         }else{
-            OutArm::outString("\tLDR " + dest_str + ", " + src_str);
+            OutArm::outString("\tLDR " + dest_str + ", " + "[" + src_str + "]");
         }
     }
     
 }
+
 
 void StoreLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
@@ -577,7 +596,11 @@ void StoreLLVM::out_arm_str()  {
         std::string tmp_num_str = src_str;
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
         src_str = out_Arm.DispatchReg(tmp);
-        OutArm::outString("\tMOV " + src_str + ", " + tmp_num_str);
+        if(std::stoi(src_str.substr(1)) > 4095){
+            OutArm::outString("\tMOVZ " + src_str + ", " + tmp_num_str);
+        }else{
+            OutArm::outString("\tMOV " + src_str + ", " + tmp_num_str);
+        }
     }else if(src_str.front() == '#' && this->src_sym->getDataType()==dataType::f32){
         std::string tmp_num_str = src_str;
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
@@ -596,17 +619,33 @@ void StoreLLVM::out_arm_str()  {
         }
     }else{
         std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
-        if(out_Arm.globalAllocator.find_symbol(src_sym->getName())){
-            OutArm::outString("\tADRP " + dest_str + ", " + src_str);
-            OutArm::outString("\tADD " + dest_str + ", " + dest_str +  ", :lo12:" + src_str);
-            //有偏移情况
-            if(out_Arm.globalAllocator.symbol_to_global.count(src_sym->getName())){
-                int offset = out_Arm.globalAllocator.symbol_to_global[src_sym->getName()].second ;
-                OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", #" + std::to_string(offset));
+        if(out_Arm.globalAllocator.find_symbol(dest_sym->getName())){
+                VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
+             //全局变量 而不是临时变量
+             if(!out_Arm.globalAllocator.symbol_to_global.count(dest_sym->getName())){
+                OutArm::outString("\tADRP " + tmp_str + ", " + dest_str);
+                OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + dest_str);
+            }else{//临时变量
+                std::string tmp_dest_str = out_Arm.globalAllocator.symbol_to_global[dest_sym->getName()].first;
+                tmp_dest_str = tmp_dest_str.substr(1);
+                OutArm::outString("\tADRP " + tmp_str + ", " + tmp_dest_str);
+                OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + tmp_dest_str);
+            }//有偏移情况
+            if(out_Arm.globalAllocator.symbol_to_global.count(dest_sym->getName())){
+                int offset = out_Arm.globalAllocator.symbol_to_global[dest_sym->getName()].second ;
+                if(offset > 4095){
+                    VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                    std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
+                    OutArm::outString("\tMOVZ " + tmp_tmp_str + ", #" + std::to_string(offset));
+                    OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
+                }else{
+                    OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", #" + std::to_string(offset));
+                }
             }
-            OutArm::outString("\tSTR " + src_str + ", " + "[" + dest_str + "]");
+            OutArm::outString("\tSTR " + src_str + ", " + "[" + tmp_str + "]");
         }else{
-            OutArm::outString("\tSTR " + src_str + ", " + dest_str);
+            OutArm::outString("\tSTR " + src_str + ", " + "[" + dest_str + "]");
         }
     }
 }
@@ -685,7 +724,7 @@ void GetElementPtrLLVM::out_arm_str()  {
         }
         // N维数组偏移量计算（通用方法）
         int offset = 0;
-        int multiplier = 16;
+        int multiplier = 1;
         std::vector<int> dims = this->getDimensions();
         int i = this->getDimensions().size() - 1;
         
@@ -696,11 +735,18 @@ void GetElementPtrLLVM::out_arm_str()  {
                         offset += (std::stoi(getSymOut(symbol_ptr))) * multiplier;
                     }else{
                         std::string tmp_str = out_Arm.DispatchReg(symbol_ptr);
-                        std::string tmp_num_str = std::to_string(multiplier * 4);
+                        std::string tmp_num_str = std::to_string(multiplier * 16);
                         if(multiplier == 1){
                             out_Arm.outString("\tMOV "+ tmp_str + ", #" + tmp_num_str);
                         }else{
-                            out_Arm.outString("\tMUL "+ tmp_str + ", " + tmp_str + ", #" + tmp_num_str);
+                            VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                            std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
+                            if(multiplier * 16 > 4095){
+                                out_Arm.outString("\tMOVZ " + tmp_tmp_str + ", #" + tmp_num_str);
+                            }else{
+                                out_Arm.outString("\tMOV " + tmp_tmp_str + ", #" + tmp_num_str);
+                            }
+                            out_Arm.outString("\tMUL " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
                         }
                             OutArm::outString("\tADD " + arr_str + ", " + arr_str + ", " + tmp_str);
                     }                   

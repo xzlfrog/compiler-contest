@@ -993,19 +993,19 @@ Symbol* create_param_array(int btype,std::string name,std::vector<int>* dims){
 }
 
 void end_parser(){
-    // LLVMList* llvmlist=module_list->head;
-    // LLVM* llvm;
-    // std::ofstream outfile("output.ll");
-    // if(outfile.is_open()){
-    //     for(;llvmlist!=nullptr;llvmlist=llvmlist->next){
-    //         llvm=llvmlist->head;
-    //         //if(llvm->getLLVMType()==LLVMtype::func_def){
-    //             //SSA(llvmlist);
-    //         //}
-    //         outfile<<llvm->out_str();
-    //     }
-    //     outfile.close();
-    // }
+    LLVMList* llvmlist=module_list->head;
+    LLVM* llvm;
+    std::ofstream outfile("output.ll");
+    if(outfile.is_open()){
+        for(;llvmlist!=nullptr;llvmlist=llvmlist->next){
+            llvm=llvmlist->head;
+            //if(llvm->getLLVMType()==LLVMtype::func_def){
+                //SSA(llvmlist);
+            //}
+            outfile<<llvm->out_str();
+        }
+        outfile.close();
+    }
 }
 
 void func_table_init(){
