@@ -69,6 +69,7 @@ public:
     void resetReg();
     static void outString(const std::string &str);
 
+    static void emitLargeNumber(const std::string& reg, uint64_t imm);
     static int getDataSize(Symbol* symbol);
     static std::string ArithmeticOpConvert(LLVMtype op);
     static std::string ASMDOperation(ArithmeticOperationLLVM* ASMDllvm);

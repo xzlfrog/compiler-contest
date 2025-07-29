@@ -7,6 +7,37 @@
 OutArm* OutArm::instance = nullptr; 
 std::ofstream outputArmFile;
 
+void OutArm::emitLargeNumber(const std::string& reg, uint64_t imm){
+        bool first = true;
+    
+        // 提取四个 16 位段
+        uint16_t parts[4] = {
+            static_cast<uint16_t>(imm & 0xFFFF),           // bits 0-15
+            static_cast<uint16_t>((imm >> 16) & 0xFFFF),   // bits 16-31
+            static_cast<uint16_t>((imm >> 32) & 0xFFFF),   // bits 32-47
+            static_cast<uint16_t>((imm >> 48) & 0xFFFF)    // bits 48-63
+        };
+        int shifts[4] = {0, 16, 32, 48};
+    
+        for (int i = 3; i >= 0; i--) {
+            if (parts[i] != 0 || (first && i == 0)) {
+                std::string instr = first ? "MOVZ" : "MOVK";
+                if (shifts[i] == 0) {
+                    OutArm::outString("\t" + instr + " " + reg + ", #" + std::to_string(parts[i]));
+                } else {
+                    OutArm::outString("\t" + instr + " " + reg + ", #" + std::to_string(parts[i]) + ", LSL #" + std::to_string(shifts[i]));
+                }
+                first = false;
+            }
+        }
+    
+        // 如果全为 0
+        if (first) {
+            OutArm::outString("\tMOVZ " + reg + ", #0");
+        }
+    
+}
+
 // 暂时不用了 因为我们统一用X寄存器 D寄存器
 int OutArm::getDataSize(Symbol* symbol){
     int size ;
@@ -349,6 +380,20 @@ std::string OutArm::ComparisonOperation(ArithmeticOperationLLVM* cmpllvm) {
     b_str = out_Arm.DispatchReg(cmpllvm->b);
     c_str = out_Arm.DispatchReg(cmpllvm->c);
 
+    if(b_str.front()== '#'){
+        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
+        std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+        OutArm::outString("\tMOV " + tmp_tmp_str + ", " + b_str);
+        b_str = tmp_tmp_str;
+    }
+
+    if(c_str.front()== '#'){
+        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
+        std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+        OutArm::outString("\tMOV " + tmp_tmp_str + ", " + c_str);
+        c_str = tmp_tmp_str;
+    }
+
     return op0 + " " + b_str + ", " + c_str + "\n\t" +
            op1 + " " + a_str + ", " + op2 ;
            
@@ -547,21 +592,27 @@ void LoadLLVM::out_arm_str()  {
             OutArm::outString("\tLDR " + dest_str + ", [SP]");
         }
         else{
-            if(offset >= -512 && offset <= 504){
+            if(offset >= -255 && offset <= 255){
                 OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
-            }else if(offset < -512){
+            }else if(offset < -255){
                 if( offset >= -4095 ){
                     OutArm::outString("\tMOV X8, #" + std::to_string(-offset));
-                }else{
+                }else if( offset <= -65535){
+                    OutArm::emitLargeNumber("X8",-offset);
+                }
+                else{
                     OutArm::outString("\tMOVZ X8, #" + std::to_string(-offset));
                 }
                 OutArm::outString("\tSUB SP, SP, X8");
                 OutArm::outString("\tLDR " + dest_str + ", [SP]");
                 out_Arm.stackAllocator.stack_currentOffset -= offset;
-            }else if(offset > 504){
+            }else if(offset > 255){
                 if( offset <=4095 ){
                     OutArm::outString("\tMOV X8, #" + std::to_string(offset));
-                }else{
+                }else if( offset >= 65535){
+                    OutArm::emitLargeNumber("X8",offset);
+                }
+                else{
                     OutArm::outString("\tMOVZ X8, #" + std::to_string(offset));
                 }
                 OutArm::outString("\tADD SP, SP, X8");
@@ -635,21 +686,25 @@ void StoreLLVM::out_arm_str()  {
         if(offset == 0){
             OutArm::outString("\tSTR " + src_str + ", [SP]");
         }else{
-            if(offset >= -512 && offset <= 504){
+            if(offset >= -255 && offset <= 255){
                 OutArm::outString("\tSTR " + src_str + ", [SP, #" + std::to_string(offset) + "]!");
                 out_Arm.stackAllocator.stack_currentOffset -= offset; 
-            }else if(offset < -512){
+            }else if(offset < -255){
                 if( offset >= -4095 ){
                     OutArm::outString("\tMOV X8, #" + std::to_string(-offset));
+                }else if( offset <= -65535){
+                    OutArm::emitLargeNumber("X8",-offset);
                 }else{
                     OutArm::outString("\tMOVZ X8, #" + std::to_string(-offset));
                 }
                 OutArm::outString("\tSUB SP, SP, X8");
                 OutArm::outString("\tSTR " + src_str + ", [SP]");
                 out_Arm.stackAllocator.stack_currentOffset -= offset; 
-            }else if(offset > 504){
+            }else if(offset > 255){
                 if( offset <=4095 ){
                     OutArm::outString("\tMOV X8, #" + std::to_string(offset));
+                }else if( offset >= 65535){
+                    OutArm::emitLargeNumber("X8",offset);
                 }else{
                     OutArm::outString("\tMOVZ X8, #" + std::to_string(offset));
                 }
@@ -993,21 +1048,25 @@ void XRegAllocator::spillToStack(std::string symbol) {
     if(stack_offset == 0){
         OutArm::outString("\tSTR " + reg_name + ", [SP]");
     }else{
-        if(-512 <= stack_offset <= 504){
+        if(-255 <= stack_offset <= 255){
             OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]!");
             out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
-        }else if(stack_offset < -512){
-            if( -4095 <= stack_offset ){
+        }else if(stack_offset < -255){
+            if( stack_offset >= -4095 ){
                 OutArm::outString("\tMOV X8, #" + std::to_string(-stack_offset));
+            }else if( stack_offset <= -65535){
+                OutArm::emitLargeNumber("X8",-stack_offset);
             }else{
                 OutArm::outString("\tMOVZ X8, #" + std::to_string(-stack_offset));
             }
             OutArm::outString("\tSUB SP, SP, X8");
             OutArm::outString("\tSTR " + reg_name + ", [SP]");
             out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
-        }else if(stack_offset > 504){
+        }else if(stack_offset > 255){
             if( stack_offset <=4095 ){
                 OutArm::outString("\tMOV X8, #" + std::to_string(stack_offset));
+            }else if( stack_offset >= 65535){
+                OutArm::emitLargeNumber("X8",stack_offset);
             }else{
                 OutArm::outString("\tMOVZ X8, #" + std::to_string(stack_offset));
             }
@@ -1066,21 +1125,25 @@ void DRegAllocator::spillToStack(std::string symbol) {
     if(stack_offset == 0){
         OutArm::outString("\tSTR " + reg_name + ", [SP]");
     }else{
-        if(-512 <= stack_offset <= 504){
+        if(-255 <= stack_offset <= 255){
             OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]!");
             out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
-        }else if(stack_offset < -512){
+        }else if(stack_offset < -255){
             if( -4095 <= stack_offset ){
                 OutArm::outString("\tMOV X8, #" + std::to_string(-stack_offset));
+            }else if( stack_offset <= -65535){
+                OutArm::emitLargeNumber("X8",-stack_offset);
             }else{
                 OutArm::outString("\tMOVZ X8, #" + std::to_string(-stack_offset));
             }
             OutArm::outString("\tSUB SP, SP, X8");
             OutArm::outString("\tSTR " + reg_name + ", [SP]");
             out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
-        }else if(stack_offset > 504){
+        }else if(stack_offset > 255){
             if( stack_offset <=4095 ){
                 OutArm::outString("\tMOV X8, #" + std::to_string(stack_offset));
+            }else if( stack_offset >= 65535){
+                OutArm::emitLargeNumber("X8",stack_offset);
             }else{
                 OutArm::outString("\tMOVZ X8, #" + std::to_string(stack_offset));
             }
