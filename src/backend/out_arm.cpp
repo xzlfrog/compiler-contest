@@ -106,20 +106,7 @@ std::string OutArm::getIntNumberOfOperands(Symbol *constvarsym){
     }
 }
 
-// std::string getIntNumberOfOperands(ConstSymbol *sym){
-//     ValueVariant number = sym->data->getValue();
-//     if (std::holds_alternative<int>(number)) {
-//         if(std::get<int>(number) == 0) {
-//             return "XZR"; // ARM zero register
-//         }
-//         return "#" + std::to_string(std::get<int>(number));
-//     }else if(std::holds_alternative<float>(number)) {
-//         return std::to_string(std::get<float>(number));
-//     }
-//     throw std::invalid_argument("Unsupported type for getIntNumberOfOperands");
-// }
-
-
+//常数 时候 未考虑 浮点数溢出！
 std::string OutArm::DispatchReg(Symbol* symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     std::string reg_name;
@@ -137,7 +124,13 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
             reg_name = out_Arm.stackAllocator.Tmp_StackAddress_InReg[symbol->getName()];
     }//常数情况
     else if(symbol->getType() == symType::constant_nonvar){
-            reg_name = "#" + getSymOut(symbol);
+            if(std::stoi(getSymOut(symbol)) < 4096 && std::stoi(getSymOut(symbol)) > -4096){
+                reg_name = "#" + getSymOut(symbol);
+            }else{
+                VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                reg_name = out_Arm.DispatchReg(tmp_sym);
+                out_Arm.emitLargeNumber(reg_name,std::stoi(getSymOut(symbol)));
+            }
     }//数组情况
     else if(auto* array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {       
         if (array_Symbol->getArrayType() == dataType::f32 || 
