@@ -397,7 +397,9 @@ void mem2reg_pass_pre(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs){
                     break;
                 }
                 case LLVMtype::load:{
-                    //LoadLLVM* loadLLVM=dynamic_cast<LoadLLVM*>(llvm);
+                    LoadLLVM* loadLLVM=dynamic_cast<LoadLLVM*>(llvm);
+                    if(loadLLVM->src_sym->scope!=GLOBAL_SCOPE&&array_item_pointer.find(loadLLVM->src_sym->name)==array_item_pointer.end())
+                        bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
                     //loadLLVM->dest_sym=worklists[loadLLVM->src_sym->name][bb];
                     break;
                 }
@@ -767,16 +769,6 @@ void delete_alloca(LLVMList* llvmlist){
     }
 }
 
-void init_bs_to_ps(LLVMList* llvmlist){
-    for(LLVM* llvm=llvmlist->head;llvm!=llvmlist->tail;llvm=llvm->next){
-        if(llvm->getLLVMType()==LLVMtype::load){
-            LoadLLVM* loadLLVM=dynamic_cast<LoadLLVM*>(llvm);
-            if(loadLLVM->src_sym->scope!=GLOBAL_SCOPE)
-                bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
-        }
-    }
-}
-
 void SSA(LLVMList* llvmlist){
     count.clear();
     st.clear();
@@ -794,7 +786,6 @@ void SSA(LLVMList* llvmlist){
             func_param_bs->ssa_name=func_param_bs->ssa_name+".0";
         }
     }
-    init_bs_to_ps(llvmlist);
     std::vector<BasicBlock*>bbs=divideBasicBlock(llvmlist);
     connectBasicBlocks(bbs);
     initial_ssa(bbs);

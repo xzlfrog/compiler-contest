@@ -445,10 +445,11 @@ Expression* create_func_call(std::string name, Expression* exp){
     return new Expression(llvmlist,bs);
 }
 
-std::vector<std::pair<dataType,BasicSymbol*>>& getIdxFromExp(std::vector<Expression*>* exps){
+std::vector<std::pair<dataType,BasicSymbol*>>& getIdxFromExp(std::vector<Expression*>* exps,bool flag){
     static std::vector<std::pair<dataType,BasicSymbol*>> res;
     res.clear();
-    res.push_back({dataType::i32,getZeroSym(dataType::i32)});
+    if(!flag)
+        res.push_back({dataType::i32,getZeroSym(dataType::i32)});
     for(auto &exp : (*exps)){
         res.push_back({exp->sym->data->getType(),dynamic_cast<BasicSymbol*>(exp->sym)});
     }
@@ -515,7 +516,8 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
             bs=SymbolFactory::createTmpVarSymbolWithScope(array->getArrayType(),scope);
             PointerSymbol* ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
             ps->isConst=array->isConst;
-            llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM(ps,array,getIdxFromExp(exps)));
+            bool flag=array->scope==1;
+            llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM(ps,array,getIdxFromExp(exps,flag)));
             llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
             if(cnt_array_init>0){
                 PointerSymbol* ps_store=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
@@ -1007,6 +1009,11 @@ void end_parser(){
         for(;llvmlist!=nullptr;llvmlist=llvmlist->next){
             llvm=llvmlist->head;
             if(llvm->getLLVMType()==LLVMtype::func_def){
+                FuncDefination* func_def=dynamic_cast<FuncDefination*>(llvm);
+                if(func_def->block_tail->getLLVMType()!=LLVMtype::ret&&func_def->getReturnType()==dataType::void_){
+                    llvmlist->InsertTail(LLVMfactory::createReturnLLVM(nullptr));
+                    func_def->block_tail=llvmlist->tail;
+                }
                 //SSA(llvmlist);
             }
             outfile<<llvm->out_str();
@@ -1099,7 +1106,7 @@ void begin_parser(){
 LLVMList* assign_array_item(Expression* LVal,Expression* exp){
     LLVM* tail_llvm=LVal->llvmlist->tail;
     LoadLLVM* llvm=dynamic_cast<LoadLLVM*>(tail_llvm);
-    //LVal->llvmlist->Remove(llvm);
+    LVal->llvmlist->Remove(llvm);
     LLVMList* llvmlist=new LLVMList();
     llvmlist->InsertHead(LVal->llvmlist);
     llvmlist->InsertTail(exp->llvmlist);

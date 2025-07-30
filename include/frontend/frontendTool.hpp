@@ -56,7 +56,7 @@ Expression* create_primary_INTCONST(int value);//根据某个值创建对应的e
 Expression* create_primary_FLOATCONST(float value);//根据某个值创建对应的expression
 FuncSymbol* findFunc(std::string name);//根据函数名称查找对应的函数
 Expression* create_func_call(std::string name, Expression* exp);//调用函数
-std::vector<std::pair<dataType,BasicSymbol*>>& getIdxFromExp(std::vector<Expression*>* exps);//这个不重要，用于get_array_item函数中生成getelementptr的指令
+std::vector<std::pair<dataType,BasicSymbol*>>& getIdxFromExp(std::vector<Expression*>* exps,bool flag);//这个不重要，用于get_array_item函数中生成getelementptr的指令
 Expression* get_element(std::string name,std::vector<Expression*>* exps);//取出某个数组中的某个元素
 LLVMList* create_if_stmt(Expression* exp,LLVMList* llvmlist);//if语句llvm ir生成
 LLVMList* create_if_else_stmt(Expression* exp,LLVMList* llvmlist1,LLVMList* llvmlist2);//if-else语句llvm ir生成
