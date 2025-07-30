@@ -63,6 +63,7 @@ void OutArm::emitLoadFloat(const std::string& reg, float value) {
 
 void OutArm::emitLoadFloatSymbol(const std::string& reg, Symbol* float_symbol) {
     OutArm& out_Arm = OutArm::getInstance();
+    
     if(!out_Arm.globalAllocator.rodata.count(float_symbol->getName())){
         std::vector<Data*> float_value;
         float_value.push_back(float_symbol->data);
@@ -718,7 +719,14 @@ void CallLLVM::out_arm_str()  {
                 int val = std::get<int>(const_symbol->data->getValue());
                 OutArm::emitLargeNumber(ori_str,val);
             }else{
-                out_Arm.emitLoadFloatSymbol(ori_str,const_symbol);
+                if(const_symbol->getName() == ""){
+                    std::string name = generate_tmp_var_name();
+                    VarSymbol* tmp_float_sym = SymbolFactory::createVarSymbol(name,const_symbol->data);
+                    std::string tmp_float_str = out_Arm.DispatchReg(tmp_float_sym);
+                    out_Arm.emitLoadFloatSymbol(tmp_float_str,tmp_float_sym);
+                }else{
+                    out_Arm.emitLoadFloatSymbol(ori_str,const_symbol);
+                }
             }
         }else if (auto* const_var_symbol = dynamic_cast<ConstVarSymbol*>(arg)){
             if(const_var_symbol->getDataType()==dataType::i32 || const_var_symbol->getDataType()==dataType::i1){
