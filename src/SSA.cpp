@@ -395,6 +395,10 @@ Data* getZeroData_ssa(dataType dtype){
     return nullptr;
 }
 
+BasicSymbol* getZeroSym_ssa(dataType dtype){
+    return SymbolFactory::createConstSymbol(getZeroData_ssa(dtype));
+}
+
 void mem2reg_pass_pre(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs){
     for(auto & bb : bbs){
         for(LLVM* llvm=bb->head;llvm!=bb->tail->next;llvm=llvm->next){
@@ -517,6 +521,7 @@ void insertPhi(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,std::vector<std::
                         //bs=worklists[sym_name][bbs[bbs[dfn]->prevNode[j]->idx]];
                         phiLLVM->addCase(SymbolFactory::createVarSymbolWithScope(sym_name+".loader",bs_type,2),bbs[dfn]->prevNode[j]->label->label);
                     }
+                    worklist.push(dfn);
                     s1.insert(dfn);
                 }
             }
@@ -561,10 +566,16 @@ void replace_symbol(LLVM* llvm){
     case LLVMtype::fcmp_ord:{
         ArithmeticOperationLLVM* ir =dynamic_cast<ArithmeticOperationLLVM*>(llvm);
         if(bs_to_ps.end()!=bs_to_ps.find(ir->c->name)){
-            ir->c=copy(last_store[bs_to_ps[ir->c->name]->name].top());
+            if(last_store[bs_to_ps[ir->c->name]->name].size()!=0)
+                ir->c=copy(last_store[bs_to_ps[ir->c->name]->name].top());
+            else
+                ir->c=getZeroSym_ssa(ir->c->getDataType());
         }
         if(bs_to_ps.end()!=bs_to_ps.find(ir->b->name)){
-            ir->b=copy(last_store[bs_to_ps[ir->b->name]->name].top());
+            if(last_store[bs_to_ps[ir->b->name]->name].size()!=0)
+                ir->b=copy(last_store[bs_to_ps[ir->b->name]->name].top());
+            else
+                ir->b=getZeroSym_ssa(ir->b->getDataType());
         }
         break;
     }   
@@ -582,7 +593,10 @@ void replace_symbol(LLVM* llvm){
     case LLVMtype::inttoptr:{
         TypeConversionOperation* ir=dynamic_cast<TypeConversionOperation*>(llvm);
         if(bs_to_ps.find(ir->src_sym->name)!=bs_to_ps.end()){
-            ir->src_sym=copy(last_store[bs_to_ps[ir->src_sym->name]->name].top());
+            if(last_store[bs_to_ps[ir->src_sym->name]->name].size()!=0)
+                ir->src_sym=copy(last_store[bs_to_ps[ir->src_sym->name]->name].top());
+            else
+                ir->src_sym=getZeroSym_ssa(ir->src_sym->getDataType());
         }
         break;
     }
@@ -590,7 +604,10 @@ void replace_symbol(LLVM* llvm){
         GetElementPtrLLVM* ir=dynamic_cast<GetElementPtrLLVM*>(llvm);
         for(auto & a : ir->ty_idx){
             if(bs_to_ps.find(a.second->name)!=bs_to_ps.end()){
-                a.second=copy(last_store[bs_to_ps[a.second->name]->name].top());
+                if(last_store[bs_to_ps[a.second->name]->name].size()!=0)
+                    a.second=copy(last_store[bs_to_ps[a.second->name]->name].top());
+                else
+                    a.second=getZeroSym_ssa(a.second->getDataType());
             }
         }
         break;
@@ -598,14 +615,20 @@ void replace_symbol(LLVM* llvm){
     case LLVMtype::llvm_fneg:{
         UnaryOperationLLVM* ir=dynamic_cast<UnaryOperationLLVM*>(llvm);
         if(bs_to_ps.find(ir->src_sym->name)!=bs_to_ps.end()){
-            ir->src_sym=copy(last_store[bs_to_ps[ir->src_sym->name]->name].top());
+            if(last_store[bs_to_ps[ir->src_sym->name]->name].size()!=0)
+                ir->src_sym=copy(last_store[bs_to_ps[ir->src_sym->name]->name].top());
+            else
+                ir->src_sym=getZeroSym_ssa(ir->src_sym->getDataType());
         }
         break;
     }
     case LLVMtype::ret:{
         ReturnLLVM* ir=dynamic_cast<ReturnLLVM*>(llvm);
         if(ir->returnValue!=nullptr&&bs_to_ps.find(ir->returnValue->name)!=bs_to_ps.end()){
-            ir->returnValue=copy(last_store[bs_to_ps[ir->returnValue->name]->name].top());
+            if(last_store[bs_to_ps[ir->returnValue->name]->name].size()!=0)
+                ir->returnValue=copy(last_store[bs_to_ps[ir->returnValue->name]->name].top());
+            else
+                ir->returnValue=getZeroSym_ssa(ir->returnValue->getDataType());
         }
         break;
     }
@@ -613,7 +636,10 @@ void replace_symbol(LLVM* llvm){
         CallLLVM* ir=dynamic_cast<CallLLVM*>(llvm);
         for(auto & a : ir->arguments){
             if(a->getType()==symType::variable&&bs_to_ps.find(a->name)!=bs_to_ps.end()){
-                a=copy(last_store[bs_to_ps[a->name]->name].top());
+                if(last_store[bs_to_ps[a->name]->name].size()!=0)
+                    a=copy(last_store[bs_to_ps[a->name]->name].top());
+                else
+                    a=getZeroSym_ssa(a->getDataType());
             }
         }
         break;
@@ -631,7 +657,10 @@ void replace_llvm_phi(LLVM* llvm,Label* label){
     std::vector<std::pair<BasicSymbol*,LabelSymbol*>>& valAndSrc=phiLLVM->vals_srcs;
     for(auto &a : valAndSrc){
         if(a.second==label->getLabel()&&a.first->getType()==symType::variable){
-            a.first=last_store[bs_to_ps[a.first->name]->name].top();
+            if(last_store[bs_to_ps[a.first->name]->name].size()!=0)
+                a.first=last_store[bs_to_ps[a.first->name]->name].top();
+            else
+                a.first=getZeroSym_ssa(phiLLVM->dest_sym->getDataType());
         }
     }
 }
@@ -668,7 +697,7 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
                         bb->tail=llvm->prev;
                         flag_break=true;
                     }
-                    //llvmlist->Remove(llvm);
+                    llvmlist->Remove(llvm);
                     bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
                     //if(!last_store[loadLLVM->src_sym->name].empty())
                         //last_load[loadLLVM->dest_sym->name].push(last_store[loadLLVM->src_sym->name].top());
@@ -677,7 +706,7 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
             }
             else{
                 //先修改表达式右值
-                //replace_symbol(llvm);
+                replace_symbol(llvm);
                 std::vector<Symbol*> bs=getSrcSym(llvm);
                 for(auto& b : bs){
                     if(b!=nullptr&&b->getType()==symType::variable){
@@ -701,7 +730,7 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
                         bb->tail=llvm->prev;
                         flag_break=true;
                     }
-                    //llvmlist->Remove(llvm);
+                    llvmlist->Remove(llvm);
                     last_store[storeLLVM->dest_sym->name].push(storeLLVM->src_sym);
                     stores[storeLLVM->dest_sym->name]++;
                 }
@@ -723,7 +752,7 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
     for(auto nxt_bb : bb->nextNode){
         for(LLVM* llvm=nxt_bb->head;llvm!=nullptr&&llvm->prev!=nxt_bb->tail;llvm=llvm->next){
             if(llvm->getLLVMType()==LLVMtype::phi){
-                //replace_llvm_phi(llvm,dynamic_cast<Label*>(bb->head));
+                replace_llvm_phi(llvm,dynamic_cast<Label*>(bb->head));
                 PhiLLVM* phiLLVM=dynamic_cast<PhiLLVM*>(llvm);
                 std::vector<std::pair<BasicSymbol*,LabelSymbol*>> srcAndLabel=phiLLVM->getValAndSrc();
                 for(auto &p : srcAndLabel){

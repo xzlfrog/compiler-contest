@@ -19,6 +19,7 @@ std::vector<int> array_init_idx;
 int cnt_array_init;
 dataType func_ret_type;
 Symbol* sym_defining;
+bool ssa_flag;
 //std::stack<int>array_initial;
 
 bool Make_llvm = true;//不输出
@@ -61,7 +62,7 @@ int main(int argc,char* argv[]){
     yyin = inputFile;
     begin_parser();
     yyparse();
-    out_arm(outputFileName,module_list);
+    //out_arm(outputFileName,module_list);
 
     return 0;
 }

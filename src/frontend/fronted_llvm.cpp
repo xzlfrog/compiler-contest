@@ -7,6 +7,7 @@ extern int cnt_array_init;
 extern std::vector<int>dim_array;
 extern Symbol* sym_defining;
 extern bool Make_llvm;
+extern bool ssa_flag;
 
 bool isConst(Symbol* sym){
     if(sym->getType()==symType::constant_var||sym->getType()==symType::constant_nonvar){
@@ -653,8 +654,8 @@ LLVMList* create_return_stmt(Expression* exp){
         llvmlist->InsertTail(LLVMfactory::createReturnLLVM(nullptr));
     }
     else{
-        //if(exp->llvmlist->tail!=nullptr&&exp->llvmlist->tail->getLLVMType()==LLVMtype::load)
-            //exp->llvmlist->Remove(exp->llvmlist->tail);
+        if(ssa_flag&&exp->llvmlist->tail!=nullptr&&exp->llvmlist->tail->getLLVMType()==LLVMtype::load)
+            exp->llvmlist->Remove(exp->llvmlist->tail);
         llvmlist->InsertHead(exp->llvmlist);
         if(exp->sym->getDataType()!=func_ret_type){
             VarSymbol* var_tmp=SymbolFactory::createTmpVarSymbolWithScope(func_ret_type,scope);
@@ -1015,7 +1016,8 @@ void end_parser(){
                         llvmlist->InsertTail(LLVMfactory::createReturnLLVM(nullptr));
                         func_def->block_tail=llvmlist->tail;
                     }
-                    //SSA(llvmlist);
+                    if(ssa_flag)
+                        SSA(llvmlist);
                 }
                 outfile<<llvm->out_str();
             }
@@ -1096,6 +1098,7 @@ void func_table_init(){
 }
 
 void begin_parser(){
+    ssa_flag=false;
     scope=GLOBAL_SCOPE;
     module_list=new ModuleList();
     variable_table.push_back(std::unordered_map<std::string,Symbol*>());
