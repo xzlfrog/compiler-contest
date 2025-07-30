@@ -381,6 +381,20 @@ std::vector<Symbol*> getSrcSym(LLVM* llvm){
     }
 }
 
+Data* getZeroData_ssa(dataType dtype){
+    switch (dtype)
+    {
+    case dataType::i32:
+        return createData(dtype,0);
+        break;
+    case dataType::f32:
+        return createData(dtype,0.0f);
+    default:
+        break;
+    }
+    return nullptr;
+}
+
 void mem2reg_pass_pre(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs){
     for(auto & bb : bbs){
         for(LLVM* llvm=bb->head;llvm!=bb->tail->next;llvm=llvm->next){
@@ -389,11 +403,14 @@ void mem2reg_pass_pre(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs){
                 case LLVMtype::allocate_nonarray:{
                     AllocaNonArrayLLVM* alloca=dynamic_cast<AllocaNonArrayLLVM*>(llvm);
                     worklists[alloca->sym->name]=std::unordered_map<BasicBlock*,BasicSymbol*>();
+                    worklists[alloca->sym->name][bb]=SymbolFactory::createConstSymbol(getZeroData_ssa(alloca->sym->getPointedType()));
                     break;
                 }
                 case LLVMtype::store:{
                     StoreLLVM* storeLLVM=dynamic_cast<StoreLLVM*>(llvm);
-                    worklists[storeLLVM->dest_sym->name][bb]=storeLLVM->src_sym;
+                    if(array_item_pointer.find(storeLLVM->dest_sym->name)==array_item_pointer.end())
+                        worklists[storeLLVM->dest_sym->name][bb]=storeLLVM->src_sym;
+                    //std::cout<<storeLLVM->dest_sym->name<<" : "<<worklists[storeLLVM->dest_sym->name].size()<<"\n";
                     break;
                 }
                 case LLVMtype::load:{
@@ -406,6 +423,7 @@ void mem2reg_pass_pre(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs){
                 case LLVMtype::getelementptr:{
                     GetElementPtrLLVM* getelementptr=dynamic_cast<GetElementPtrLLVM*>(llvm);
                     array_item_pointer.insert(getelementptr->dest_sym->name);
+                    break;
                 }
                 default:{
                     break;
@@ -450,6 +468,8 @@ void insertPhi(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,std::vector<std::
     for(auto& a:w){
         std::vector<BasicBlock*>&bbs1=a.second;
         std::string sym_name=a.first;
+        if(sym_name=="%lastnum.scope2.id0")
+            std::cout<<"111\n";
         BasicSymbol* bs;
         int sz=bbs1.size();
         std::set<int>s1;
@@ -468,8 +488,8 @@ void insertPhi(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,std::vector<std::
                     s1.insert(dfn);
                     vals=std::vector<BasicSymbol*>(0);
                     srcs=std::vector<LabelSymbol*>(0);
-                    bs=SymbolFactory::createVarSymbolWithScope(remove_scope_idx_from_name(sym_name)+".loader",bs_type,2);
-                    PhiLLVM* phiLLVM=LLVMfactory::createPhiLLVM(SymbolFactory::createVarSymbolWithScope(remove_scope_idx_from_name(sym_name)+".loader",bs_type,2),vals,srcs);
+                    bs=SymbolFactory::createVarSymbolWithScope(sym_name+".loader",bs_type,2);
+                    PhiLLVM* phiLLVM=LLVMfactory::createPhiLLVM(SymbolFactory::createVarSymbolWithScope(sym_name+".loader",bs_type,2),vals,srcs);
                     StoreLLVM* storeLLVM=nullptr;
                     PointerSymbol* ps=new PointerSymbol();
                     ps->pointedData=bs->data;
@@ -495,7 +515,7 @@ void insertPhi(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,std::vector<std::
                     phiLLVM->prev=bbs[dfn]->head;
                     for(int j=0;j<bbs[dfn]->prevNode.size();j++){
                         //bs=worklists[sym_name][bbs[bbs[dfn]->prevNode[j]->idx]];
-                        phiLLVM->addCase(SymbolFactory::createVarSymbolWithScope(remove_scope_idx_from_name(sym_name)+".loader",bs_type,2),bbs[dfn]->prevNode[j]->label->label);
+                        phiLLVM->addCase(SymbolFactory::createVarSymbolWithScope(sym_name+".loader",bs_type,2),bbs[dfn]->prevNode[j]->label->label);
                     }
                     s1.insert(dfn);
                 }
@@ -648,7 +668,7 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
                         bb->tail=llvm->prev;
                         flag_break=true;
                     }
-                    llvmlist->Remove(llvm);
+                    //llvmlist->Remove(llvm);
                     bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
                     //if(!last_store[loadLLVM->src_sym->name].empty())
                         //last_load[loadLLVM->dest_sym->name].push(last_store[loadLLVM->src_sym->name].top());
@@ -657,7 +677,7 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
             }
             else{
                 //先修改表达式右值
-                replace_symbol(llvm);
+                //replace_symbol(llvm);
                 std::vector<Symbol*> bs=getSrcSym(llvm);
                 for(auto& b : bs){
                     if(b!=nullptr&&b->getType()==symType::variable){
@@ -681,7 +701,7 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
                         bb->tail=llvm->prev;
                         flag_break=true;
                     }
-                    llvmlist->Remove(llvm);
+                    //llvmlist->Remove(llvm);
                     last_store[storeLLVM->dest_sym->name].push(storeLLVM->src_sym);
                     stores[storeLLVM->dest_sym->name]++;
                 }

@@ -361,7 +361,7 @@ Expression* create_primary_IDENTIFIER(std::string name){
     if(identifier!=nullptr){
         if(identifier->getType()==symType::pointer){
             PointerSymbol* ps=dynamic_cast<PointerSymbol*>(identifier);
-            sym=SymbolFactory::createVarSymbolWithScope(name+".loader",scope);
+            sym=SymbolFactory::createVarSymbolWithScope(ps->name+".loader",scope);
             llvmlist->InsertHead(LLVMfactory::createLoadLLVM(ps,sym));
             exp=new Expression(llvmlist,sym);
         }
@@ -533,7 +533,7 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
         }
         else if(sym->getType()==symType::pointer){
             PointerSymbol* ps=dynamic_cast<PointerSymbol*>(sym);
-            bs=SymbolFactory::createVarSymbolWithScope(name+".loader",scope,createInitialedData(ps->PointedType));
+            bs=SymbolFactory::createVarSymbolWithScope(ps->name+".loader",scope,createInitialedData(ps->PointedType));
             llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
             if(cnt_array_init>0){
                 PointerSymbol* ps_store=SymbolFactory::createTmpPointerSymbolWithScope(ps->PointedType,scope);
