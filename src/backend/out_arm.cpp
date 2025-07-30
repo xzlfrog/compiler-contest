@@ -596,9 +596,22 @@ void ReturnLLVM::out_arm_str()  {
                 //虽然有bug 隐患 但是先这样吧。。。
                 return_value_str = "#" + my_to_string(out_Arm.globalAllocator.rodata[this->returnValue->getName()].front());
             }
-            if(this->getReturnType() == dataType::f32 || this->getReturnType() == dataType::f64) 
-            {OutArm::outString("\tFMOV D0, " + return_value_str); 
-            }else{
+            if(this->getReturnType() == dataType::f32 || this->getReturnType() == dataType::f64){
+                if(returnValue->getName() == ""){
+                    std::string name = generate_tmp_var_name();
+                    VarSymbol* tmp_float_sym = SymbolFactory::createVarSymbol(name,returnValue->data);
+                    std::string tmp_float_str = out_Arm.DispatchReg(tmp_float_sym);
+                    out_Arm.emitLoadFloatSymbol(tmp_float_str,tmp_float_sym);
+                    OutArm::outString("\tFMOV D0, " + tmp_float_str);
+                }else{
+                    out_Arm.emitLoadFloatSymbol("D0",returnValue);
+                }
+            }
+                // {   ValueVariant number = returnValue->data->getValue();
+                //     if (std::holds_alternative<float>(number))
+                //     OutArm::emitLoadFloat("D0", std::get<float>(number)); 
+                    //OutArm::outString("\tFMOV D0, " + return_value_str); 
+            else{
                 OutArm::outString("\tMOV X0, " + return_value_str);
             }
         }
@@ -666,53 +679,15 @@ void CallLLVM::out_arm_str()  {
             }else{
                 OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
             }
-        // }else if(auto* array_symbol = dynamic_cast<PointerSymbol*>(arg)){
-        //     if(out_Arm.globalAllocator.find_symbol(array_symbol->getName())){
-        //         VarSymbol* tmp_sym =SymbolFactory::createTmpVarSymbol (dataType::i32);
-        //         std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
-        //         //全局变量 而不是临时变量
-        //     if(!out_Arm.globalAllocator.symbol_to_global.count(array_symbol->getName())){
-                
-        //         OutArm::outString("\tADRP " + tmp_str + ", " + array_symbol->getName().substr(1));
-        //         OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + array_symbol->getName().substr(1));
-        //     }else{//临时变量
-        //         std::string tmp_src_str = out_Arm.globalAllocator.symbol_to_global[array_symbol->getName()].first;
-        //         //out_Arm.stackAllocator.Tmp_StackAddress_InReg[tmp_src_str] = tmp_str;
-        //         tmp_src_str = tmp_src_str.substr(1);
-        //         OutArm::outString("\tADRP " + tmp_str + ", " + tmp_src_str);
-        //         OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + tmp_src_str);
-        //     }
-        //     //有偏移情况
-        //     if(out_Arm.globalAllocator.symbol_to_global.count(array_symbol->getName())){
-        //         int offset = out_Arm.globalAllocator.symbol_to_global[array_symbol->getName()].second ;
-        //         if(offset > 4095){
-        //             VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
-        //             std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
-        //             OutArm::emitLargeNumber(tmp_tmp_str,offset);
-        //             OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
-        //         }else if( offset == 0){
-
-        //         }else{
-        //             OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + std::to_string(offset));
-        //         }
-        //     }
-        //         arg_str = tmp_str;
-        // }else{
-        //     arg_str = out_Arm.DispatchReg(array_symbol);
-        // }
-
-        // if(ori_str.front() == 'D'){
-        //     OutArm::outString("\tFMOV " + arg_str + ", " + ori_str);
-        // }else{
-        //     OutArm::outString("\tMOV " + arg_str + ", " + ori_str);
-        // }
         }
         else if (auto* var_symbol = dynamic_cast<VarSymbol*>(arg)) {
             arg_str = out_Arm.DispatchReg(var_symbol);
             if(ori_str.front() == 'D'){
-                OutArm::outString("\tFMOV " + arg_str + ", " + ori_str);
+                OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+            }else if(arg_str.front() == 'D' && ori_str.front() == 'X'){
+                OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
             }else{
-                OutArm::outString("\tMOV " + arg_str + ", " + ori_str);
+                OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
             }
         }else if (auto* const_symbol = dynamic_cast<ConstSymbol*>(arg)){
             if(const_symbol->getDataType()==dataType::i32 || const_symbol->getDataType()==dataType::i1){
