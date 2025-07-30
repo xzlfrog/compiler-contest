@@ -61,6 +61,26 @@ void OutArm::emitLoadFloat(const std::string& reg, float value) {
     }
 }
 
+void OutArm::emitLoadFloatSymbol(const std::string& reg, Symbol* float_symbol) {
+    OutArm& out_Arm = OutArm::getInstance();
+    if(!out_Arm.globalAllocator.rodata.count(float_symbol->getName())){
+        std::vector<Data*> float_value;
+        float_value.push_back(float_symbol->data);
+        out_Arm.globalAllocator.rodata[float_symbol->getName()] = float_value;
+    }
+
+    if (out_Arm.globalAllocator.rodata.count(float_symbol->getName())){
+        OutArm::outString("\tADRP X8," + float_symbol->getName().substr(1));
+        OutArm::outString("\tADRP X8, X8, :lo12:"+ float_symbol->getName().substr(1));
+        OutArm::outString("\tLDR " + reg + ", [X8]");
+    }
+    else {
+        // 错误：不是浮点寄存器
+        // 可以抛出错误或断言
+        OutArm::outString("\t// ERROR: invalid float register: " + reg);
+    }
+}
+
 // 暂时不用了 因为我们统一用X寄存器 D寄存器
 int OutArm::getDataSize(Symbol* symbol){
     int size ;
@@ -606,7 +626,40 @@ void CallLLVM::out_arm_str()  {
     for (const auto& arg : this->arguments) {
         ori_str = ori_strs[i];
         if (auto* array_symbol = dynamic_cast<ArraySymbol*>(arg)) {
-            arg_str = out_Arm.DispatchReg(array_symbol);
+                if(out_Arm.globalAllocator.find_symbol(array_symbol->getName())){
+                    VarSymbol* tmp_sym =SymbolFactory::createTmpVarSymbol (dataType::i32);
+                    std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
+                    //全局变量 而不是临时变量
+                if(!out_Arm.globalAllocator.symbol_to_global.count(array_symbol->getName())){
+                    
+                    OutArm::outString("\tADRP " + tmp_str + ", " + array_symbol->getName().substr(1));
+                    OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + array_symbol->getName().substr(1));
+                }else{//临时变量
+                    std::string tmp_src_str = out_Arm.globalAllocator.symbol_to_global[array_symbol->getName()].first;
+                    //out_Arm.stackAllocator.Tmp_StackAddress_InReg[tmp_src_str] = tmp_str;
+                    tmp_src_str = tmp_src_str.substr(1);
+                    OutArm::outString("\tADRP " + tmp_str + ", " + tmp_src_str);
+                    OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + tmp_src_str);
+                }
+                //有偏移情况
+                if(out_Arm.globalAllocator.symbol_to_global.count(array_symbol->getName())){
+                    int offset = out_Arm.globalAllocator.symbol_to_global[array_symbol->getName()].second ;
+                    if(offset > 4095){
+                        VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                        std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
+                        OutArm::emitLargeNumber(tmp_tmp_str,offset);
+                        OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
+                    }else if( offset == 0){
+
+                    }else{
+                        OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + std::to_string(offset));
+                    }
+                }
+                    arg_str = tmp_str;
+            }else{
+                arg_str = out_Arm.DispatchReg(array_symbol);
+            }
+
             if(ori_str.front() == 'D'){
                 OutArm::outString("\tFMOV " + arg_str + ", " + ori_str);
             }else{
@@ -625,8 +678,7 @@ void CallLLVM::out_arm_str()  {
                 int val = std::get<int>(const_symbol->data->getValue());
                 OutArm::emitLargeNumber(ori_str,val);
             }else{
-                float val = std::get<float>(const_symbol->data->getValue());
-                OutArm::emitLoadFloat(ori_str,val);
+                out_Arm.emitLoadFloatSymbol(ori_str,const_symbol);
             }
         }else if (auto* const_var_symbol = dynamic_cast<ConstVarSymbol*>(arg)){
             if(const_var_symbol->getDataType()==dataType::i32 || const_var_symbol->getDataType()==dataType::i1){
@@ -636,19 +688,20 @@ void CallLLVM::out_arm_str()  {
                     Data* tmp_data = out_Arm.globalAllocator.rodata[const_var_symbol->getName()].front();
                     val = std::get<int>(tmp_data->getValue());
                 }else{
-                    val = std::get<int>(const_symbol->data->getValue());
+                    val = std::get<int>(const_var_symbol->data->getValue());
                 }
                 OutArm::emitLargeNumber(ori_str,val);
             }else{
-                float val;
-                //全局常量时候
-                if(out_Arm.globalAllocator.find_symbol(const_var_symbol->getName())){
-                    Data* tmp_data = out_Arm.globalAllocator.rodata[const_var_symbol->getName()].front();
-                    val = std::get<float>(tmp_data->getValue());
-                }else{
-                    val = std::get<float>(const_symbol->data->getValue());
-                }
-                OutArm::emitLoadFloat(ori_str,val);
+                out_Arm.emitLoadFloatSymbol(ori_str,const_var_symbol);
+                // float val;
+                // //全局常量时候
+                // if(out_Arm.globalAllocator.find_symbol(const_var_symbol->getName())){
+                //     Data* tmp_data = out_Arm.globalAllocator.rodata[const_var_symbol->getName()].front();
+                //     val = std::get<float>(tmp_data->getValue());
+                // }else{
+                //     val = std::get<float>(const_symbol->data->getValue());
+                // }
+                // OutArm::emitLoadFloat(ori_str,val);
             }
         }
         ++i;
@@ -1230,7 +1283,12 @@ void XRegAllocator::promoteToRegister(std::string symbol) {
         if (reg_name.empty()) {
             throw std::runtime_error("No free registers available for promotion");
         }
-        OutArm::outString("\tLDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+        if(stack_offset >= -256 && stack_offset <= 255){
+            OutArm::outString("\tLDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+        }else{
+            OutArm::emitLargeNumber(reg_name,stack_offset);
+            OutArm::outString("\tLDR " + reg_name + ", [" + reg_name + "]");
+        }   
         int position = this->var_to_reg[symbol]; 
         if(!Registers[position].empty()){
             this->spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
@@ -1262,16 +1320,11 @@ void XRegAllocator::spillToStack(std::string symbol) {
         return;//默认不用存进栈帧
         //throw std::runtime_error("No register allocated for spilling");
     }
-    // bool is_in_stack = stackAllocator.hasVariable(symbol);
-    // if(is_in_stack) {
-    //     stack_offset = stackAllocator.getOffset(symbol);
-    // }else{
-    //     stack_offset = stackAllocator.allocateLocal(symbol);
-    // }
+
     if(stack_offset == 0){
         OutArm::outString("\tSTR " + reg_name + ", [SP]");
     }else{
-        if(-255 <= stack_offset <= 255){
+        if(stack_offset <= 255 && stack_offset>=-255){
             OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]!");
             out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
         }else if(stack_offset < -255){
@@ -1313,7 +1366,12 @@ void DRegAllocator::promoteToRegister(std::string symbol) {
         if (reg_name.empty()) {
             throw std::runtime_error("No free registers available for promotion");
         }
-        OutArm::outString("\tLDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+        if(stack_offset >= -256 && stack_offset <= 255){
+            OutArm::outString("\tLDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
+        }else{
+            OutArm::emitLargeNumber(reg_name,stack_offset);
+            OutArm::outString("\tLDR " + reg_name + ", [" + reg_name + "]");
+        }       
         int position = this->var_to_reg[symbol]; 
         if(!Registers[position].empty()){
             this->spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
