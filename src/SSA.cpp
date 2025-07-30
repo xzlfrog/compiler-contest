@@ -771,7 +771,8 @@ void init_bs_to_ps(LLVMList* llvmlist){
     for(LLVM* llvm=llvmlist->head;llvm!=llvmlist->tail;llvm=llvm->next){
         if(llvm->getLLVMType()==LLVMtype::load){
             LoadLLVM* loadLLVM=dynamic_cast<LoadLLVM*>(llvm);
-            bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
+            if(loadLLVM->src_sym->scope!=GLOBAL_SCOPE)
+                bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
         }
     }
 }

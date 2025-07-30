@@ -139,7 +139,8 @@ std::string CallLLVM::out_str() const {
 
     for (size_t i = 0; i < arguments.size(); ++i) {
         if (i > 0) result += ", ";
-        std::string argType = Data::getTypeStr(arguments[i]->data->getType());
+        std::string argType = arguments[i]->getType()!=symType::array?
+        Data::getTypeStr(arguments[i]->data->getType()):Data::getTypeStr(dynamic_cast<ArraySymbol*>(arguments[i])->arrayType);
         if (arguments[i]) {
             result += argType + " " + getSymOut(arguments[i]);
         }
