@@ -38,6 +38,29 @@ void OutArm::emitLargeNumber(const std::string& reg, uint64_t imm){
     
 }
 
+void OutArm::emitLoadFloat(const std::string& reg, float value) {
+    // 判断是 S 寄存器（32位）还是 D 寄存器（64位）
+    if (reg[0] == 'S' || reg[0] == 's') {
+        // S0, S1, ... 表示 float (32-bit)
+        char buffer[32];
+        std::snprintf(buffer, sizeof(buffer), "\tLDR %s, =%.7gf", reg.c_str(), value);
+        OutArm::outString(std::string(buffer));
+    }
+    else if (reg[0] == 'D' || reg[0] == 'd') {
+        // D0, D1, ... 表示 double (64-bit)
+        // 注意：我们传入的是 float，要转成 double
+        double dval = static_cast<double>(value);
+        char buffer[32];
+        std::snprintf(buffer, sizeof(buffer), "\tLDR %s, =%.15g", reg.c_str(), dval);
+        OutArm::outString(std::string(buffer));
+    }
+    else {
+        // 错误：不是浮点寄存器
+        // 可以抛出错误或断言
+        OutArm::outString("\t// ERROR: invalid float register: " + reg);
+    }
+}
+
 // 暂时不用了 因为我们统一用X寄存器 D寄存器
 int OutArm::getDataSize(Symbol* symbol){
     int size ;
@@ -288,12 +311,12 @@ std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
         int tmp_num = std::stoi(b_str.substr(1));
-        OutArm::emitLargeNumber(tmp_tmp_str,tmp_num);
-        b_str = tmp_tmp_str;
+        OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
+        b_str = tmp_tmp_str ;
     }
 
-    if(c_str.front()== '='){
-        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
+    if(c_str.front()== '#'){
+        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
         int tmp_num = std::stoi(c_str.substr(1));
         OutArm::emitLargeNumber(tmp_tmp_str,tmp_num);
@@ -304,7 +327,7 @@ std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
         int tmp_num = std::stoi(c_str.substr(1));
-        OutArm::emitLargeNumber(tmp_tmp_str,tmp_num);
+        OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
         c_str = tmp_tmp_str;
     }
 
@@ -361,7 +384,7 @@ std::string OutArm::ASMDOperation(ArithmeticOperationLLVM* ASMDllvm){
             VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
             std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
             int tmp_num = std::stoi(b_str.substr(1));
-            OutArm::emitLargeNumber(tmp_tmp_str,tmp_num);
+            OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
             b_str = tmp_tmp_str;
         }
     
@@ -369,7 +392,7 @@ std::string OutArm::ASMDOperation(ArithmeticOperationLLVM* ASMDllvm){
             VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
             std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
             int tmp_num = std::stoi(c_str.substr(1));
-            OutArm::emitLargeNumber(tmp_tmp_str,tmp_num);
+            OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
             c_str = tmp_tmp_str;
         }
     switch (ASMDllvm->llvmType)
@@ -481,7 +504,7 @@ std::string OutArm::ComparisonOperation(ArithmeticOperationLLVM* cmpllvm) {
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
         int tmp_num = std::stoi(b_str.substr(1));
-        OutArm::emitLargeNumber(tmp_tmp_str,tmp_num);
+        OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
         b_str = tmp_tmp_str;
     }
 
@@ -489,7 +512,7 @@ std::string OutArm::ComparisonOperation(ArithmeticOperationLLVM* cmpllvm) {
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
         int tmp_num = std::stoi(c_str.substr(1));
-        OutArm::emitLargeNumber(tmp_tmp_str,tmp_num);
+        OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
         c_str = tmp_tmp_str;
     }
 
@@ -1050,7 +1073,7 @@ void TypeConversionOperation::out_arm_str()  {
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
         int tmp_num = std::stoi(dest_str.substr(1));
-        OutArm::emitLargeNumber(tmp_tmp_str,tmp_num);
+        OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
         dest_str = tmp_tmp_str;
     }
 
@@ -1058,7 +1081,7 @@ void TypeConversionOperation::out_arm_str()  {
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
         int tmp_num = std::stoi(src_str.substr(1));
-        OutArm::emitLargeNumber(tmp_tmp_str,tmp_num);
+        OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
         src_str = tmp_tmp_str;
     }
 
@@ -1085,6 +1108,12 @@ void TypeConversionOperation::out_arm_str()  {
             OutArm::outString("\tFPTUOI " + dest_str + ", " + src_str);
             break;
         case fptosi:
+            if(src_str.front() == 'X'){
+                VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
+                std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+                out_Arm.outString("\tSCVTF " + tmp_tmp_str + ", " + src_str);
+                src_str = tmp_tmp_str;
+            }
             OutArm::outString("\tFCVTZS " + dest_str + ", " + src_str);
             break;
         case uitofp:

@@ -70,6 +70,7 @@ public:
     static void outString(const std::string &str);
 
     static void emitLargeNumber(const std::string& reg, uint64_t imm);
+    static void emitLoadFloat(const std::string& reg, float value);
     static int getDataSize(Symbol* symbol);
     static std::string ArithmeticOpConvert(LLVMtype op);
     static std::string ASMDOperation(ArithmeticOperationLLVM* ASMDllvm);
