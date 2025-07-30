@@ -651,6 +651,8 @@ LLVMList* create_return_stmt(Expression* exp){
         llvmlist->InsertTail(LLVMfactory::createReturnLLVM(nullptr));
     }
     else{
+        //if(exp->llvmlist->tail!=nullptr&&exp->llvmlist->tail->getLLVMType()==LLVMtype::load)
+            //exp->llvmlist->Remove(exp->llvmlist->tail);
         llvmlist->InsertHead(exp->llvmlist);
         if(exp->sym->getDataType()!=func_ret_type){
             VarSymbol* var_tmp=SymbolFactory::createTmpVarSymbolWithScope(func_ret_type,scope);
@@ -1004,9 +1006,9 @@ void end_parser(){
     if(outfile.is_open()){
         for(;llvmlist!=nullptr;llvmlist=llvmlist->next){
             llvm=llvmlist->head;
-            //if(llvm->getLLVMType()==LLVMtype::func_def){
+            if(llvm->getLLVMType()==LLVMtype::func_def){
                 //SSA(llvmlist);
-            //}
+            }
             outfile<<llvm->out_str();
         }
         outfile.close();
@@ -1097,6 +1099,7 @@ void begin_parser(){
 LLVMList* assign_array_item(Expression* LVal,Expression* exp){
     LLVM* tail_llvm=LVal->llvmlist->tail;
     LoadLLVM* llvm=dynamic_cast<LoadLLVM*>(tail_llvm);
+    //LVal->llvmlist->Remove(llvm);
     LLVMList* llvmlist=new LLVMList();
     llvmlist->InsertHead(LVal->llvmlist);
     llvmlist->InsertTail(exp->llvmlist);

@@ -302,10 +302,6 @@ std::vector<Symbol*> getSrcSym(LLVM* llvm){
             ArithmeticOperationLLVM* ir=dynamic_cast<ArithmeticOperationLLVM*>(llvm);
             ret.push_back(ir->b);
             ret.push_back(ir->c);
-            /*for(auto & a : ret){
-                if(a!=nullptr&&a->getType()==symType::variable&&last_load.find(a->name)!=last_load.end())
-                    a=last_load[a->name].top();
-            }*/
             return ret;
         }
         case LLVMtype::llvm_trunc:
@@ -324,10 +320,6 @@ std::vector<Symbol*> getSrcSym(LLVM* llvm){
         {
             TypeConversionOperation* ir=dynamic_cast<TypeConversionOperation*>(llvm);
             ret.push_back(ir->getSrcSymbol());
-            /*for(auto & a : ret){
-                if(a!=nullptr&&a->getType()==symType::variable&&last_load.find(a->name)!=last_load.end())
-                    a=last_load[a->name].top();
-            }*/
             return ret;
         }
         case LLVMtype::store:
@@ -340,10 +332,6 @@ std::vector<Symbol*> getSrcSym(LLVM* llvm){
         {
             ReturnLLVM* ir=dynamic_cast<ReturnLLVM*>(llvm);
             ret.push_back(ir->getReturnValue());
-            /*for(auto & a : ret){
-                if(a!=nullptr&&a->getType()==symType::variable&&last_load.find(a->name)!=last_load.end())
-                    a=last_load[a->name].top();
-            }*/
             return ret;
         }
         case LLVMtype::call:
@@ -354,39 +342,19 @@ std::vector<Symbol*> getSrcSym(LLVM* llvm){
                     ret.push_back(a);
                 }
             }
-            /*for(auto & a : ret){
-                if(a!=nullptr&&a->getType()==symType::variable&&last_load.find(a->name)!=last_load.end())
-                    a=last_load[a->name].top();
-            }*/
             return ret;
         }
-        /*case LLVMtype::phi:
-        {
-            PhiLLVM* ir=dynamic_cast<PhiLLVM*>(llvm);
-            for(auto &a : ir->getValAndSrc()){
-                ret.push_back(a.first);
-            }
-            return ret;
-        }*/
         case LLVMtype::llvm_neg:
         case LLVMtype::llvm_fneg:
         {
             UnaryOperationLLVM* ir=dynamic_cast<UnaryOperationLLVM*>(llvm);
             ret.push_back(ir->src_sym);
-            /*for(auto & a : ret){
-                if(a!=nullptr&&a->getType()==symType::variable&&last_load.find(a->name)!=last_load.end())
-                    a=last_load[a->name].top();
-            }*/
             return ret;
         }
         case LLVMtype::br_conditional:
         {
             ConditionalBranchLLVM* ir=dynamic_cast<ConditionalBranchLLVM*>(llvm);
             ret.push_back(ir->condition);
-            /*for(auto & a : ret){
-                if(a!=nullptr&&a->getType()==symType::variable&&last_load.find(a->name)!=last_load.end())
-                    a=last_load[a->name].top();
-            }*/
             return ret;
         }
         case LLVMtype::func_def:
@@ -396,10 +364,6 @@ std::vector<Symbol*> getSrcSym(LLVM* llvm){
                 if(a->getType()==symType::variable)
                     ret.push_back(a);
             }
-            /*for(auto & a : ret){
-                if(a!=nullptr&&a->getType()==symType::variable&&last_load.find(a->name)!=last_load.end())
-                    a=last_load[a->name].top();
-            }*/
             return ret;
         }
         case LLVMtype::getelementptr:
@@ -410,10 +374,6 @@ std::vector<Symbol*> getSrcSym(LLVM* llvm){
                     ret.push_back(a.second);
                 }
             }
-            /*for(auto & a : ret){
-                if(a!=nullptr&&a->getType()==symType::variable&&last_load.find(a->name)!=last_load.end())
-                    a=last_load[a->name].top();
-            }*/
         }
         default:
             return std::vector<Symbol*>(0);
@@ -579,10 +539,10 @@ void replace_symbol(LLVM* llvm){
     case LLVMtype::fcmp_ord:{
         ArithmeticOperationLLVM* ir =dynamic_cast<ArithmeticOperationLLVM*>(llvm);
         if(bs_to_ps.end()!=bs_to_ps.find(ir->c->name)){
-            ir->c=copy(last_load[ir->c->name].top());
+            ir->c=copy(last_store[bs_to_ps[ir->c->name]->name].top());
         }
         if(bs_to_ps.end()!=bs_to_ps.find(ir->b->name)){
-            ir->b=copy(last_load[ir->b->name].top());
+            ir->b=copy(last_store[bs_to_ps[ir->b->name]->name].top());
         }
         break;
     }   
@@ -600,7 +560,7 @@ void replace_symbol(LLVM* llvm){
     case LLVMtype::inttoptr:{
         TypeConversionOperation* ir=dynamic_cast<TypeConversionOperation*>(llvm);
         if(bs_to_ps.find(ir->src_sym->name)!=bs_to_ps.end()){
-            ir->src_sym=copy(last_load[ir->src_sym->name].top());
+            ir->src_sym=copy(last_store[bs_to_ps[ir->src_sym->name]->name].top());
         }
         break;
     }
@@ -608,7 +568,7 @@ void replace_symbol(LLVM* llvm){
         GetElementPtrLLVM* ir=dynamic_cast<GetElementPtrLLVM*>(llvm);
         for(auto & a : ir->ty_idx){
             if(bs_to_ps.find(a.second->name)!=bs_to_ps.end()){
-                a.second=copy(last_load[a.second->name].top());
+                a.second=copy(last_store[bs_to_ps[a.second->name]->name].top());
             }
         }
         break;
@@ -616,14 +576,14 @@ void replace_symbol(LLVM* llvm){
     case LLVMtype::llvm_fneg:{
         UnaryOperationLLVM* ir=dynamic_cast<UnaryOperationLLVM*>(llvm);
         if(bs_to_ps.find(ir->src_sym->name)!=bs_to_ps.end()){
-            ir->src_sym=copy(last_load[ir->src_sym->name].top());
+            ir->src_sym=copy(last_store[bs_to_ps[ir->src_sym->name]->name].top());
         }
         break;
     }
     case LLVMtype::ret:{
         ReturnLLVM* ir=dynamic_cast<ReturnLLVM*>(llvm);
         if(ir->returnValue!=nullptr&&bs_to_ps.find(ir->returnValue->name)!=bs_to_ps.end()){
-            ir->returnValue=copy(last_load[ir->returnValue->name].top());
+            ir->returnValue=copy(last_store[bs_to_ps[ir->returnValue->name]->name].top());
         }
         break;
     }
@@ -631,20 +591,11 @@ void replace_symbol(LLVM* llvm){
         CallLLVM* ir=dynamic_cast<CallLLVM*>(llvm);
         for(auto & a : ir->arguments){
             if(a->getType()==symType::variable&&bs_to_ps.find(a->name)!=bs_to_ps.end()){
-                a=copy(last_load[a->name].top());
+                a=copy(last_store[bs_to_ps[a->name]->name].top());
             }
         }
         break;
     }
-    /*case LLVMtype::phi:{
-        PhiLLVM* ir=dynamic_cast<PhiLLVM*>(llvm);
-        for(auto & a : ir->vals_srcs){
-            if(bs_to_ps.find(a.first->name)!=bs_to_ps.end()){
-                a.first=copy(last_load[a.first->name].top());
-            }
-        }
-        break;
-    }*/
     default:
         break;
     }
@@ -697,9 +648,9 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
                     }
                     llvmlist->Remove(llvm);
                     bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
-                    if(!last_store[loadLLVM->src_sym->name].empty())
-                        last_load[loadLLVM->dest_sym->name].push(last_store[loadLLVM->src_sym->name].top());
-                    loads[loadLLVM->dest_sym->name]++;
+                    //if(!last_store[loadLLVM->src_sym->name].empty())
+                        //last_load[loadLLVM->dest_sym->name].push(last_store[loadLLVM->src_sym->name].top());
+                    //loads[loadLLVM->dest_sym->name]++;
                 }
             }
             else{
@@ -750,7 +701,7 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
     for(auto nxt_bb : bb->nextNode){
         for(LLVM* llvm=nxt_bb->head;llvm!=nullptr&&llvm->prev!=nxt_bb->tail;llvm=llvm->next){
             if(llvm->getLLVMType()==LLVMtype::phi){
-                replace_llvm_phi(llvm,dynamic_cast<Label*>(bb->head));
+                //replace_llvm_phi(llvm,dynamic_cast<Label*>(bb->head));
                 PhiLLVM* phiLLVM=dynamic_cast<PhiLLVM*>(llvm);
                 std::vector<std::pair<BasicSymbol*,LabelSymbol*>> srcAndLabel=phiLLVM->getValAndSrc();
                 for(auto &p : srcAndLabel){
@@ -780,7 +731,7 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
 
     for(auto &a:loads){
         for(int i=0;i<a.second;i++){
-            last_load[a.first].pop();
+            //last_load[a.first].pop();
         }
     }
 
@@ -816,6 +767,15 @@ void delete_alloca(LLVMList* llvmlist){
     }
 }
 
+void init_bs_to_ps(LLVMList* llvmlist){
+    for(LLVM* llvm=llvmlist->head;llvm!=llvmlist->tail;llvm=llvm->next){
+        if(llvm->getLLVMType()==LLVMtype::load){
+            LoadLLVM* loadLLVM=dynamic_cast<LoadLLVM*>(llvm);
+            bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
+        }
+    }
+}
+
 void SSA(LLVMList* llvmlist){
     count.clear();
     st.clear();
@@ -833,6 +793,7 @@ void SSA(LLVMList* llvmlist){
             func_param_bs->ssa_name=func_param_bs->ssa_name+".0";
         }
     }
+    init_bs_to_ps(llvmlist);
     std::vector<BasicBlock*>bbs=divideBasicBlock(llvmlist);
     connectBasicBlocks(bbs);
     initial_ssa(bbs);
