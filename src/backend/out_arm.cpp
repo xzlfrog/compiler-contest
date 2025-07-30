@@ -604,20 +604,46 @@ void CallLLVM::out_arm_str()  {
     std::vector<std::string> ori_strs = out_Arm.func_Params_Regs[func_name];
     int i = 0;
     for (const auto& arg : this->arguments) {
+        ori_str = ori_strs[i];
         if (auto* array_symbol = dynamic_cast<ArraySymbol*>(arg)) {
-            ori_str = ori_strs[i];
             arg_str = out_Arm.DispatchReg(array_symbol);
+            if(ori_str.front() == 'D'){
+                OutArm::outString("\tFMOV " + arg_str + ", " + ori_str);
+            }else{
+                OutArm::outString("\tMOV " + arg_str + ", " + ori_str);
+            }
         }
         else if (auto* var_symbol = dynamic_cast<VarSymbol*>(arg)) {
-            ori_str = ori_strs[i];
             arg_str = out_Arm.DispatchReg(var_symbol);
-        } 
-        if(ori_str.front() == 'D'){
-            OutArm::outString("\tFMOV " + arg_str + ", " + ori_str);
-        }else{
-            OutArm::outString("\tMOV " + arg_str + ", " + ori_str);
+            if(ori_str.front() == 'D'){
+                OutArm::outString("\tFMOV " + arg_str + ", " + ori_str);
+            }else{
+                OutArm::outString("\tMOV " + arg_str + ", " + ori_str);
+            }
+        }else if (auto* const_symbol = dynamic_cast<ConstSymbol*>(arg)){
+            if(const_symbol->getDataType()==dataType::i32 || const_symbol->getDataType()==dataType::i1){
+                int val = std::get<int>(const_symbol->data->getValue());
+                OutArm::emitLargeNumber(ori_str,val);
+            }else{
+                float val = std::get<float>(const_symbol->data->getValue());
+                OutArm::emitLoadFloat(ori_str,val);
+            }
+        }else if (auto* const_var_symbol = dynamic_cast<ConstVarSymbol*>(arg)){
+            if(const_var_symbol->getDataType()==dataType::i32 || const_var_symbol->getDataType()==dataType::i1){
+                int val = std::get<int>(const_symbol->data->getValue());
+                OutArm::emitLargeNumber(ori_str,val);
+            }else{
+                float val;
+                //全局常量时候
+                if(out_Arm.globalAllocator.find_symbol(const_var_symbol->getName())){
+                    Data* tmp_data = out_Arm.globalAllocator.rodata[const_var_symbol->getName()].front();
+                    val = std::get<float>(tmp_data->getValue());
+                }else{
+                    val = std::get<float>(const_symbol->data->getValue());
+                }
+                OutArm::emitLoadFloat(ori_str,val);
+            }
         }
-        
         ++i;
     }  
     
