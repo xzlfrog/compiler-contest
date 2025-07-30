@@ -1002,23 +1002,25 @@ Symbol* create_param_array(int btype,std::string name,std::vector<int>* dims){
 }
 
 void end_parser(){
-    LLVMList* llvmlist=module_list->head;
-    LLVM* llvm;
-    std::ofstream outfile("output.ll");
-    if(outfile.is_open()){
-        for(;llvmlist!=nullptr;llvmlist=llvmlist->next){
-            llvm=llvmlist->head;
-            if(llvm->getLLVMType()==LLVMtype::func_def){
-                FuncDefination* func_def=dynamic_cast<FuncDefination*>(llvm);
-                if(func_def->block_tail->getLLVMType()!=LLVMtype::ret&&func_def->getReturnType()==dataType::void_){
-                    llvmlist->InsertTail(LLVMfactory::createReturnLLVM(nullptr));
-                    func_def->block_tail=llvmlist->tail;
+    if(Make_llvm){
+        LLVMList* llvmlist=module_list->head;
+        LLVM* llvm;
+        std::ofstream outfile("output.ll");
+        if(outfile.is_open()){
+            for(;llvmlist!=nullptr;llvmlist=llvmlist->next){
+                llvm=llvmlist->head;
+                if(llvm->getLLVMType()==LLVMtype::func_def){
+                    FuncDefination* func_def=dynamic_cast<FuncDefination*>(llvm);
+                    if(func_def->block_tail->getLLVMType()!=LLVMtype::ret&&func_def->getReturnType()==dataType::void_){
+                        llvmlist->InsertTail(LLVMfactory::createReturnLLVM(nullptr));
+                        func_def->block_tail=llvmlist->tail;
+                    }
+                    //SSA(llvmlist);
                 }
-                //SSA(llvmlist);
+                outfile<<llvm->out_str();
             }
-            outfile<<llvm->out_str();
+            outfile.close();
         }
-        outfile.close();
     }
 }
 

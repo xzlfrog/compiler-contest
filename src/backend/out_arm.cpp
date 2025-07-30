@@ -71,7 +71,7 @@ void OutArm::emitLoadFloatSymbol(const std::string& reg, Symbol* float_symbol) {
 
     if (out_Arm.globalAllocator.rodata.count(float_symbol->getName())){
         OutArm::outString("\tADRP X8, " + float_symbol->getName().substr(1));
-        OutArm::outString("\tADRP X8, :lo12:"+ float_symbol->getName().substr(1));
+        OutArm::outString("\tADD X8, X8, :lo12:"+ float_symbol->getName().substr(1));
         OutArm::outString("\tLDR " + reg + ", [X8]");
     }
     else {
@@ -1167,7 +1167,7 @@ void GetElementPtrLLVM::out_arm_str()  {
                 VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i32);
                 std::string tmp_str = out_Arm.DispatchReg(tmp);
                 OutArm::emitLargeNumber(tmp_str,offset);
-                OutArm::outString("\tADD " + arr_str + ", " + arr_str  + ", #" + tmp_str);
+                OutArm::outString("\tADD " + arr_str + ", " + arr_str  + ", " + tmp_str);
             }else if(offset * 16 < 0 && offset * 16 >= -4095){
                 OutArm::outString("\tSUB " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
             }else{
