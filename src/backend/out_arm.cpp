@@ -630,7 +630,14 @@ void CallLLVM::out_arm_str()  {
             }
         }else if (auto* const_var_symbol = dynamic_cast<ConstVarSymbol*>(arg)){
             if(const_var_symbol->getDataType()==dataType::i32 || const_var_symbol->getDataType()==dataType::i1){
-                int val = std::get<int>(const_symbol->data->getValue());
+                int val ;
+                //全局变量时候
+                if(out_Arm.globalAllocator.find_symbol(const_var_symbol->getName())){
+                    Data* tmp_data = out_Arm.globalAllocator.rodata[const_var_symbol->getName()].front();
+                    val = std::get<int>(tmp_data->getValue());
+                }else{
+                    val = std::get<int>(const_symbol->data->getValue());
+                }
                 OutArm::emitLargeNumber(ori_str,val);
             }else{
                 float val;
