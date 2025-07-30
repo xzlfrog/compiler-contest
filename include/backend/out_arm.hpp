@@ -56,6 +56,7 @@ public:
         {"getch", {}},
         {"getfloat", {}},
         {"getarray", {"X1"}},
+        {"getfarray", {"X1"}},
         {"putint", {"X1"}},
         {"putch", {"X1"}},
         {"putfloat", {"D1"}},
