@@ -13,7 +13,7 @@
 class StackAllocator {
     private:
         static StackAllocator* stackInstance; // 单例模式
-        std::map<std::string, int> localVarOffsets; // 变量名 -> 栈偏移
+        std::map<std::string, int> localVarOffsets;
         int currentTop = 0;                      // 栈顶
         
         // 辅助函数
@@ -24,6 +24,7 @@ class StackAllocator {
         StackAllocator() = default;
         
     public:
+  // 变量名 -> 栈偏移
         int stack_currentOffset = 0;    // 栈帧指针；
         std::map<std::string, std::string> RegVar_StackVar; //寄存器 栈帧 映射
         std::map<std::string, std::string> Tmp_StackAddress_InReg; //前变量 后 寄存器 ；getelem时候 临时存一下  

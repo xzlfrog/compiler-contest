@@ -70,8 +70,8 @@ void OutArm::emitLoadFloatSymbol(const std::string& reg, Symbol* float_symbol) {
     }
 
     if (out_Arm.globalAllocator.rodata.count(float_symbol->getName())){
-        OutArm::outString("\tADRP X8," + float_symbol->getName().substr(1));
-        OutArm::outString("\tADRP X8, X8, :lo12:"+ float_symbol->getName().substr(1));
+        OutArm::outString("\tADRP X8, " + float_symbol->getName().substr(1));
+        OutArm::outString("\tADRP X8, :lo12:"+ float_symbol->getName().substr(1));
         OutArm::outString("\tLDR " + reg + ", [X8]");
     }
     else {
@@ -189,29 +189,29 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
         }
     }//数组情况
     else if(auto* array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {       
-        if (array_Symbol->getArrayType() == dataType::f32 || 
-        array_Symbol->getArrayType() == dataType::f64) {
-        reg_name = out_Arm.dRegAllocator.accessVariable(array_Symbol->getName());
-    } else if (array_Symbol->getArrayType() == dataType::i32 || 
-               array_Symbol->getArrayType() == dataType::i64 || 
-               array_Symbol->getArrayType() == dataType::i16 || 
-               array_Symbol->getArrayType() == dataType::i8 || 
-               array_Symbol->getArrayType() == dataType::i1 || 
-               array_Symbol->getArrayType() == dataType::array_data) {
+    //     if (array_Symbol->getArrayType() == dataType::f32 || 
+    //     array_Symbol->getArrayType() == dataType::f64) {
+    //     reg_name = out_Arm.dRegAllocator.accessVariable(array_Symbol->getName());
+    // } else if (array_Symbol->getArrayType() == dataType::i32 || 
+    //            array_Symbol->getArrayType() == dataType::i64 || 
+    //            array_Symbol->getArrayType() == dataType::i16 || 
+    //            array_Symbol->getArrayType() == dataType::i8 || 
+    //            array_Symbol->getArrayType() == dataType::i1 || 
+    //            array_Symbol->getArrayType() == dataType::array_data) {
         reg_name = out_Arm.xRegAllocator.accessVariable(array_Symbol->getName());
-    }
+    //}
     }else if(auto* pointer_symbol = dynamic_cast<PointerSymbol*>(symbol)){
-        if (pointer_symbol->getPointedType() == dataType::f32 || 
-        pointer_symbol->getPointedType() == dataType::f64) {
-        reg_name = out_Arm.dRegAllocator.accessVariable(pointer_symbol->getName());
-    } else if (pointer_symbol->getPointedType() == dataType::i32 || 
-               pointer_symbol->getPointedType() == dataType::i64 || 
-               pointer_symbol->getPointedType() == dataType::i16 || 
-               pointer_symbol->getPointedType() == dataType::i8 || 
-               pointer_symbol->getPointedType() == dataType::i1 || 
-               pointer_symbol->getPointedType() == dataType::array_data) {
+    //     if (pointer_symbol->getPointedType() == dataType::f32 || 
+    //     pointer_symbol->getPointedType() == dataType::f64) {
+    //     reg_name = out_Arm.dRegAllocator.accessVariable(pointer_symbol->getName());
+    // } else if (pointer_symbol->getPointedType() == dataType::i32 || 
+    //            pointer_symbol->getPointedType() == dataType::i64 || 
+    //            pointer_symbol->getPointedType() == dataType::i16 || 
+    //            pointer_symbol->getPointedType() == dataType::i8 || 
+    //            pointer_symbol->getPointedType() == dataType::i1 || 
+    //            pointer_symbol->getPointedType() == dataType::array_data) {
         reg_name = out_Arm.xRegAllocator.accessVariable(pointer_symbol->getName());
-    }
+   // }
     }
     else{
         if(symbol->data->getType() == (dataType::f32) || symbol->data->getType() == (dataType::f64)) {
@@ -239,11 +239,11 @@ std::string OutArm::DispatchRegParam(VarSymbol* symbol) {
 std::string OutArm::DispatchRegParam(ArraySymbol* symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     std::string reg_name;
-    if(symbol->getArrayType() == (dataType::f32) || symbol->getArrayType() == (dataType::f64)) {
-        reg_name = out_Arm.dRegAllocator.accessParam(symbol->getName());
-    }else if(symbol->getArrayType() == (dataType::i32) || symbol->getArrayType() == (dataType::i64) || symbol->getArrayType() == (dataType::i16) || symbol->getArrayType() == (dataType::i8) || symbol->getArrayType() == (dataType::i1)||symbol->getArrayType() == (dataType::array_data)) {
+    // if(symbol->getArrayType() == (dataType::f32) || symbol->getArrayType() == (dataType::f64)) {
+    //     reg_name = out_Arm.dRegAllocator.accessParam(symbol->getName());
+    // }else if(symbol->getArrayType() == (dataType::i32) || symbol->getArrayType() == (dataType::i64) || symbol->getArrayType() == (dataType::i16) || symbol->getArrayType() == (dataType::i8) || symbol->getArrayType() == (dataType::i1)||symbol->getArrayType() == (dataType::array_data)) {
         reg_name = out_Arm.xRegAllocator.accessParam(symbol->getName());
-    }
+   // }
     return reg_name; 
 }
 
@@ -661,10 +661,50 @@ void CallLLVM::out_arm_str()  {
             }
 
             if(ori_str.front() == 'D'){
-                OutArm::outString("\tFMOV " + arg_str + ", " + ori_str);
+                OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
             }else{
-                OutArm::outString("\tMOV " + arg_str + ", " + ori_str);
+                OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
             }
+        // }else if(auto* array_symbol = dynamic_cast<PointerSymbol*>(arg)){
+        //     if(out_Arm.globalAllocator.find_symbol(array_symbol->getName())){
+        //         VarSymbol* tmp_sym =SymbolFactory::createTmpVarSymbol (dataType::i32);
+        //         std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
+        //         //全局变量 而不是临时变量
+        //     if(!out_Arm.globalAllocator.symbol_to_global.count(array_symbol->getName())){
+                
+        //         OutArm::outString("\tADRP " + tmp_str + ", " + array_symbol->getName().substr(1));
+        //         OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + array_symbol->getName().substr(1));
+        //     }else{//临时变量
+        //         std::string tmp_src_str = out_Arm.globalAllocator.symbol_to_global[array_symbol->getName()].first;
+        //         //out_Arm.stackAllocator.Tmp_StackAddress_InReg[tmp_src_str] = tmp_str;
+        //         tmp_src_str = tmp_src_str.substr(1);
+        //         OutArm::outString("\tADRP " + tmp_str + ", " + tmp_src_str);
+        //         OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + tmp_src_str);
+        //     }
+        //     //有偏移情况
+        //     if(out_Arm.globalAllocator.symbol_to_global.count(array_symbol->getName())){
+        //         int offset = out_Arm.globalAllocator.symbol_to_global[array_symbol->getName()].second ;
+        //         if(offset > 4095){
+        //             VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+        //             std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
+        //             OutArm::emitLargeNumber(tmp_tmp_str,offset);
+        //             OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
+        //         }else if( offset == 0){
+
+        //         }else{
+        //             OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + std::to_string(offset));
+        //         }
+        //     }
+        //         arg_str = tmp_str;
+        // }else{
+        //     arg_str = out_Arm.DispatchReg(array_symbol);
+        // }
+
+        // if(ori_str.front() == 'D'){
+        //     OutArm::outString("\tFMOV " + arg_str + ", " + ori_str);
+        // }else{
+        //     OutArm::outString("\tMOV " + arg_str + ", " + ori_str);
+        // }
         }
         else if (auto* var_symbol = dynamic_cast<VarSymbol*>(arg)) {
             arg_str = out_Arm.DispatchReg(var_symbol);
@@ -898,6 +938,8 @@ void StoreLLVM::out_arm_str()  {
     out_Arm.stackAllocator.RegVar_StackVar[src_sym->getName()] = dest_sym->getName();
     
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
+
+
     //store语句特殊处理下
     if(src_str.front() == '#' && this->src_sym->getDataType()==dataType::i32){
         std::string tmp_num_str = src_str;
@@ -919,6 +961,12 @@ void StoreLLVM::out_arm_str()  {
     if(!out_Arm.globalAllocator.find_symbol(dest_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(dest_sym->getName())){
         int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
         //store 是否 只存 -8 的情况？ 并不是！！！
+        if(src_str.front() == '='){
+            VarSymbol* tmp_float_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+            std::string tmp_reg = out_Arm.DispatchReg(tmp_float_sym);
+            out_Arm.emitLoadFloatSymbol(tmp_reg,tmp_float_sym);
+            src_str = tmp_reg;
+        }
         if(offset == 0){
             OutArm::outString("\tSTR " + src_str + ", [SP]");
         }else{
