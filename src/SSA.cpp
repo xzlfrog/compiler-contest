@@ -412,15 +412,19 @@ void mem2reg_pass_pre(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs){
                 }
                 case LLVMtype::store:{
                     StoreLLVM* storeLLVM=dynamic_cast<StoreLLVM*>(llvm);
-                    if(array_item_pointer.find(storeLLVM->dest_sym->name)==array_item_pointer.end())
+                    if(array_item_pointer.find(storeLLVM->dest_sym->name)==array_item_pointer.end()){
                         worklists[storeLLVM->dest_sym->name][bb]=storeLLVM->src_sym;
+                        if(storeLLVM->src_sym->getType()==symType::variable)
+                            bs_to_ps[storeLLVM->src_sym->name]=storeLLVM->dest_sym;
+                    }
                     //std::cout<<storeLLVM->dest_sym->name<<" : "<<worklists[storeLLVM->dest_sym->name].size()<<"\n";
                     break;
                 }
                 case LLVMtype::load:{
                     LoadLLVM* loadLLVM=dynamic_cast<LoadLLVM*>(llvm);
                     if(loadLLVM->src_sym->scope!=GLOBAL_SCOPE&&array_item_pointer.find(loadLLVM->src_sym->name)==array_item_pointer.end())
-                        bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
+                        if(loadLLVM->dest_sym->getType()==symType::variable)
+                            bs_to_ps[loadLLVM->dest_sym->name]=loadLLVM->src_sym;
                     //loadLLVM->dest_sym=worklists[loadLLVM->src_sym->name][bb];
                     break;
                 }
@@ -501,6 +505,7 @@ void insertPhi(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,std::vector<std::
                     ps->PointedType=bs->getDataType();
                     ps->scope=getScope(sym_name);
                     storeLLVM=LLVMfactory::createStoreLLVM(bs,ps);
+                    bs_to_ps[bs->name]=ps;
                     if(storeLLVM!=nullptr){
                         phiLLVM->next=storeLLVM;
                         storeLLVM->prev=phiLLVM;
