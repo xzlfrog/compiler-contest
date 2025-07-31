@@ -802,7 +802,7 @@ void FuncDefination::out_arm_str()  {
     }
     if(func_name == "main"){
         //func_name = "_start";
-        out_Arm.exit = true;
+        //out_Arm.exit = true;
     }
     out_Arm.globalAllocator.allocateFunc(func_name);
     OutArm::outString(func_name + ":");
