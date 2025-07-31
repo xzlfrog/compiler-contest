@@ -71,7 +71,7 @@ $(BIN_DIR) $(OBJ_DIR):
 
 # 清理构建文件
 clean:
-	rm -rf $(BUILD_DIR) $(YACC_CPP) $(YACC_HPP) $(LEX_CPP)
+	rm -rf $(BUILD_DIR)
 
 test:
 	./build/bin/compiler -S -o ./test/test1.s ./test/test1.sy
