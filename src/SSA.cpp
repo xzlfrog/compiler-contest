@@ -680,8 +680,10 @@ void rename(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs,int idx){
     for(LLVM* llvm=bb->head;llvm!=bb->tail->next;llvm=llvm->next){
         if(llvm->getLLVMType()==LLVMtype::phi){
             BasicSymbol* basicSymbol=getDestSym(llvm);
-            count[basicSymbol->name]++;
-            st[basicSymbol->name].push(count[basicSymbol->name]);
+            if(llvm->getLLVMType()!=LLVMtype::load){
+                count[basicSymbol->name]++;
+                st[basicSymbol->name].push(count[basicSymbol->name]);
+            }
             basicSymbol->ssa_name=basicSymbol->name+"."+std::to_string(count[basicSymbol->name]);
             defs.push_back(basicSymbol->name);
         }

@@ -654,8 +654,8 @@ LLVMList* create_return_stmt(Expression* exp){
         llvmlist->InsertTail(LLVMfactory::createReturnLLVM(nullptr));
     }
     else{
-        if(ssa_flag&&exp->llvmlist->tail!=nullptr&&exp->llvmlist->tail->getLLVMType()==LLVMtype::load)
-            exp->llvmlist->Remove(exp->llvmlist->tail);
+        //if(ssa_flag&&exp->llvmlist->tail!=nullptr&&exp->llvmlist->tail->getLLVMType()==LLVMtype::load)
+            //exp->llvmlist->Remove(exp->llvmlist->tail);
         llvmlist->InsertHead(exp->llvmlist);
         if(exp->sym->getDataType()!=func_ret_type){
             VarSymbol* var_tmp=SymbolFactory::createTmpVarSymbolWithScope(func_ret_type,scope);
