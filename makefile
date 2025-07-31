@@ -63,8 +63,8 @@ $(OBJ_DIR)/frontend/sysy.l.o: $(LEX_CPP) | parser $(OBJ_DIR)
 
 # 3. 链接可执行文件 - 调整链接顺序，并使用 LDFLAGS
 $(TARGET): $(OBJS) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $^ $(SYLIB) -o $@ $(LDFLAGS)
-
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+# $(SYLIB)
 # 创建构建目录
 $(BIN_DIR) $(OBJ_DIR):
 	@mkdir -p $@

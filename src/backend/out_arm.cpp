@@ -801,7 +801,7 @@ void FuncDefination::out_arm_str()  {
         func_name = func_name.substr(1);  // 从第1个字符开始，取到末尾
     }
     if(func_name == "main"){
-        func_name = "_start";
+        //func_name = "_start";
         out_Arm.exit = true;
     }
     out_Arm.globalAllocator.allocateFunc(func_name);
