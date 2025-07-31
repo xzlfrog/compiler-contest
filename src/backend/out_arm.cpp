@@ -169,7 +169,7 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
         // }
     }//计算数组offset情况
     else if(out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(symbol->getName())){
-            reg_name = out_Arm.stackAllocator.Tmp_StackAddress_InReg[symbol->getName()];
+            reg_name = "X8" ;
     }//常数情况
     else if(symbol->getType() == symType::constant_nonvar){
             if(symbol->getDataType() == dataType::i32){
@@ -194,27 +194,11 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
         }
     }//数组情况
     else if(auto* array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {       
-    //     if (array_Symbol->getArrayType() == dataType::f32 || 
-    //     array_Symbol->getArrayType() == dataType::f64) {
-    //     reg_name = out_Arm.dRegAllocator.accessVariable(array_Symbol->getName());
-    // } else if (array_Symbol->getArrayType() == dataType::i32 || 
-    //            array_Symbol->getArrayType() == dataType::i64 || 
-    //            array_Symbol->getArrayType() == dataType::i16 || 
-    //            array_Symbol->getArrayType() == dataType::i8 || 
-    //            array_Symbol->getArrayType() == dataType::i1 || 
-    //            array_Symbol->getArrayType() == dataType::array_data) {
+
         reg_name = out_Arm.xRegAllocator.accessVariable(array_Symbol->getName());
-    //}
+
     }else if(auto* pointer_symbol = dynamic_cast<PointerSymbol*>(symbol)){
-    //     if (pointer_symbol->getPointedType() == dataType::f32 || 
-    //     pointer_symbol->getPointedType() == dataType::f64) {
-    //     reg_name = out_Arm.dRegAllocator.accessVariable(pointer_symbol->getName());
-    // } else if (pointer_symbol->getPointedType() == dataType::i32 || 
-    //            pointer_symbol->getPointedType() == dataType::i64 || 
-    //            pointer_symbol->getPointedType() == dataType::i16 || 
-    //            pointer_symbol->getPointedType() == dataType::i8 || 
-    //            pointer_symbol->getPointedType() == dataType::i1 || 
-    //            pointer_symbol->getPointedType() == dataType::array_data) {
+
         reg_name = out_Arm.xRegAllocator.accessVariable(pointer_symbol->getName());
    // }
     }
@@ -244,11 +228,8 @@ std::string OutArm::DispatchRegParam(VarSymbol* symbol) {
 std::string OutArm::DispatchRegParam(ArraySymbol* symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     std::string reg_name;
-    // if(symbol->getArrayType() == (dataType::f32) || symbol->getArrayType() == (dataType::f64)) {
-    //     reg_name = out_Arm.dRegAllocator.accessParam(symbol->getName());
-    // }else if(symbol->getArrayType() == (dataType::i32) || symbol->getArrayType() == (dataType::i64) || symbol->getArrayType() == (dataType::i16) || symbol->getArrayType() == (dataType::i8) || symbol->getArrayType() == (dataType::i1)||symbol->getArrayType() == (dataType::array_data)) {
-        reg_name = out_Arm.xRegAllocator.accessParam(symbol->getName());
-   // }
+       reg_name = out_Arm.xRegAllocator.accessParam(symbol->getName());
+
     return reg_name; 
 }
 
@@ -831,7 +812,7 @@ void AllocaNonArrayLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
 
     //int datasize = OutArm::getDataSize(this->sym); 暂时不用了 我们统一用x寄存器 所以偏移量为16.
-    int size = out_Arm.stackAllocator.allocateLocal( 16 ,this->sym->getName());
+    int size = out_Arm.stackAllocator.allocateLocal( 4 ,this->sym->getName());
     
 }
 
@@ -840,7 +821,7 @@ void AllocaArrayLLVM::out_arm_str()  {
 
     //好吧 数组还是需要的哈  额额 实际不需要
     //int datasize = OutArm::getDataSize(this->array);
-    int size = out_Arm.stackAllocator.allocateArray( 16 ,this->getDimensions(),this->array->getName());
+    int size = out_Arm.stackAllocator.allocateArray( 4 ,this->getDimensions(),this->array->getName());
 }
 
 void LoadLLVM::out_arm_str()  {
@@ -848,6 +829,8 @@ void LoadLLVM::out_arm_str()  {
     out_Arm.stackAllocator.RegVar_StackVar[dest_sym->getName()] = src_sym->getName();
 
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
+
+    //加载普通变量 数组首位 已计算过【1】【2】地址的数组  ---- ----  全局变量 [i][j] 地址的数组
     if(!out_Arm.globalAllocator.find_symbol(src_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(src_sym->getName())){
         int offset = out_Arm.stackAllocator.getOffset(this->src_sym->getName());
         if (offset == 0){
@@ -882,36 +865,41 @@ void LoadLLVM::out_arm_str()  {
                 out_Arm.stackAllocator.stack_currentOffset -= offset;
             }
         }
+
     }else{
         std::string src_str = out_Arm.DispatchReg(this->src_sym);
         if(out_Arm.globalAllocator.find_symbol(src_sym->getName())) {
-            //全局变量 而不是临时变量
-            if(!out_Arm.globalAllocator.symbol_to_global.count(src_sym->getName())){
-                //这里也要添加因为 store 无法直接取全局变量
-                out_Arm.stackAllocator.Tmp_StackAddress_InReg[src_str] = dest_str;
-                OutArm::outString("\tADRP " + dest_str + ", " + src_str);
-                OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", :lo12:" + src_str);
-            }else{//临时变量
+            VarSymbol* tmp_address_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+            std::string tmp_address_str = out_Arm.DispatchReg(tmp_address_sym);
+            //全局变量 非数组情况
+            if(!out_Arm.globalAllocator.symbol_to_global.count(src_sym->getName())){ 
+                // out_Arm.stackAllocator.Tmp_StackAddress_InReg[src_sym->getName()] = dest_str;
+                OutArm::outString("\tADRP " + tmp_address_str + ", " + src_str);
+                OutArm::outString("\tADD " + tmp_address_str + ", " + tmp_address_str + ", :lo12:" + src_str);
+            }else{
+                //变量 映射了全局数组情况
                 std::string tmp_src_str = out_Arm.globalAllocator.symbol_to_global[src_sym->getName()].first;
-                out_Arm.stackAllocator.Tmp_StackAddress_InReg[tmp_src_str] = dest_str;
+                // out_Arm.stackAllocator.Tmp_StackAddress_InReg[src_sym->getName()] = dest_str;
                 tmp_src_str = tmp_src_str.substr(1);
-                OutArm::outString("\tADRP " + dest_str + ", " + tmp_src_str);
-                OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", :lo12:" + tmp_src_str);
+                OutArm::outString("\tADRP " + tmp_address_str + ", " + tmp_src_str);
+                OutArm::outString("\tADD " + tmp_address_str + ", " + tmp_address_str + ", :lo12:" + tmp_src_str);
             }
             //有偏移情况
             if(out_Arm.globalAllocator.symbol_to_global.count(src_sym->getName())){
                 int offset = out_Arm.globalAllocator.symbol_to_global[src_sym->getName()].second ;
                 if(offset > 4095){
-                    VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                    VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
                     std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
                     OutArm::emitLargeNumber(tmp_tmp_str,offset);
-                    OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", " + tmp_tmp_str);
+                    OutArm::outString("\tADD " + tmp_address_str + ", " + tmp_address_str + ", " + tmp_tmp_str);
                 }else{
-                    OutArm::outString("\tADD " + dest_str + ", " + dest_str + ", " + std::to_string(offset));
+                    OutArm::outString("\tADD " + tmp_address_str + ", " + tmp_address_str + ", " + std::to_string(offset));
                 }
             }
-            OutArm::outString("\tLDR " + dest_str + ", " + "[" + dest_str + "]");
-        }else{
+            OutArm::outString("\tLDR " + dest_str + ", " + "[" + tmp_address_str + "]");
+        }else
+        //临时变量情况(Tmp_StackAddress_InReg)
+        {   src_str = "X8";
             OutArm::outString("\tLDR " + dest_str + ", " + "[" + src_str + "]");
         }
     }
@@ -943,7 +931,7 @@ void StoreLLVM::out_arm_str()  {
         OutArm::outString("\tMOV " + src_str + ", " + tmp_num_str);
     }
 
-    //非全局变量 或 数组情况
+    //非全局变量 或 非数组情况
     if(!out_Arm.globalAllocator.find_symbol(dest_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(dest_sym->getName())){
         int offset = out_Arm.stackAllocator.getOffset(this->dest_sym->getName());
         //store 是否 只存 -8 的情况？ 并不是！！！
@@ -1016,7 +1004,6 @@ void StoreLLVM::out_arm_str()  {
     }
 }
 
-//直接4offset 可能有隐患
 //此处未给[a][b]数组设置那个啥溢出去的地方 默认后面用不到
 void GetElementPtrLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
@@ -1066,27 +1053,31 @@ void GetElementPtrLLVM::out_arm_str()  {
                     i--;
                 }
         }   
-        offset *= 16; //这里！！！ 我觉得可能有bug哦。。。 
+        offset *= 4; //这里！！！ 我觉得可能有bug哦。。。 
 
-        // 全局变量的情况
+        // 全局变量的情况   str-str,int symbolTOglobal offset
         if(out_Arm.globalAllocator.find_symbol(this->ptrval->getName())){
             out_Arm.globalAllocator.addSymbolToGlobal(this->dest_sym->getName(),this->ptrval->getName(),offset);
         }else{
-            //等一下这里没把 非数组的情况考虑进去吗？
+            //正常变量的情况    localoffset str offset(绝对位置)
             out_Arm.stackAllocator.addArrayPtrwithOffset(this->dest_sym->getName(), this->ptrval->getName(), offset);
-            
         }
-        //
-        out_Arm.stackAllocator.RegVar_StackVar[this->getSrcSymbol()->getName()] = this->getDestSymbol()->getName();
+
     }else{//这里是[][]含有变量的情况
         
         //获取其所在地址
+        //X8 专门作为getelem寄存器来用吧
         std::string arr_str = "X8";
-        out_Arm.stackAllocator.Tmp_StackAddress_InReg[this->getSrcSymbol()->getName()] = arr_str;
 
+        std::string arr_name = this->ptrval->getName();
+        std::string poi_name = this->getSrcSymbol()->getName();
+        out_Arm.stackAllocator.Tmp_StackAddress_InReg[poi_name] = arr_str;
         std::string arr_offset_str;
+        
         //先把数组的首地址正确传递
-        if(!out_Arm.globalAllocator.find_symbol(this->ptrval->getName()) && out_Arm.stackAllocator.hasVariable(this->getSrcSymbol()->getName())){
+        //非全局变量(全局变量只需要记录 offset)
+        if(!out_Arm.globalAllocator.find_symbol(arr_name)) // "&&" out_Arm.stackAllocator.hasVariable(poi_name) 可能会加载别的值b = a[1]->a[2]，故省略
+        { 
             int offset = out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName());
             arr_offset_str = std::to_string(offset);
             if(offset == 0){
@@ -1109,27 +1100,35 @@ void GetElementPtrLLVM::out_arm_str()  {
                 }
             }
         }
+
         // N维数组偏移量计算（通用方法）
-        int offset = 0;
+        int offset = 0;//此为数字时候算的偏移量
         int multiplier = 1;
         std::vector<int> dims = this->getDimensions();
-        int i = this->getDimensions().size() - 1;
+        int i = dims.size() - 1;
         
         for (auto it = container.rbegin(); it != container.rend(); ++it) {
             const auto& [data_type, symbol_ptr] = *it;
                 if (i >= 0) {
+                    //常数时候
                     if(it->second->getType() == symType::constant_nonvar){
+                        
                         offset += (std::stoi(getSymOut(symbol_ptr))) * multiplier;
-                    }else{
+                    }//字母时候
+                    else{
+                        //给该字母找其寄存器捏 话说需要读取值不？ 好像还真需要？ 不对getelem前会 用phi 一次所以其实不需要。
                         std::string tmp_str = out_Arm.DispatchReg(symbol_ptr);
-                        std::string tmp_num_str = std::to_string(multiplier * 16);
+                        std::string tmp_num_str = std::to_string(multiplier * 4);
+                        
+                        //最后一维 不用乘？
                         if(multiplier == 1){
                             out_Arm.outString("\tMOV "+ tmp_str + ", #" + tmp_num_str);
                         }else{
+                        //其他维度需要乘 比如对于a[10][20] 读取a[i][j]  第二维度时候直接加 第一维度加i*20
                             VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
                             std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
-                            if(multiplier * 16 > 4095){
-                                out_Arm.emitLargeNumber(tmp_tmp_str,multiplier * 16);
+                            if(multiplier * 4 > 4095){
+                                out_Arm.emitLargeNumber(tmp_tmp_str,multiplier * 4);
                             }else{
                                 out_Arm.outString("\tMOV " + tmp_tmp_str + ", #" + tmp_num_str);
                             }
@@ -1137,7 +1136,8 @@ void GetElementPtrLLVM::out_arm_str()  {
                         }
 
                             OutArm::outString("\tADD " + arr_str + ", " + arr_str + ", " + tmp_str);
-                    }                   
+                    } 
+
                     // 更新乘数和索引
                     if (i > 0) {
                         multiplier *= dims[i] ;
@@ -1145,16 +1145,17 @@ void GetElementPtrLLVM::out_arm_str()  {
                     i--;
                 }
         }
+
         if(offset!=0){
-            std::string tmp_num_str = std::to_string(offset * 16);//巨大隐患 究竟是4 还是 16 宏定义考虑之后
-            if(offset * 16 > 0 && offset * 16 <= 4095){
+            std::string tmp_num_str = std::to_string(offset * 4);
+            if(offset * 4 > 0 && offset * 4 <= 4095){
                 OutArm::outString("\tADD " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
-            }else if(offset * 16> 4095){
+            }else if(offset * 4 > 4095){
                 VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i32);
                 std::string tmp_str = out_Arm.DispatchReg(tmp);
                 OutArm::emitLargeNumber(tmp_str,offset);
                 OutArm::outString("\tADD " + arr_str + ", " + arr_str  + ", " + tmp_str);
-            }else if(offset * 16 < 0 && offset * 16 >= -4095){
+            }else if(offset * 4 < 0 && offset * 4 >= -4095){
                 OutArm::outString("\tSUB " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
             }else{
                 VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i32);
@@ -1162,8 +1163,7 @@ void GetElementPtrLLVM::out_arm_str()  {
                 OutArm::emitLargeNumber(tmp_str,-offset);
                 OutArm::outString("\tSUB " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
             }
-        }
-            out_Arm.stackAllocator.Tmp_StackAddress_InReg[this->getDestSymbol()->getName()] = arr_str;
+        }   
     }
 }
 
@@ -1278,27 +1278,6 @@ void UnaryOperationLLVM::out_arm_str()  {
     }
 }
 
-// void insertContentToFileFront(std::ofstream& outputFile, const std::string& contentToInsert) {
-//     if (!outputFile.is_open()) {
-//         std::cerr << "无法打开输出文件" << std::endl;
-//         throw std::runtime_error("无法打开输出文件");
-//     }
-
-//     // 读取现有内容
-//     std::string existingContent;
-//     outputFile.seekp(0, std::ios::end);
-//     size_t fileSize = outputFile.tellp();
-//     if (fileSize > 0) {
-//         outputFile.seekp(0, std::ios::beg);
-//         existingContent.resize(fileSize);
-//         //outputFile.read(&existingContent[0], fileSize);
-//     }
-
-//     // 将新内容插入到现有内容前面
-//     outputFile.seekp(0, std::ios::beg);
-//     outputFile << contentToInsert << existingContent;
-//     outputFile.flush();
-// }
 void insertContentToFileFront(const std::string& filename, const std::string& contentToInsert) {
     std::ifstream read(filename, std::ios::binary);
     std::string oldContent;
