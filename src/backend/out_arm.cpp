@@ -721,7 +721,7 @@ void CallLLVM::out_arm_str()  {
                 }
                 OutArm::emitLargeNumber(ori_str,val);
             }else{
-                 if(arg_str.front() == '='){
+                 if(arg_str.front() == '=' || arg_str.front() == '#'){
                     out_Arm.emitLoadFloatSymbol(ori_str,const_var_symbol);
                 }
                 else{
