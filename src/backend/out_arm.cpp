@@ -63,16 +63,20 @@ void OutArm::emitLoadFloat(const std::string& reg, float value) {
 
 void OutArm::emitLoadFloatSymbol(const std::string& reg, Symbol* float_symbol) {
     OutArm& out_Arm = OutArm::getInstance();
-    
+    std::string tmp_str = float_symbol->getName();
     if(!out_Arm.globalAllocator.rodata.count(float_symbol->getName())){
         std::vector<Data*> float_value;
         float_value.push_back(float_symbol->data);
-        out_Arm.globalAllocator.rodata[float_symbol->getName()] = float_value;
+        
+        if(tmp_str == ""){
+            tmp_str = generate_tmp_var_name();
+        }
+        out_Arm.globalAllocator.rodata[tmp_str] = float_value;
     }
 
-    if (out_Arm.globalAllocator.rodata.count(float_symbol->getName())){
-        OutArm::outString("\tADRP X8, " + float_symbol->getName().substr(1));
-        OutArm::outString("\tADD X8, X8, :lo12:"+ float_symbol->getName().substr(1));
+    if (out_Arm.globalAllocator.rodata.count(tmp_str)){
+        OutArm::outString("\tADRP X8, " + tmp_str.substr(1));
+        OutArm::outString("\tADD X8, X8, :lo12:"+ tmp_str.substr(1));
         OutArm::outString("\tLDR " + reg + ", [X8]");
     }
     else {
@@ -593,24 +597,25 @@ void ReturnLLVM::out_arm_str()  {
         if (this->returnValue) {
             std::string return_value_str = out_Arm.DispatchReg(this->returnValue);
             if(out_Arm.globalAllocator.rodata.count(this->returnValue->getName())){
-                //虽然有bug 隐患 但是先这样吧。。。
-                return_value_str = "#" + my_to_string(out_Arm.globalAllocator.rodata[this->returnValue->getName()].front());
+                if(auto* i32_data = dynamic_cast<Data_i32*>(out_Arm.globalAllocator.rodata[this->returnValue->getName()].front())){
+                    return_value_str = "#" + my_to_string(i32_data);
+                }else if(auto* f32_data = dynamic_cast<Data_f32*>(out_Arm.globalAllocator.rodata[this->returnValue->getName()].front())){
+                    return_value_str = "=" + my_to_string(i32_data);
+                }
             }
             if(this->getReturnType() == dataType::f32 || this->getReturnType() == dataType::f64){
-                if(returnValue->getName() == ""){
+                if(return_value_str == ""){
                     std::string name = generate_tmp_var_name();
                     VarSymbol* tmp_float_sym = SymbolFactory::createVarSymbol(name,returnValue->data);
                     std::string tmp_float_str = out_Arm.DispatchReg(tmp_float_sym);
                     out_Arm.emitLoadFloatSymbol(tmp_float_str,tmp_float_sym);
                     OutArm::outString("\tFMOV D0, " + tmp_float_str);
-                }else{
+                }else if(return_value_str.front() == '='){
                     out_Arm.emitLoadFloatSymbol("D0",returnValue);
+                }else{
+                    OutArm::outString("\tFMOV D0, " + return_value_str);
                 }
             }
-                // {   ValueVariant number = returnValue->data->getValue();
-                //     if (std::holds_alternative<float>(number))
-                //     OutArm::emitLoadFloat("D0", std::get<float>(number)); 
-                    //OutArm::outString("\tFMOV D0, " + return_value_str); 
             else{
                 OutArm::outString("\tMOV X0, " + return_value_str);
             }
@@ -704,6 +709,7 @@ void CallLLVM::out_arm_str()  {
                 }
             }
         }else if (auto* const_var_symbol = dynamic_cast<ConstVarSymbol*>(arg)){
+            arg_str = out_Arm.DispatchReg(const_var_symbol);
             if(const_var_symbol->getDataType()==dataType::i32 || const_var_symbol->getDataType()==dataType::i1){
                 int val ;
                 //全局变量时候
@@ -715,16 +721,13 @@ void CallLLVM::out_arm_str()  {
                 }
                 OutArm::emitLargeNumber(ori_str,val);
             }else{
-                out_Arm.emitLoadFloatSymbol(ori_str,const_var_symbol);
-                // float val;
-                // //全局常量时候
-                // if(out_Arm.globalAllocator.find_symbol(const_var_symbol->getName())){
-                //     Data* tmp_data = out_Arm.globalAllocator.rodata[const_var_symbol->getName()].front();
-                //     val = std::get<float>(tmp_data->getValue());
-                // }else{
-                //     val = std::get<float>(const_symbol->data->getValue());
-                // }
-                // OutArm::emitLoadFloat(ori_str,val);
+                 if(arg_str.front() == '='){
+                    out_Arm.emitLoadFloatSymbol(ori_str,const_var_symbol);
+                }
+                else{
+                    OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+                }
+                
             }
         }
         ++i;
@@ -1255,11 +1258,19 @@ void UnaryOperationLLVM::out_arm_str()  {
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
 
+    
     switch (this->llvmType) {
         case llvm_neg:
             OutArm::outString("\tNEG " + dest_str + ", " + src_str);
             break;
         case llvm_fneg:
+            if(src_str.front()== '=' || src_str.front()== '#'){
+                VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
+                std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+                int tmp_num = std::stoi(src_str.substr(1));
+                OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
+                src_str = tmp_tmp_str;
+            }
             OutArm::outString("\tFNEG " + dest_str + ", " + src_str);
             break;
         default:
