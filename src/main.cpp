@@ -1,5 +1,5 @@
 #include"../include/frontend/frontendTool.hpp"
-//#include"frontend/sysy.y.hpp"
+#include"frontend/sysy.y.hpp"
 #include"../include/backend/out_arm.hpp"
 #include<stdio.h>
 #include<filesystem>
