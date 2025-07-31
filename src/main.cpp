@@ -3,7 +3,6 @@
 #include"../include/backend/out_arm.hpp"
 #include<stdio.h>
 #include<filesystem>
-#include"./frontend/sysy.y.hpp"
 
 int scope;
 ModuleList* module_list;
