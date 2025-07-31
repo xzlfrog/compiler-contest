@@ -29,6 +29,9 @@ OBJS += $(OBJ_DIR)/frontend/sysy.l.o
 # Final executable
 TARGET := $(BIN_DIR)/compiler
 
+# 新增：运行时库路径
+SYLIB := lib/sylib.a
+
 # Default target
 all: $(TARGET)
 
@@ -60,7 +63,7 @@ $(OBJ_DIR)/frontend/sysy.l.o: $(LEX_CPP) | parser $(OBJ_DIR)
 
 # 3. 链接可执行文件 - 调整链接顺序，并使用 LDFLAGS
 $(TARGET): $(OBJS) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $^ $(SYLIB) -o $@ $(LDFLAGS)
 
 # 创建构建目录
 $(BIN_DIR) $(OBJ_DIR):
