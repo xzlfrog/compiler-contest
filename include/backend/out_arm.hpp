@@ -68,6 +68,7 @@ public:
     };
 
     void resetReg();
+    void SPmove(bool isStore, const std::string& reg, int offsets);
     static void outString(const std::string &str);
 
     static void emitLargeNumber(const std::string& reg, uint64_t imm);

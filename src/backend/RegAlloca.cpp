@@ -87,7 +87,7 @@ std::string XRegAllocator::getRegister(std::string symbol) const {
     auto it = this->var_to_reg.find(symbol);
     if (it != this->var_to_reg.end()) {
         size_t index = it->second;
-        return "X" + std::to_string(index); // 返回寄存器名称
+        return "W" + std::to_string(index); // 返回寄存器名称
     }
     return ""; // 如果没有分配寄存器，返回空字符串
 }
@@ -111,8 +111,31 @@ std::string XRegAllocator::accessVariable(std::string symbol){
         this->spillToStack(Registers[it->second]); // 如果寄存器已被占用，先溢出
     }
         Registers[it->second] = symbol; // 更新寄存器
-        return "X" + std::to_string(it->second); // 返回寄存器名称
-    
+
+        return "W" + std::to_string(it->second); // 返回寄存器名称  
+}
+
+std::string XRegAllocator::accessAddress(std::string symbol){
+    StackAllocator& stackAllocator = StackAllocator::getInstance();
+    auto it = this->var_to_reg.find(symbol);
+    bool is_in_reg = true;
+    if (it == this->var_to_reg.end()) {
+        is_in_reg = false;
+        this->allocateOtherSpace(symbol); // 如果没有分配寄存器，则分配
+        it = this->var_to_reg.find(symbol); // 重新查找
+    }
+    bool is_in_stack = stackAllocator.hasVariable(symbol);
+    if (is_in_stack && !is_in_reg) {
+        this->promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
+        return "X" + this->getRegister(symbol).substr(1); // 返回寄存器名称
+    }
+
+    if(!Registers[it->second].empty() && (symbol != Registers[it->second])){
+        this->spillToStack(Registers[it->second]); // 如果寄存器已被占用，先溢出
+    }
+        Registers[it->second] = symbol; // 更新寄存器
+
+        return "X" + std::to_string(it->second); // 返回寄存器名称  
 }
 
 std::string XRegAllocator::accessParam(std::string symbol){
@@ -135,7 +158,7 @@ std::string XRegAllocator::accessParam(std::string symbol){
         this->spillToStack(Registers[it->second]); // 如果寄存器已被占用，先溢出
     }
         Registers[it->second] = symbol; // 更新寄存器
-        return "X" + std::to_string(it->second); // 返回寄存器名称
+        return "W" + std::to_string(it->second); // 返回寄存器名称
     
 }
 
@@ -165,7 +188,7 @@ std::string DRegAllocator::getRegister(std::string symbol) const {
     auto it = this->var_to_reg.find(symbol);
     if (it != this->var_to_reg.end()) {
         size_t index = it->second;
-        return "D" + std::to_string(index); // 返回寄存器名称
+        return "S" + std::to_string(index); // 返回寄存器名称
     }
     return ""; // 如果没有分配寄存器，返回空字符串
 }
@@ -191,7 +214,7 @@ std::string DRegAllocator::accessVariable(std::string symbol){
    }
 
    Registers[it->second] = symbol; // 更新寄存器
-   return "D" + std::to_string(it->second); // 返回寄存器名称
+   return "S" + std::to_string(it->second); // 返回寄存器名称
 
 }
 
@@ -215,6 +238,6 @@ std::string DRegAllocator::accessParam(std::string symbol){
         this->spillToStack(Registers[it->second]); // 如果寄存器已被占用，先溢出
         }
         Registers[it->second] = symbol; // 更新寄存器
-        return "D" + std::to_string(it->second); // 返回寄存器名称
+        return "S" + std::to_string(it->second); // 返回寄存器名称
 
 }

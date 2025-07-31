@@ -5,12 +5,12 @@
 StackAllocator* StackAllocator::stackInstance = nullptr;
 
 
-// int StackAllocator::align(int value, int alignment) {
-//     if (alignment <= 0 || (alignment & (alignment - 1))) {
-//         throw std::invalid_argument("Alignment must be a power of 2");
-//     }
-//     return (value + alignment - 1) & ~(alignment - 1);
-// }
+int StackAllocator::align(int value, int alignment) {
+    if (alignment <= 0 || (alignment & (alignment - 1))) {
+        throw std::invalid_argument("Alignment must be a power of 2");
+    }
+    return (value + alignment - 1) & ~(alignment - 1);
+}
 
 void StackAllocator::addUsedRegister(std::string& reg) {
     if (reg.size() < 2 || reg[0] != 'X') return;
