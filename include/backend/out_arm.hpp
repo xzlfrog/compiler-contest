@@ -67,6 +67,8 @@ public:
         {"stoptime", {}}
     };
 
+    //记录函数参数 进入新函数时候clear
+    std::unordered_set<std::string> params;
     void resetReg();
     void SPmove(bool isStore, const std::string& reg, int offsets);
     static void outString(const std::string &str);

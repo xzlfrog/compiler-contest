@@ -9,7 +9,12 @@ std::ofstream outputArmFile;
 
 void OutArm::emitLargeNumber(const std::string& reg, uint64_t imm){
         bool first = true;
-    
+        std::string reg_new;
+        if(reg.front()=='W'){
+            reg_new = "X" + reg.substr(1);
+        }else{
+            reg_new = reg;
+        }
         // 提取四个 16 位段
         uint16_t parts[4] = {
             static_cast<uint16_t>(imm & 0xFFFF),           // bits 0-15
@@ -23,9 +28,9 @@ void OutArm::emitLargeNumber(const std::string& reg, uint64_t imm){
             if (parts[i] != 0 || (first && i == 0)) {
                 std::string instr = first ? "MOVZ" : "MOVK";
                 if (shifts[i] == 0) {
-                    OutArm::outString("\t" + instr + " " + reg + ", #" + std::to_string(parts[i]));
+                    OutArm::outString("\t" + instr + " " + reg_new + ", #" + std::to_string(parts[i]));
                 } else {
-                    OutArm::outString("\t" + instr + " " + reg + ", #" + std::to_string(parts[i]) + ", LSL #" + std::to_string(shifts[i]));
+                    OutArm::outString("\t" + instr + " " + reg_new + ", #" + std::to_string(parts[i]) + ", LSL #" + std::to_string(shifts[i]));
                 }
                 first = false;
             }
@@ -344,13 +349,13 @@ std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
 
     switch(REMllvm->llvmType){
         case llvm_frem:
-        if(b_str.front()== 'X'){
+        if(b_str.front()== 'W'){
             VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
             std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
             out_Arm.outString("\tSCVTF " + tmp_tmp_str + ", " + b_str);
             b_str = tmp_tmp_str;
         }
-            if(c_str.front()== 'X'){
+            if(c_str.front()== 'W'){
                 VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
                 std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
                 out_Arm.outString("\tSCVTF " + tmp_tmp_str + ", " + c_str);
@@ -412,13 +417,13 @@ std::string OutArm::ASMDOperation(ArithmeticOperationLLVM* ASMDllvm){
         case llvm_fsub:
         case llvm_fmul:
         case llvm_fdiv:
-            if(b_str.front()== 'X'){
+            if(b_str.front()== 'W'){
                 VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
                 std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
                 out_Arm.outString("\tSCVTF " + tmp_tmp_str + ", " + b_str);
                 b_str = tmp_tmp_str;
             }
-            if(c_str.front()== 'X'){
+            if(c_str.front()== 'W'){
                 VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
                 std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
                 out_Arm.outString("\tSCVTF " + tmp_tmp_str + ", " + c_str);
@@ -534,14 +539,14 @@ std::string OutArm::ComparisonOperation(ArithmeticOperationLLVM* cmpllvm) {
         case fcmp_ole:
         case fcmp_olt:
         case fcmp_one:
-            if(b_str.front()== 'X'){
+            if(b_str.front()== 'W'){
                 VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
                 std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
                 out_Arm.outString("\tSCVTF " + tmp_tmp_str + ", " + b_str);
                 b_str = tmp_tmp_str;
             }
 
-            if(c_str.front()== 'X'){
+            if(c_str.front()== 'W'){
                 VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
                 std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
                 out_Arm.outString("\tSCVTF " + tmp_tmp_str + ", " + c_str);
@@ -595,15 +600,15 @@ void ReturnLLVM::out_arm_str()  {
                     VarSymbol* tmp_float_sym = SymbolFactory::createVarSymbol(name,returnValue->data);
                     std::string tmp_float_str = out_Arm.DispatchReg(tmp_float_sym);
                     out_Arm.emitLoadFloatSymbol(tmp_float_str,tmp_float_sym);
-                    OutArm::outString("\tFMOV D0, " + tmp_float_str);
+                    OutArm::outString("\tFMOV S0, " + tmp_float_str);
                 }else if(return_value_str.front() == '='){
-                    out_Arm.emitLoadFloatSymbol("D0",returnValue);
+                    out_Arm.emitLoadFloatSymbol("S0",returnValue);
                 }else{
-                    OutArm::outString("\tFMOV D0, " + return_value_str);
+                    OutArm::outString("\tFMOV S0, " + return_value_str);
                 }
             }
             else{
-                OutArm::outString("\tMOV X0, " + return_value_str);
+                OutArm::outString("\tMOV W0, " + return_value_str);
             }
         }
         if(out_Arm.exit){
@@ -801,6 +806,7 @@ void FuncDefination::out_arm_str()  {
     // 输出函数参数
         
     for (const auto& param : this->params) {
+        out_Arm.params.insert(param->getName());
         if (auto* array_symbol = dynamic_cast<ArraySymbol*>(param)) {
             param_str = out_Arm.DispatchRegParam(array_symbol);
         }
@@ -1043,17 +1049,16 @@ void GetElementPtrLLVM::out_arm_str()  {
         //X8 专门作为getelem寄存器来用吧
         std::string arr_str = "X8";
 
-        std::string arr_name = this->ptrval->getName();
-        std::string poi_name = this->getSrcSymbol()->getName();
-        //out_Arm.stackAllocator.Tmp_StackAddress_InReg[poi_name] = arr_str;
+        std::string arr_name = this->getSrcSymbol()->getName();
+        std::string poi_name = this->getDestSymbol()->getName();
+
         std::string arr_offset_str;
+        out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
         
         //先把数组的首地址正确传递
-        //非全局变量 (全局变量只需要记录 offset)
-        if(!out_Arm.globalAllocator.find_symbol(arr_name)) // "&&" out_Arm.stackAllocator.hasVariable(poi_name) 可能会加载别的值b = a[1]->a[2]，故省略
+        //非全局变量 (全局变量只需要记录 offset) 参数数组也不用算首地址 都在他寄存器里
+        if(!out_Arm.globalAllocator.find_symbol(arr_name) && !out_Arm.params.count(arr_name)) // "&&" out_Arm.stackAllocator.hasVariable(poi_name) 可能会加载别的值b = a[1]->a[2]，故省略
         {   
-            //非全局变量情况还需将其记录
-            out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
 
             int offset = out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName());
             arr_offset_str = std::to_string(offset);
@@ -1076,6 +1081,9 @@ void GetElementPtrLLVM::out_arm_str()  {
                     OutArm::outString("\tSUB " + arr_str + ", SP, " + tmp_str);
                 }
             }
+        }else{
+            OutArm::outString("\tADRP " + arr_str+ ", " + arr_name.substr(1));
+            OutArm::outString("\tADD " + arr_str + ", " + arr_str + ", :lo12:" + arr_name.substr(1));
         }
 
         // N维数组偏移量计算（通用方法）
@@ -1140,7 +1148,8 @@ void GetElementPtrLLVM::out_arm_str()  {
                 OutArm::emitLargeNumber(tmp_str,-offset);
                 OutArm::outString("\tSUB " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
             }
-        }   
+        } 
+
     }
 }
 
@@ -1205,7 +1214,7 @@ void TypeConversionOperation::out_arm_str()  {
             OutArm::outString("\tFPTUOI " + dest_str + ", " + src_str);
             break;
         case fptosi:
-            if(src_str.front() == 'X'){
+            if(src_str.front() == 'W'){
                 VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
                 std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
                 out_Arm.outString("\tSCVTF " + tmp_tmp_str + ", " + src_str);
@@ -1488,6 +1497,7 @@ void out_arm(std::string outputFileName, ModuleList* module_list) {
         // 输出模块名称
         if(auto* func_module = dynamic_cast<FuncDefination*> (module->head)){
             flag = true;
+            Out_Arm.params.clear();
         }
 
         if(flag)
