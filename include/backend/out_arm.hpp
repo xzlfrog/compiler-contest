@@ -57,11 +57,11 @@ public:
         {"getfloat", {}},
         {"getarray", {"X1"}},
         {"getfarray", {"X1"}},
-        {"putint", {"X1"}},
-        {"putch", {"X1"}},
-        {"putfloat", {"D1"}},
-        {"putarray", {"X1","X2"}},
-        {"putfarray", {"X1","X2"}},
+        {"putint", {"W1"}},
+        {"putch", {"W1"}},
+        {"putfloat", {"S1"}},
+        {"putarray", {"W1","X2"}},
+        {"putfarray", {"W1","X2"}},
 
         {"starttime", {}},
         {"stoptime", {}}
