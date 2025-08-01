@@ -194,9 +194,9 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
                 if (parts[i] != 0 || (first && i == 0)) {
                     std::string instr = first ? "MOVZ" : "MOVK";
                     if (shifts[i] == 0) {
-                        out << "\t" << instr << " " << reg_new << ", #" << std::to_string(parts[i]);
+                        out << "\t" << instr << " " << reg_new << ", #" << std::to_string(parts[i]) << "\n";
                     } else {
-                        out << "\t" << instr << " " << reg_new << ", #" << std::to_string(parts[i]) << ", LSL #" << std::to_string(shifts[i]);
+                        out << "\t" << instr << " " << reg_new << ", #" << std::to_string(parts[i]) << ", LSL #" << std::to_string(shifts[i]) << "\n";
                     }
                     first = false;
                 }
