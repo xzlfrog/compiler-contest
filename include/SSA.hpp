@@ -2,8 +2,8 @@
 
 #include"BasicBlock.hpp"
 
-void join_or(std::vector<bool>&a,std::vector<bool>&b);
-void meet_and(std::vector<bool>&a,std::vector<bool>&b);
+//void join_or(std::vector<bool>&a,std::vector<bool>&b);
+//void meet_and(std::vector<bool>&a,std::vector<bool>&b);
 void initial_ssa(std::vector<BasicBlock*>&bbs);
 void getDom(std::vector<BasicBlock*>&bbs);
 std::vector<int> getIdom(std::vector<BasicBlock*>&bbs);

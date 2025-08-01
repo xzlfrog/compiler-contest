@@ -14,18 +14,6 @@ std::unordered_map<std::string,std::stack<BasicSymbol*>>last_store;
 std::unordered_map<std::string,std::stack<BasicSymbol*>>last_load;
 std::set<std::string> array_item_pointer;
 
-void join_or(std::vector<bool>&a,std::vector<bool>&b){
-    for(int i=0;i<a.size();i++){
-        a[i]=a[i]|b[i];
-    }
-}
-
-void meet_and(std::vector<bool>&a,std::vector<bool>&b){
-    for(int i=0;i<a.size();i++){
-        a[i]=a[i]&b[i];
-    }
-}
-
 void initial_ssa(std::vector<BasicBlock*>&bbs){
     int n=bbs.size();
     int i=0;

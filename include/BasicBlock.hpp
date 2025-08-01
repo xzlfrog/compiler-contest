@@ -53,5 +53,7 @@ void set(std::vector<bool>&a,int j);
 void reset(std::vector<bool>&a);
 void reset(std::vector<bool>&a,int j);
 int count_bool(std::vector<bool>&a);
+void join_or(std::vector<bool>&a,std::vector<bool>&b);
+void meet_and(std::vector<bool>&a,std::vector<bool>&b);
 
 BasicSymbol* getDestSym(LLVM* llvm);

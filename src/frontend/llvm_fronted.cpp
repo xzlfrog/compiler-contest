@@ -1098,7 +1098,7 @@ void func_table_init(){
 }
 
 void begin_parser(){
-    ssa_flag=true;
+    ssa_flag=false;
     scope=GLOBAL_SCOPE;
     module_list=new ModuleList();
     variable_table.push_back(std::unordered_map<std::string,Symbol*>());

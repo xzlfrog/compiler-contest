@@ -297,3 +297,15 @@ BasicSymbol* getDestSym(LLVM* llvm){
             break;
     }
 }
+
+void join_or(std::vector<bool>&a,std::vector<bool>&b){
+    for(int i=0;i<a.size();i++){
+        a[i]=a[i]|b[i];
+    }
+}
+
+void meet_and(std::vector<bool>&a,std::vector<bool>&b){
+    for(int i=0;i<a.size();i++){
+        a[i]=a[i]&b[i];
+    }
+}
