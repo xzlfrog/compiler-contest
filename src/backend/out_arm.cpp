@@ -1451,7 +1451,9 @@ void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
     OutArm& out_Arm = OutArm::getInstance();
     int offset = this->stackAllocator.align(offsets,16);
     std::string ls_str = isStore? "STR" : "LDR";
-    if(offset == offsets && offset >= -255 && offset <= 255){
+    int diff = offset - offsets;
+
+    if(diff == 0 && offset >= -255 && offset <= 255){
         OutArm::outString("\t" + ls_str + " " + reg + ", [SP, #" + std::to_string(offset) + "]!");
         out_Arm.stackAllocator.stack_currentOffset -= offset; 
         return ;
@@ -1463,18 +1465,18 @@ void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
         OutArm::emitLargeNumber(tmp_num_str,offset);
 
         OutArm::outString("\tADD SP, SP, " + tmp_num_str);
-        OutArm::outString("\t "+ ls_str + " " + reg + ", [SP]");
+        OutArm::outString("\t "+ ls_str + " " + reg + ", [SP, #" + std::to_string(diff) + "]");
         out_Arm.stackAllocator.stack_currentOffset -= offset;
     }
     else if(offset < 0){
         OutArm::emitLargeNumber(tmp_num_str,-offset);
 
         OutArm::outString("\tSUB SP, SP, " + tmp_num_str);
-        OutArm::outString("\t"+ ls_str + " " + reg + ", [SP]");
+        OutArm::outString("\t"+ ls_str + " " + reg + ", [SP, #" + std::to_string(diff) + "]");
         out_Arm.stackAllocator.stack_currentOffset -= offset;
     }
     else {
-        OutArm::outString("\t"+ ls_str + " " + reg + ", [SP]");
+        OutArm::outString("\t"+ ls_str + " " + reg + ", [SP, #" + std::to_string(diff) + "]");
     }
     
 }
