@@ -483,11 +483,13 @@ Data* getZeroData(dataType dtype){
 }
 
 Expression* get_element(std::string name,std::vector<Expression*>* exps){
+    bool is_ps=false;
     Symbol* sym=findVar(name);
     if(sym->getType()==symType::variable)//函数参数！！！
         sym=copy(dynamic_cast<VarSymbol*>(sym));
     LLVMList* llvmlist=new LLVMList();
     BasicSymbol* bs;
+    PointerSymbol* ps;
     if(sym!=nullptr){
         if(exps->size()!=0){
             if(sym->getType()!=symType::array){
@@ -515,11 +517,15 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
                 }
             }*/
             bs=SymbolFactory::createTmpVarSymbolWithScope(array->getArrayType(),scope);
-            PointerSymbol* ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
+            ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
             ps->isConst=array->isConst;
             bool flag=array->scope==1;
-            llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM(ps,array,getIdxFromExp(exps,flag)));
-            llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
+            std::vector<std::pair<dataType,BasicSymbol*>> idxs=getIdxFromExp(exps,flag);
+            llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM(ps,array,idxs));
+            if(idxs.size()>array->getDimensions().size())
+                llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
+            else 
+                is_ps=true;
             if(cnt_array_init>0){
                 PointerSymbol* ps_store=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
                 llvmlist->InsertTail(LLVMfactory::createGetElementPtrLLVM(ps_store,dynamic_cast<ArraySymbol*>(sym_defining),intVectorToBasicSymbolVector(array_init_idx)));
@@ -533,7 +539,7 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
             return new Expression(llvmlist,sym);
         }
         else if(sym->getType()==symType::pointer){
-            PointerSymbol* ps=dynamic_cast<PointerSymbol*>(sym);
+            ps=dynamic_cast<PointerSymbol*>(sym);
             bs=SymbolFactory::createVarSymbolWithScope(ps->name+".loader",scope,createInitialedData(ps->PointedType));
             llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
             if(cnt_array_init>0){
@@ -555,7 +561,10 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
         throw std::runtime_error("error occurs at get_item."
             "the variable was not defined before!");
     }
-    return new Expression(llvmlist,bs);
+    if(!is_ps)
+        return new Expression(llvmlist,bs);
+    else 
+        return new Expression(llvmlist,ps);
 }
 
 LLVMList* create_if_stmt(Expression* exp,LLVMList* llvmlist){

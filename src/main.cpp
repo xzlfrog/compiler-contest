@@ -3,6 +3,9 @@
 #include"../include/backend/out_arm.hpp"
 #include<stdio.h>
 #include<filesystem>
+#include <iostream>
+#include <fstream>
+#include <string>
 
 int scope;
 ModuleList* module_list;
@@ -22,7 +25,8 @@ Symbol* sym_defining;
 bool ssa_flag;
 //std::stack<int>array_initial;
 
-bool Make_llvm = true;//不输出
+bool Make_llvm = false;//不输出
+bool output_all_llvm=false;
 
 //compiler -S -o testcase.s testcase.sy
 int main(int argc,char* argv[]){
@@ -61,8 +65,34 @@ int main(int argc,char* argv[]){
     
     yyin = inputFile;
     begin_parser();
+
+    if(output_all_llvm){
+        LLVMList* llvmlist=module_list->head;
+        LLVM* llvm;
+        std::string llvm_filename=std::filesystem::path(inputFileName).stem().string();
+        llvm_filename+=".ll";
+        std::ofstream outfile(llvm_filename);
+        if(outfile.is_open()){
+            for(;llvmlist!=nullptr;llvmlist=llvmlist->next){
+                llvm=llvmlist->head;
+                if(llvm->getLLVMType()==LLVMtype::func_def){
+                    FuncDefination* func_def=dynamic_cast<FuncDefination*>(llvm);
+                    if(func_def->block_tail->getLLVMType()!=LLVMtype::ret&&func_def->getReturnType()==dataType::void_){
+                        llvmlist->InsertTail(LLVMfactory::createReturnLLVM(nullptr));
+                        func_def->block_tail=llvmlist->tail;
+                    }
+                    //if(ssa_flag)
+                        //SSA(llvmlist);
+                }
+                outfile<<"111\n";
+                outfile<<llvm->out_str();
+            }
+            outfile.close();
+        }
+    }
+
     yyparse();
-    
+
     out_arm(outputFileName,module_list);
 
     return 0;

@@ -16,7 +16,7 @@ std::vector<Symbol*>& copy(const std::vector<Symbol*>& bs_vector){
     for(auto & a :bs_vector){
         if(a->getType()==symType::variable||a->getType()==symType::constant_nonvar||a->getType()==symType::constant_var)
             bs_vector_copy.push_back(copy(dynamic_cast<BasicSymbol*>(a)));
-        else if(a->getType()==symType::array)
+        else if(a->getType()==symType::array||a->getType()==symType::pointer)
             bs_vector_copy.push_back(a);
     }
     return bs_vector_copy;
