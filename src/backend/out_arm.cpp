@@ -730,9 +730,11 @@ void CallLLVM::out_arm_str()  {
     OutArm::outString("\t"+call_str);
     if (this->dest_sym) {
         if(this->function->getReturnType() == dataType::f32 || this->function->getReturnType() == dataType::f64) {
-            OutArm::outString("\tFMOV " + dest_str + ", D0"); // Assuming S0 is the return register for floating point
-        } else {
-            OutArm::outString("\tMOV " + dest_str + ", X0"); // Assuming X0 is the return register for integers
+            OutArm::outString("\tFMOV " + dest_str + ", S0"); // Assuming S0 is the return register for floating point
+        } else if(this->function->getReturnType() == dataType::i32){
+            OutArm::outString("\tMOV " + dest_str + ", W0"); // Assuming X0 is the return register for integers
+        } else{
+            OutArm::outString("\tMOV " + dest_str + ", X0");
         }
     }
 
