@@ -25,7 +25,7 @@ Symbol* sym_defining;
 bool ssa_flag;
 //std::stack<int>array_initial;
 
-bool Make_llvm = false;//不输出
+bool Make_llvm = true;//不输出
 bool output_all_llvm=false;
 
 //compiler -S -o testcase.s testcase.sy

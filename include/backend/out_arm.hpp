@@ -70,6 +70,7 @@ public:
     //记录函数参数 进入新函数时候clear
     std::unordered_set<std::string> params;
     void resetReg();
+    void params_offset(const std::string& reg, int offsets);
     void SPmove(bool isStore, const std::string& reg, int offsets);
     void global_offset_move(bool isStore, const std::string& global_reg, const std::string& symbol_reg, int offsets);
     static void outString(const std::string &str);
