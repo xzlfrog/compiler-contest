@@ -154,3 +154,158 @@ std::vector<BasicBlock*> divideBasicBlock(LLVMList* llvmlist){
     }
     return basicBlocks;
 }
+
+//通过基本块开头的label的名称查找对应的基本块
+BasicBlock* getBasicBlock(std::string& bb_name,std::vector<BasicBlock*>& bbs){
+    for(auto & bb : bbs){
+        if(dynamic_cast<Label*>(bb->head)->label->name==bb_name)
+            return bb;
+    }
+    return nullptr;
+}
+
+std::vector<BasicBlock*> getCFG(LLVMList* llvmlist){
+    std::vector<BasicBlock*> basicBlocks=divideBasicBlock(llvmlist);
+    connectBasicBlocks(basicBlocks);
+    return basicBlocks;
+}
+
+std::vector<std::vector<std::pair<BasicSymbol*,BasicSymbol*>>> getMovVar(LLVMList* llvmlist,std::vector<BasicBlock*>&bbs){
+    std::vector<std::vector<std::pair<BasicSymbol*,BasicSymbol*>>> res;
+    for(LLVM* llvm=llvmlist->head;llvm!=nullptr;llvm=llvm->next){
+        if(llvm->getLLVMType()==LLVMtype::phi){
+            PhiLLVM* phiLLVM=dynamic_cast<PhiLLVM*>(llvm);
+            std::vector<std::pair<BasicSymbol*,LabelSymbol*>> & val_and_src=phiLLVM->vals_srcs;
+            for(auto & a : val_and_src){
+                res[getBasicBlock(a.second->name,bbs)->idx].push_back({phiLLVM->dest_sym,a.first});
+            }
+        }
+    }
+    return res;
+}
+
+void set(std::vector<bool>&a){
+    for(int i=0;i<a.size();i++){
+        a[i]=true;
+    }
+}
+
+void set(std::vector<bool>&a,int j){
+    a[j]=true;
+}
+
+void reset(std::vector<bool>&a){
+    for(int i=0;i<a.size();i++){
+        a[i]=false;
+    }
+}
+
+void reset(std::vector<bool>&a,int j){
+    a[j]=false;
+}
+
+int count_bool(std::vector<bool>&a){
+    int cnt=0;
+    for(int i=0;i<a.size();i++){
+        if(a[i]==true){
+            cnt++;
+        }
+    }
+    return cnt;
+}
+
+//对于getelementptr这个指令，我们是自己生成一个临时变量来处理，所以不用考虑变量重复赋值的问题
+BasicSymbol* getDestSym(LLVM* llvm){
+    switch (llvm->getLLVMType())
+    {
+        case LLVMtype::add:
+        case LLVMtype::sub:
+        case LLVMtype::mul:
+        case LLVMtype::sdiv:
+        case LLVMtype::udiv:
+        case LLVMtype::icmp_eq:
+        case LLVMtype::icmp_ne:
+        case LLVMtype::icmp_sge:
+        case LLVMtype::icmp_sgt:
+        case LLVMtype::icmp_sle:
+        case LLVMtype::llvm_fadd:
+        case LLVMtype::llvm_fsub:
+        case LLVMtype::llvm_fmul:
+        case LLVMtype::llvm_fdiv:
+        case LLVMtype::llvm_frem:
+        case LLVMtype::logical_or:
+        case LLVMtype::logical_and:
+        case LLVMtype::logical_xor:
+        case LLVMtype::srem:
+        case LLVMtype::urem:
+        case LLVMtype::icmp_slt:
+        case LLVMtype::icmp_uge:
+        case LLVMtype::icmp_ugt:
+        case LLVMtype::icmp_ule:
+        case LLVMtype::icmp_ult:
+        case LLVMtype::fcmp_oeq:
+        case LLVMtype::fcmp_oge:
+        case LLVMtype::fcmp_ogt:
+        case LLVMtype::fcmp_ole:
+        case LLVMtype::fcmp_olt:
+        case LLVMtype::fcmp_one:
+        case LLVMtype::fcmp_ord:
+        {
+            ArithmeticOperationLLVM* ir=dynamic_cast<ArithmeticOperationLLVM*>(llvm);
+            return ir->a;
+        }
+        case LLVMtype::llvm_trunc:
+        case LLVMtype::zext:
+        case LLVMtype::sext:
+        case LLVMtype::bitcast:
+        case LLVMtype::fptrunc:
+        case LLVMtype::fpext:
+        case LLVMtype::fptoui:
+        case LLVMtype::fptosi:
+        case LLVMtype::uitofp:
+        case LLVMtype::sitofp:
+        case LLVMtype::ptrtoint:
+        case LLVMtype::inttoptr:
+        //case LLVMtype::addrspacecast:
+        {
+            TypeConversionOperation* ir=dynamic_cast<TypeConversionOperation*>(llvm);
+            return ir->dest_sym;
+        }
+        case LLVMtype::load:
+        {
+            LoadLLVM* ir=dynamic_cast<LoadLLVM*>(llvm);
+            return ir->dest_sym;
+        }
+        case LLVMtype::call:
+        {
+            CallLLVM* ir=dynamic_cast<CallLLVM*>(llvm);
+            return ir->dest_sym;
+        }
+        case LLVMtype::phi:
+        {
+            PhiLLVM* ir=dynamic_cast<PhiLLVM*>(llvm);
+            return ir->dest_sym;
+        }
+        case LLVMtype::llvm_neg:
+        case LLVMtype::llvm_fneg:
+        {
+            UnaryOperationLLVM* ir=dynamic_cast<UnaryOperationLLVM*>(llvm);
+            return ir->dest_sym;
+        }
+        default:
+            return nullptr;
+            break;
+    }
+}
+
+void join_or(std::vector<bool>&a,std::vector<bool>&b){
+    for(int i=0;i<a.size();i++){
+        a[i]=a[i]|b[i];
+    }
+}
+
+void meet_and(std::vector<bool>&a,std::vector<bool>&b){
+    for(int i=0;i<a.size();i++){
+        a[i]=a[i]&b[i];
+    }
+}

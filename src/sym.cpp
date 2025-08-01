@@ -222,6 +222,7 @@ std::string getSymOut(Symbol* symbol){
     case symType::constant_var:
     case symType::variable:
     case symType::array:
+    case symType::pointer:
         return symbol->getName();
     case symType::constant_nonvar:
         return my_to_string(symbol->data);
