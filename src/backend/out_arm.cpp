@@ -888,15 +888,15 @@ void AllocaArrayLLVM::out_arm_str()  {
     out_Arm.SPmove(1,"WZR",out_Arm.stackAllocator.getOffset(this->getArray()->getName()));
     totaltimes--;
 
-    int offsets[] = {4, 8, 12, 16};
+    std::string offsets[] = {"4", "8", "12", "16"};
 
     for (int i = 0; i < totaltimes; ++i) {
         int idx = i % 4;
         if (idx == 3) {
-            std::cout << "STR XZR, [SP, #" << offsets[idx] << "]!" << std::endl;
+            OutArm::outString("\tSTR WZR, [SP, #" + offsets[idx] + "]!");
             out_Arm.stackAllocator.stack_currentOffset +=16;
         } else {
-            std::cout << "STR XZR, [SP, #" << offsets[idx] << "]" << std::endl;
+            OutArm::outString("\tSTR WZR, [SP, #" + offsets[idx] + "]");
         }
     }
 
