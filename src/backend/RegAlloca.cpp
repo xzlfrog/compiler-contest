@@ -124,11 +124,13 @@ std::string XRegAllocator::accessAddress(std::string symbol){
         this->allocateOtherSpace(symbol); // 如果没有分配寄存器，则分配
         it = this->var_to_reg.find(symbol); // 重新查找
     }
-    bool is_in_stack = stackAllocator.hasVariable(symbol);
-    if (is_in_stack && !is_in_reg) {
-        this->promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
-        return "X" + this->getRegister(symbol).substr(1); // 返回寄存器名称
-    }
+
+    //address 不需要被读值。。。
+    // bool is_in_stack = stackAllocator.hasVariable(symbol);
+    // if (is_in_stack && !is_in_reg) {
+    //     this->promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
+    //     return "X" + this->getRegister(symbol).substr(1); // 返回寄存器名称
+    // }
 
     if(!Registers[it->second].empty() && (symbol != Registers[it->second])){
         this->spillToStack(Registers[it->second]); // 如果寄存器已被占用，先溢出

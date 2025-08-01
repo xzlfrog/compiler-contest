@@ -624,9 +624,11 @@ void ReturnLLVM::out_arm_str()  {
 void CallLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     std::string func_name = this->function->getName();
+
     if (!func_name.empty()) {
         func_name = func_name.substr(1);  // 从第1个字符开始，取到末尾
     }
+
     std::string dest_str; 
     if(this->dest_sym) {
         dest_str= out_Arm.DispatchReg(this->dest_sym);
@@ -672,7 +674,7 @@ void CallLLVM::out_arm_str()  {
                 arg_str = out_Arm.DispatchReg(array_symbol);
             }
 
-            if(ori_str.front() == 'D'){
+            if(ori_str.front() == 'S'){
                 OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
             }else{
                 OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
@@ -687,7 +689,9 @@ void CallLLVM::out_arm_str()  {
             }else{
                 OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
             }
-        }else if (auto* const_symbol = dynamic_cast<ConstSymbol*>(arg)){
+        }else if (auto* pointer_symbol = dynamic_cast<ConstSymbol*>(arg)){
+
+        } else if (auto* const_symbol = dynamic_cast<ConstSymbol*>(arg)){
             if(const_symbol->getDataType()==dataType::i32 || const_symbol->getDataType()==dataType::i1){
                 int val = std::get<int>(const_symbol->data->getValue());
                 OutArm::emitLargeNumber(ori_str,val);
@@ -872,7 +876,8 @@ void LoadLLVM::out_arm_str()  {
                 OutArm::outString("\tADD " + tmp_address_str + ", " + tmp_address_str + ", :lo12:" + tmp_src_str);
 
                 int offset = out_Arm.globalAllocator.symbol_to_global[src_sym->getName()].second ;
-                out_Arm.SPmove(false, tmp_address_str, offset);
+
+                out_Arm.global_offset_move(false, tmp_address_str, dest_str,offset);
                 
             }
 
@@ -935,7 +940,7 @@ void StoreLLVM::out_arm_str()  {
                 OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + tmp_dest_str);
 
                 int offset = out_Arm.globalAllocator.symbol_to_global[dest_sym->getName()].second ;
-                out_Arm.SPmove(true, tmp_str, offset);
+                out_Arm.global_offset_move(false, tmp_str, src_str,offset);
 
             }
         }else{//临时变量情况(Tmp_StackAddress_InReg)
@@ -1395,8 +1400,35 @@ void DRegAllocator::spillToStack(std::string symbol) {
     //this->freeRegister(reg_name);
 }
 
-void OutArm::SPmove_NO_ls(const std::string& reg, int offsets){
+void OutArm::global_offset_move(bool isStore, const std::string& global_reg, const std::string& symbol_reg, int offset){
+    OutArm& out_Arm = OutArm::getInstance();
+    //int offset = this->stackAllocator.align(offsets,16); 全局变量不用对齐
+    std::string ls_str = isStore? "STR" : "LDR";
 
+    if(offset = 0){
+        OutArm::outString("\t" + ls_str + " " + symbol_reg + ", [" + global_reg + "]");
+        return;
+    }
+
+    if(offset >= -255 && offset <= 255){
+        OutArm::outString("\t" + ls_str + " " + symbol_reg + ", [" + global_reg + ", #" + std::to_string(offset) + "]");
+        return ;
+    }
+
+    VarSymbol* tmp_num_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+    std::string tmp_num_str = out_Arm.DispatchReg(tmp_num_sym);
+    if(offset > 0){
+        OutArm::emitLargeNumber(tmp_num_str,offset);
+
+        OutArm::outString("\tADD " + global_reg + ", " + global_reg + ", " + tmp_num_str);
+        OutArm::outString("\t" + ls_str + " " + symbol_reg + ", [" + global_reg + "]");
+    }
+    else if(offset < 0){
+        OutArm::emitLargeNumber(tmp_num_str,-offset);
+
+        OutArm::outString("\tSUB " + global_reg + ", " + global_reg + ", " + tmp_num_str);
+        OutArm::outString("\t" + ls_str + " " + symbol_reg + ", [" + global_reg + "]");
+    }
 }
 
 void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
