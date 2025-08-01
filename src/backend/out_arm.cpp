@@ -849,6 +849,13 @@ void LoadLLVM::out_arm_str()  {
 
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
 
+    if(out_Arm.params.count(src_sym->getName())){
+        std::string src_str = out_Arm.DispatchReg(this->src_sym);
+        OutArm::outString("\tLDR " + dest_str + ", " + "[" + src_str + "]");
+
+        return;
+    }
+
     //加载普通变量 数组首位 已计算过【1】【2】地址的数组  ---- ----  全局变量 [i][j] 地址的数组
     if(!out_Arm.globalAllocator.find_symbol(src_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(src_sym->getName())){
         int offset = out_Arm.stackAllocator.getOffset(this->src_sym->getName());
@@ -897,6 +904,11 @@ void StoreLLVM::out_arm_str()  {
     
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
 
+    if(out_Arm.params.count(src_sym->getName())){
+        std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
+        OutArm::outString("\tSTR " + src_str + ", " + "[" + dest_str + "]");
+        return;
+    }
 
     //store语句 特殊处理src为常数情况
     if(src_str.front() == '#' && this->src_sym->getDataType()==dataType::i32){
@@ -954,7 +966,7 @@ void StoreLLVM::out_arm_str()  {
 void GetElementPtrLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     const auto& container = this->getTyAndIdx();
-
+    std::string arr_name = this->getSrcSymbol()->getName();
 
     bool index_allnumber = true;//判断逻辑 是否为[1][1] 还是[a][b]
     for (const auto& [data_type, symbol_ptr] : this->getTyAndIdx()) {
@@ -977,6 +989,92 @@ void GetElementPtrLLVM::out_arm_str()  {
             index_allnumber = false;
             break;
         }
+    }
+
+    //也统一通过X8传递
+    if(out_Arm.params.count(arr_name)){
+        std::vector<int> dims = this->getSrcSymbol()->getDimensions();
+        std::string poi_name = this->getDestSymbol()->getName();
+        out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
+        //std::string poi_str = out_Arm.DispatchReg(this->getDestSymbol());
+        std::string arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
+        //也统一通过X8传递
+        std::string poi_str = "X8";
+        OutArm::outString("\tFMOV " + poi_str + ", " + arr_str);
+        //arr[]情况
+        if(this->getDimensions().size() == 0){
+            //常数时候
+            if(container.begin()->second->getType() == symType::constant_nonvar){
+                VarSymbol* tmp_num = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                std::string tmp_str = out_Arm.DispatchReg(tmp_num);
+                int offset = (std::stoi(getSymOut(container.begin()->second))) * 4;
+                out_Arm.emitLargeNumber(tmp_str,offset);
+                OutArm::outString("\tADD " + poi_str + ", " + poi_str + ", " + tmp_str);
+
+            }//字母时候
+            else{
+                //给该字母找其寄存器捏 由于变量默认存到W 手动帮其扩展至X -- 小chat说这是ok的
+                std::string tmp_str = out_Arm.DispatchReg(container.begin()->second);
+
+                if(tmp_str.front()=='W'){
+                    tmp_str = "X" + tmp_str.substr(1);
+                }
+
+                //LSL X0, X1, #2 其实乘以4
+                out_Arm.outString("\tLSL " + tmp_str + ", " + tmp_str + ", #2");
+                OutArm::outString("\tADD " + poi_str + ", " + poi_str + ", " + tmp_str);
+
+            } 
+
+            return ;
+        }
+
+        // N维数组偏移量计算（通用方法）
+        int offset = 0;//此为数字时候算的偏移量
+        int multiplier = 1;
+        
+        for(int i = container.size() - 1; i>=0 ; --i){
+            int j = i - 1;
+            //常数时候
+            if(container[i].second->getType() == symType::constant_nonvar){
+                offset += (std::stoi(getSymOut(container[i].second))) * multiplier;
+            }else{
+                std::string tmp_str = out_Arm.DispatchReg(container[i].second);
+                if(tmp_str.front()=='W'){
+                    tmp_str = "X" + tmp_str.substr(1);
+                }
+                if(multiplier == 1){
+                    out_Arm.outString("\tLSL " + tmp_str + ", " + tmp_str + ", #2");
+                }else{
+                    std::string tmp_num_str = std::to_string(multiplier * 4);
+                    VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                    std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
+                    out_Arm.emitLargeNumber(tmp_tmp_str,multiplier * 4);
+                    out_Arm.outString("\tMUL " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
+                }             
+                OutArm::outString("\tADD " + poi_str + ", " + poi_str + ", " + tmp_str);
+            }
+
+            // 更新乘数和索引
+            if (i > 0) {
+                multiplier *= dims[j] ;
+            }
+        }
+    
+        //有含有数字的偏移
+        if(offset!=0){
+            VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i64);
+            std::string tmp_str = out_Arm.DispatchReg(tmp);
+            out_Arm.emitLargeNumber(tmp_str, offset * 4);
+
+            if(offset > 0){
+                OutArm::outString("\tADD " + poi_str + ", " + poi_str + ", "  + tmp_str);
+            }else{//实际上offset不可能<0
+                OutArm::outString("\tSUB " + poi_str + ", " + poi_str + ", "  + tmp_str);
+            }
+        }
+    
+        return;
     }
 
     //全是数字数组的情况
@@ -1004,7 +1102,11 @@ void GetElementPtrLLVM::out_arm_str()  {
         // 全局变量的情况   str-str,int symbolTOglobal offset 全局变量的offset就是正偏移的
         if(out_Arm.globalAllocator.find_symbol(this->ptrval->getName())){
             out_Arm.globalAllocator.addSymbolToGlobal(this->dest_sym->getName(),this->ptrval->getName(),offset);
-        }else{
+        }else if(out_Arm.params.count(this->ptrval->getName())){
+            std::string arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
+            out_Arm.params_offset(arr_str,offset);
+        }
+        else{
             //正常变量的情况    localoffset str offset(绝对位置)
             out_Arm.stackAllocator.addArrayPtrwithOffset(this->dest_sym->getName(), this->ptrval->getName(), offset);
         }
@@ -1019,13 +1121,12 @@ void GetElementPtrLLVM::out_arm_str()  {
         std::string poi_name = this->getDestSymbol()->getName();
 
         std::string arr_offset_str;
-        out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
         
         //先把数组的首地址正确传递
         //非全局变量 (全局变量只需要记录 offset) 参数数组也不用算首地址 都在他寄存器里
         if(!out_Arm.globalAllocator.find_symbol(arr_name) && !out_Arm.params.count(arr_name)) // "&&" out_Arm.stackAllocator.hasVariable(poi_name) 可能会加载别的值b = a[1]->a[2]，故省略
         {   
-
+            out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
             int offset = out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName());
             //out_Arm.SPmove
             arr_offset_str = std::to_string(offset);
@@ -1048,7 +1149,12 @@ void GetElementPtrLLVM::out_arm_str()  {
                     OutArm::outString("\tSUB " + arr_str + ", SP, " + tmp_str);
                 }
             }
-        }else{
+        }else if(out_Arm.params.count(arr_name)){
+            out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
+            arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
+        }
+        else{
+            out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
             OutArm::outString("\tADRP " + arr_str+ ", " + arr_name.substr(1));
             OutArm::outString("\tADD " + arr_str + ", " + arr_str + ", :lo12:" + arr_name.substr(1));
         }
@@ -1428,6 +1534,21 @@ void OutArm::global_offset_move(bool isStore, const std::string& global_reg, con
 
         OutArm::outString("\tSUB " + global_reg + ", " + global_reg + ", " + tmp_num_str);
         OutArm::outString("\t" + ls_str + " " + symbol_reg + ", [" + global_reg + "]");
+    }
+}
+
+void OutArm::params_offset(const std::string& reg, int offset){
+//参数是存在寄存器里的 无需考虑对齐！
+    OutArm& out_Arm = OutArm::getInstance();
+    VarSymbol* tmp_num_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+    std::string tmp_num_str = out_Arm.DispatchReg(tmp_num_sym);
+    if(offset > 0){
+        OutArm::emitLargeNumber(tmp_num_str,offset);
+        OutArm::outString("\tADD " + reg + ", " + reg + ", " + tmp_num_str);
+    }
+    else if(offset < 0){
+        OutArm::emitLargeNumber(tmp_num_str,-offset);
+        OutArm::outString("\tSUB " + reg + ", " + reg + ", " + tmp_num_str);
     }
 }
 
