@@ -732,13 +732,42 @@ void CallLLVM::out_arm_str()  {
     //新栈顶
     out_Arm.stackAllocator.func_stackTop.push(out_Arm.stackAllocator.getCurrentTop());
     out_Arm.stackAllocator.set_top(0);
-
+    std::vector<std::pair<std::string, bool>> Regs_to_besaved;
+    for(auto reg : out_Arm.xRegAllocator.Registers){
+        if(!reg.empty()){
+            Regs_to_besaved.push_back({reg,0});
+            out_Arm.xRegAllocator.spillToStack(reg);
+        }
+        
+    }
+    for(auto reg : out_Arm.dRegAllocator.Registers){
+        if(!reg.empty()){
+            Regs_to_besaved.push_back({reg,1});
+            out_Arm.dRegAllocator.spillToStack(reg);
+        }
+    }
+    out_Arm.stackAllocator.func_register_save.push(Regs_to_besaved);
+    
     std::string call_str = "BL " + func_name;
     OutArm::outString("\t"+call_str);
 
     //跳转回来后
     out_Arm.stackAllocator.set_top(out_Arm.stackAllocator.func_stackTop.top());
     out_Arm.stackAllocator.func_stackTop.pop();
+
+    Regs_to_besaved = out_Arm.stackAllocator.func_register_save.top();
+    out_Arm.stackAllocator.func_register_save.pop();
+    for(auto reg : Regs_to_besaved){
+        if(reg.second == 0){
+            if(!reg.first.empty()){
+                out_Arm.xRegAllocator.promoteToRegister(reg.first);
+            }
+        }else if(reg.second == 1){
+            if(!reg.first.empty()){
+                out_Arm.xRegAllocator.promoteToRegister(reg.first);
+            }
+        }
+    }
 
     if (this->dest_sym) {
         if(this->function->getReturnType() == dataType::f32 || this->function->getReturnType() == dataType::f64) {
@@ -852,7 +881,7 @@ void AllocaArrayLLVM::out_arm_str()  {
 }
 
 void LoadLLVM::out_arm_str()  {
-    OutArm& out_Arm = OutArm::getInstance();
+    OutArm& out_Arm = OutArm::getInstan;ce();
     out_Arm.stackAllocator.RegVar_StackVar[dest_sym->getName()] = src_sym->getName();
 
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
