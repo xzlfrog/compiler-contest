@@ -820,7 +820,7 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
                 ArraySymbol* array=dynamic_cast<ArraySymbol*>(a);
                 array->arrayType=dtype;
                 if(a->scope==GLOBAL_SCOPE||array->isConst==true){
-                    llvmlist->InsertHead(LLVMfactory::createGlobalArrayVarDefination(array));
+                    llvmlist->InsertTail(LLVMfactory::createGlobalArrayVarDefination(array));
                 }
                 else{
                     llvmlist->InsertTail(LLVMfactory::createAllocaArrayLLVM(array));
@@ -875,7 +875,7 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
                     b={b.first,typeConversion(dtype,b.second)};
                 }
                 if(a->scope==GLOBAL_SCOPE||array->isConst==true){
-                    llvmlist->InsertHead(LLVMfactory::createGlobalArrayVarDefination(array));
+                    llvmlist->InsertTail(LLVMfactory::createGlobalArrayVarDefination(array));
                 }
                 else{
                     llvmlist->InsertTail(LLVMfactory::createAllocaArrayLLVM(array));
@@ -1027,8 +1027,12 @@ void end_parser(){
                     }
                     if(ssa_flag)
                         SSA(llvmlist);
+                    outfile<<llvm->out_str();
                 }
-                outfile<<llvm->out_str();
+                else{
+                    for(llvm=llvmlist->head;llvm!=nullptr;llvm=llvm->next)
+                        outfile<<llvm->out_str();
+                }     
             }
             outfile.close();
         }
@@ -1131,6 +1135,12 @@ LLVMList* assign_array_item(Expression* LVal,Expression* exp){
         else
             throw std::runtime_error("trying to assign to a constant varible");
     }
+    else if(LVal->sym->scope==1){
+        if(LVal->sym->getDataType()==dataType::i32)
+            llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::add,dynamic_cast<BasicSymbol*>(LVal->sym),dynamic_cast<BasicSymbol*>(exp->sym),getZeroSym(dataType::i32)));
+        else if(LVal->sym->getDataType()==dataType::f32)
+            llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::llvm_fadd,dynamic_cast<BasicSymbol*>(LVal->sym),dynamic_cast<BasicSymbol*>(exp->sym),getZeroSym(dataType::f32)));
+    }
     return llvmlist;
 }
 
@@ -1159,8 +1169,8 @@ void create_var_init_list(Expression* exp){
             add_init_item();
         }
     }
-    //else
-        //array_init_idx[cnt_array_init-1]++;
+    else
+        array_init_idx[cnt_array_init-1]++;
 }
 
 void create_var_init_list(Expression* exp1,Expression* exp2){
