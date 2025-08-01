@@ -881,7 +881,7 @@ void AllocaArrayLLVM::out_arm_str()  {
 }
 
 void LoadLLVM::out_arm_str()  {
-    OutArm& out_Arm = OutArm::getInstan;ce();
+    OutArm& out_Arm = OutArm::getInstance();
     out_Arm.stackAllocator.RegVar_StackVar[dest_sym->getName()] = src_sym->getName();
 
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
