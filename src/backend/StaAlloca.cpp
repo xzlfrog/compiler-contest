@@ -79,7 +79,7 @@ int StackAllocator::allocateLocal(int size, std::string symbol) {
     }
     
     this->localVarOffsets[name] = this->currentTop;
-    this->currentTop += size;
+    this->currentTop -= size;
     
     return address;
 }
@@ -98,7 +98,7 @@ int StackAllocator::allocateArray(int elementSize, const std::vector<int>& dimen
     }
 
     this->localVarOffsets[name] = this->currentTop;
-    this->currentTop += totalSize;
+    this->currentTop -= totalSize;
 
     return address;
 }
@@ -211,6 +211,6 @@ void StackAllocator::addArrayPtrwithOffset(std::string symbol, std::string array
         return; // 如果变量已经存在，则不需要重新添加
     }
     // Store the pointer with its offset
-    localVarOffsets[name] = this->currentTop - localVarOffsets[array_symbol] + offset;
+    localVarOffsets[name] = localVarOffsets[array_symbol] + offset;
      //加减指针要打印出来吧。。。 这里不是真正的栈帧顶啦！
 }

@@ -848,39 +848,6 @@ void LoadLLVM::out_arm_str()  {
         int offset = out_Arm.stackAllocator.getOffset(this->src_sym->getName());
 
         out_Arm.SPmove(false, dest_str, offset);
-        // int offset = out_Arm.stackAllocator.getOffset(this->src_sym->getName());
-        // if (offset == 0){
-        //     OutArm::outString("\tLDR " + dest_str + ", [SP]");
-        // }
-        // else{
-        //     if(offset >= -255 && offset <= 255){
-        //         OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
-        //     }else if(offset < -255){
-        //         if( offset >= -4095 ){
-        //             OutArm::outString("\tMOV X8, #" + std::to_string(-offset));
-        //         }else if( offset <= -65535){
-        //             OutArm::emitLargeNumber("X8",-offset);
-        //         }
-        //         else{
-        //             OutArm::outString("\tMOVZ X8, #" + std::to_string(-offset));
-        //         }
-        //         OutArm::outString("\tSUB SP, SP, X8");
-        //         OutArm::outString("\tLDR " + dest_str + ", [SP]");
-        //         out_Arm.stackAllocator.stack_currentOffset -= offset;
-        //     }else if(offset > 255){
-        //         if( offset <=4095 ){
-        //             OutArm::outString("\tMOV X8, #" + std::to_string(offset));
-        //         }else if( offset >= 65535){
-        //             OutArm::emitLargeNumber("X8",offset);
-        //         }
-        //         else{
-        //             OutArm::outString("\tMOVZ X8, #" + std::to_string(offset));
-        //         }
-        //         OutArm::outString("\tADD SP, SP, X8");
-        //         OutArm::outString("\tLDR " + dest_str + ", [SP]");
-        //         out_Arm.stackAllocator.stack_currentOffset -= offset;
-        //     }
-        // }
 
     }else{
         std::string src_str = out_Arm.DispatchReg(this->src_sym);
@@ -964,24 +931,26 @@ void StoreLLVM::out_arm_str()  {
              if(!out_Arm.globalAllocator.symbol_to_global.count(dest_sym->getName())){
                 OutArm::outString("\tADRP " + tmp_str + ", " + dest_str);
                 OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + dest_str);
+                OutArm::outString("\tSTR " + src_str + ", " + "[" + tmp_str + "]");
             }else{//临时变量
                 std::string tmp_dest_str = out_Arm.globalAllocator.symbol_to_global[dest_sym->getName()].first;
                 tmp_dest_str = tmp_dest_str.substr(1);
                 OutArm::outString("\tADRP " + tmp_str + ", " + tmp_dest_str);
                 OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + tmp_dest_str);
+                OutArm::outString("\tSTR " + src_str + ", " + "[" + tmp_str + "]");
             }//有偏移情况
             if(out_Arm.globalAllocator.symbol_to_global.count(dest_sym->getName())){
                 int offset = out_Arm.globalAllocator.symbol_to_global[dest_sym->getName()].second ;
-                if(offset > 4095){
-                    VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
-                    std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
-                    OutArm::emitLargeNumber(tmp_tmp_str,offset);
-                    OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
-                }else{
-                    OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", #" + std::to_string(offset));
-                }
+                out_Arm.SPmove(true, tmp_str, offset);
+                // if(offset > 4095){
+                //     VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                //     std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
+                //     OutArm::emitLargeNumber(tmp_tmp_str,offset);
+                //     OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
+                // }else{
+                //     OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", #" + std::to_string(offset));
+                // }
             }
-            OutArm::outString("\tSTR " + src_str + ", " + "[" + tmp_str + "]");
         }else{//临时变量情况(Tmp_StackAddress_InReg)
             dest_str = "X8";
             OutArm::outString("\tSTR " + src_str + ", " + "[" + dest_str + "]");
@@ -1040,7 +1009,7 @@ void GetElementPtrLLVM::out_arm_str()  {
         }   
         offset *= 4; //这里！！！ 我觉得可能有bug哦。。。 
 
-        // 全局变量的情况   str-str,int symbolTOglobal offset
+        // 全局变量的情况   str-str,int symbolTOglobal offset 全局变量的offset就是正偏移的
         if(out_Arm.globalAllocator.find_symbol(this->ptrval->getName())){
             out_Arm.globalAllocator.addSymbolToGlobal(this->dest_sym->getName(),this->ptrval->getName(),offset);
         }else{
@@ -1066,6 +1035,7 @@ void GetElementPtrLLVM::out_arm_str()  {
         {   
 
             int offset = out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName());
+            //out_Arm.SPmove
             arr_offset_str = std::to_string(offset);
             if(offset == 0){
                 OutArm::outString("\tMOV " + arr_str + ", SP");
@@ -1450,15 +1420,16 @@ void DRegAllocator::spillToStack(std::string symbol) {
     //this->freeRegister(reg_name);
 }
 
+void OutArm::SPmove_NO_ls(const std::string& reg, int offsets){
+
+}
+
 void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
     OutArm& out_Arm = OutArm::getInstance();
     int offset = this->stackAllocator.align(offsets,16);
     std::string ls_str = isStore? "STR" : "LDR";
     int diff = offset - offsets;
 
-        offset = -offset;
-        diff = -diff;
-        
     if(diff == 0 && offset >= -255 && offset <= 255){
         OutArm::outString("\t" + ls_str + " " + reg + ", [SP, #" + std::to_string(offset) + "]!");
         out_Arm.stackAllocator.stack_currentOffset -= offset; 
