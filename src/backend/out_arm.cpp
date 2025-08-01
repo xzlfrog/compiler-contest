@@ -44,26 +44,29 @@ void OutArm::emitLargeNumber(const std::string& reg, uint64_t imm){
 }
 
 void OutArm::emitLoadFloat(const std::string& reg, float value) {
-    // 判断是 S 寄存器（32位）还是 D 寄存器（64位）
-    if (reg[0] == 'S' || reg[0] == 's') {
-        // S0, S1, ... 表示 float (32-bit)
-        char buffer[32];
-        std::snprintf(buffer, sizeof(buffer), "\tLDR %s, =%.7gf", reg.c_str(), value);
-        OutArm::outString(std::string(buffer));
-    }
-    else if (reg[0] == 'D' || reg[0] == 'd') {
-        // D0, D1, ... 表示 double (64-bit)
-        // 注意：我们传入的是 float，要转成 double
-        double dval = static_cast<double>(value);
-        char buffer[32];
-        std::snprintf(buffer, sizeof(buffer), "\tLDR %s, =%.15g", reg.c_str(), dval);
-        OutArm::outString(std::string(buffer));
-    }
-    else {
-        // 错误：不是浮点寄存器
-        // 可以抛出错误或断言
-        OutArm::outString("\t// ERROR: invalid float register: " + reg);
-    }
+    // OutArm& out_Arm = OutArm::getInstance();
+    // std::string tmp_str = float_symbol->getName();
+    // if(!out_Arm.globalAllocator.rodata.count(float_symbol->getName())){
+    //     Data_f32* float_data = createData()
+    //     std::vector<Data*> float_value;
+    //     float_value.push_back(float_symbol->data);
+        
+    //     if(tmp_str == ""){
+    //         tmp_str = generate_tmp_var_name();
+    //     }
+    //     out_Arm.globalAllocator.rodata[tmp_str] = float_value;
+    // }
+
+    // if (out_Arm.globalAllocator.rodata.count(tmp_str)){
+    //     OutArm::outString("\tADRP X8, " + tmp_str.substr(1));
+    //     OutArm::outString("\tADD X8, X8, :lo12:"+ tmp_str.substr(1));
+    //     OutArm::outString("\tLDR " + reg + ", [X8]");
+    // }
+    // else {
+    //     // 错误：不是浮点寄存器
+    //     // 可以抛出错误或断言
+    //     OutArm::outString("\t// ERROR: invalid float register: " + reg);
+    // }
 }
 
 void OutArm::emitLoadFloatSymbol(const std::string& reg, Symbol* float_symbol) {
@@ -200,7 +203,9 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
             }
         }
         else if(symbol->getDataType() == dataType::f32){
-            reg_name = "=" + getSymOut(symbol);
+            VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::f32);
+            reg_name = out_Arm.DispatchReg(tmp_sym);
+            out_Arm.emitLoadFloatSymbol(reg_name, symbol);
         }
     }//数组情况
     else if(auto* array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {       
@@ -328,8 +333,7 @@ std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
     if(b_str.front()== '='){
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
-        int tmp_num = std::stoi(b_str.substr(1));
-        OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
+        out_Arm.emitLoadFloatSymbol(tmp_tmp_str,REMllvm->getB());
         b_str = tmp_tmp_str ;
     }
 
@@ -344,8 +348,7 @@ std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
     if(c_str.front()== '='){
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
-        int tmp_num = std::stoi(c_str.substr(1));
-        OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
+        out_Arm.emitLoadFloatSymbol(tmp_tmp_str,REMllvm->getC());
         c_str = tmp_tmp_str;
     }
 
@@ -401,16 +404,14 @@ std::string OutArm::ASMDOperation(ArithmeticOperationLLVM* ASMDllvm){
         if(b_str.front()== '='){
             VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
             std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
-            int tmp_num = std::stoi(b_str.substr(1));
-            OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
+            out_Arm.emitLoadFloatSymbol(tmp_tmp_str,ASMDllvm->getC());
             b_str = tmp_tmp_str;
         }
     
         if(c_str.front()== '='){
             VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
             std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
-            int tmp_num = std::stoi(c_str.substr(1));
-            OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
+            out_Arm.emitLoadFloatSymbol(tmp_tmp_str,ASMDllvm->getC());
             c_str = tmp_tmp_str;
         }
     switch (ASMDllvm->llvmType)
@@ -521,16 +522,14 @@ std::string OutArm::ComparisonOperation(ArithmeticOperationLLVM* cmpllvm) {
     if(b_str.front()== '='){
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
-        int tmp_num = std::stoi(b_str.substr(1));
-        OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
+        out_Arm.emitLoadFloatSymbol(tmp_tmp_str,cmpllvm->getC());
         b_str = tmp_tmp_str;
     }
 
     if(c_str.front()== '='){
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
-        int tmp_num = std::stoi(c_str.substr(1));
-        OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
+        out_Arm.emitLoadFloatSymbol(tmp_tmp_str,cmpllvm->getC());
         c_str = tmp_tmp_str;
     }
 
@@ -682,9 +681,9 @@ void CallLLVM::out_arm_str()  {
         }
         else if (auto* var_symbol = dynamic_cast<VarSymbol*>(arg)) {
             arg_str = out_Arm.DispatchReg(var_symbol);
-            if(ori_str.front() == 'D'){
+            if(ori_str.front() == 'S'){
                 OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
-            }else if(arg_str.front() == 'D' && ori_str.front() == 'X'){
+            }else if(arg_str.front() == 'S' && ori_str.front() == 'X'){
                 OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
             }else{
                 OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
@@ -1000,7 +999,7 @@ void GetElementPtrLLVM::out_arm_str()  {
         std::string arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
         //也统一通过X8传递
         std::string poi_str = "X8";
-        OutArm::outString("\tFMOV " + poi_str + ", " + arr_str);
+        OutArm::outString("\tMOV " + poi_str + ", " + arr_str);
         //arr[]情况
         if(this->getDimensions().size() == 0){
             //常数时候
@@ -1239,16 +1238,14 @@ void TypeConversionOperation::out_arm_str()  {
     if(dest_str.front()== '='){
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
-        int tmp_num = std::stoi(dest_str.substr(1));
-        OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
+        out_Arm.emitLoadFloatSymbol(tmp_tmp_str,this->getDestSymbol());
         dest_str = tmp_tmp_str;
     }
 
     if(src_str.front()== '='){
         VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
-        int tmp_num = std::stoi(src_str.substr(1));
-        OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
+        out_Arm.emitLoadFloatSymbol(tmp_tmp_str,this->getSrcSymbol());
         src_str = tmp_tmp_str;
     }
 
@@ -1305,19 +1302,41 @@ void UnaryOperationLLVM::out_arm_str()  {
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
 
-    
+    if(dest_str.front()== '#'){
+        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
+        std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+        int tmp_num = std::stoi(dest_str.substr(1));
+        OutArm::emitLargeNumber(tmp_tmp_str,tmp_num);
+        dest_str = tmp_tmp_str;
+    }
+
+    if(src_str.front()== '#'){
+        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
+        std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+        int tmp_num = std::stoi(src_str.substr(1));
+        OutArm::emitLargeNumber(tmp_tmp_str,tmp_num);
+        src_str = tmp_tmp_str;
+    }
+
+    if(dest_str.front()== '='){
+        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
+        std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+        out_Arm.emitLoadFloatSymbol(tmp_tmp_str,this->dest_sym);
+        dest_str = tmp_tmp_str;
+    }
+
+    if(src_str.front()== '='){
+        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
+        std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+        out_Arm.emitLoadFloatSymbol(tmp_tmp_str,this->src_sym);
+        src_str = tmp_tmp_str;
+    }
+
     switch (this->llvmType) {
         case llvm_neg:
             OutArm::outString("\tNEG " + dest_str + ", " + src_str);
             break;
         case llvm_fneg:
-            if(src_str.front()== '=' || src_str.front()== '#'){
-                VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
-                std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
-                int tmp_num = std::stoi(src_str.substr(1));
-                OutArm::emitLoadFloat(tmp_tmp_str,tmp_num);
-                src_str = tmp_tmp_str;
-            }
             OutArm::outString("\tFNEG " + dest_str + ", " + src_str);
             break;
         default:
