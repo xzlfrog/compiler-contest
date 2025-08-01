@@ -162,9 +162,9 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
     
     //out << "\n\t; Function epilogue\n";
     
-    if (variableAreaSize > 0) {
-        out << "\tADD SP, SP, #" << variableAreaSize << "\n";
-    }
+    // if (variableAreaSize > 0) {
+    //     out << "\tADD SP, SP, #" << variableAreaSize << "\n";
+    // }
     
     // if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
     //     out << "\t; Restore callee-saved registers\n";
