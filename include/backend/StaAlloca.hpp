@@ -19,6 +19,7 @@ class StackAllocator {
         std::unordered_map<std::string, int> localVarOffsets;
         int currentTop = 0;                      // 栈顶
         int getTypeSize(Symbol* symbol);
+        
 
 
         // 构造函数
@@ -27,6 +28,7 @@ class StackAllocator {
     public:
         // 函数名，其跳转时的栈顶
         std::stack<int> func_stackTop;
+        std::stack<std::vector<std::pair<std::string, bool>>> func_register_save; //0为x 1为d
         int stack_currentOffset = 0;    // 栈帧指针；
         std::unordered_map<std::string, std::string> RegVar_StackVar; //寄存器 栈帧 映射
         std::unordered_set<std::string> Tmp_StackAddress_InReg; //前变量 后 寄存器（统一为X8） ；getelem时候 临时存一下  
