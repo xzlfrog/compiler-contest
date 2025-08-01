@@ -1573,14 +1573,20 @@ void OutArm::params_offset(const std::string& reg, int offset){
 
 void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
     OutArm& out_Arm = OutArm::getInstance();
-    int offset = this->stackAllocator.align(offsets,16);
     std::string ls_str = isStore? "STR" : "LDR";
-    int diff = offsets - offset;
 
-    if(offsets = 0){
+    if(offsets == 0){
         OutArm::outString("\t" + ls_str + " " + reg + ", [SP]");
         return;
     }
+
+    if(offsets < 16 && offsets >-16){
+        OutArm::outString("\t" + ls_str + " " + reg + ", [SP, #" + std::to_string(offsets) + "]");
+        return ;
+    }
+
+    int offset = this->stackAllocator.align(offsets,16);
+    int diff = offsets - offset;
 
     if(diff == 0 && offset >= -255 && offset <= 255){
         OutArm::outString("\t" + ls_str + " " + reg + ", [SP, #" + std::to_string(offset) + "]!");
