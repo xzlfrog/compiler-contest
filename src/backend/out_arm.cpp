@@ -849,12 +849,12 @@ void LoadLLVM::out_arm_str()  {
 
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
 
-    if(out_Arm.params.count(src_sym->getName())){
-        std::string src_str = out_Arm.DispatchReg(this->src_sym);
-        OutArm::outString("\tLDR " + dest_str + ", " + "[" + src_str + "]");
+    // if(out_Arm.params.count(src_sym->getName())){
+    //     std::string src_str = out_Arm.DispatchReg(this->src_sym);
+    //     OutArm::outString("\tLDR " + dest_str + ", " + "[" + src_str + "]");
 
-        return;
-    }
+    //     return;
+    // }
 
     //加载普通变量 数组首位 已计算过【1】【2】地址的数组  ---- ----  全局变量 [i][j] 地址的数组
     if(!out_Arm.globalAllocator.find_symbol(src_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(src_sym->getName())){
@@ -904,11 +904,11 @@ void StoreLLVM::out_arm_str()  {
     
     std::string src_str = out_Arm.DispatchReg(this->src_sym);
 
-    if(out_Arm.params.count(src_sym->getName())){
-        std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
-        OutArm::outString("\tSTR " + src_str + ", " + "[" + dest_str + "]");
-        return;
-    }
+    // if(out_Arm.params.count(src_sym->getName())){
+    //     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
+    //     OutArm::outString("\tSTR " + src_str + ", " + "[" + dest_str + "]");
+    //     return;
+    // }
 
     //store语句 特殊处理src为常数情况
     if(src_str.front() == '#' && this->src_sym->getDataType()==dataType::i32){
