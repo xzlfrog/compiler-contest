@@ -4,6 +4,9 @@
 // 静态成员定义（唯一一份）
 StackAllocator* StackAllocator::stackInstance = nullptr;
 
+void StackAllocator::set_top(int value){
+    this->currentTop = value;
+}
 
 int StackAllocator::align(int value, int alignment) {
     if (alignment <= 0 || (alignment & (alignment - 1))) {
@@ -154,28 +157,55 @@ std::string StackAllocator::emitPrologue(int stackSize) {
     out << "\tSTP X29, X30, [SP, #-" << registerSaveSize << "]!\n";
     out << "\tMOV X29, SP\n";
     
-    // if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
-    //     out << "\t; Save callee-saved registers\n";
-    //     emitRegisterSave(out, 16);
-    // }
-    
-    // if (variableAreaSize > 0) {
-    //     out << "\tSUB SP, SP, #" << variableAreaSize << "      // Allocate stack space\n";
-    // }
-    
     return out.str();
 }
 
 std::string StackAllocator::emitEpilogue(int stackSize) {
     std::ostringstream out;
     int registerSaveSize = calculateRegisterSaveAreaSize();
-    int variableAreaSize = stackSize - registerSaveSize;
+    int current_top = this->getCurrentTop();
     
     //out << "\n\t; Function epilogue\n";
     
-    // if (variableAreaSize > 0) {
-    //     out << "\tADD SP, SP, #" << variableAreaSize << "\n";
-    // }
+    if (current_top != 0) {
+        if(current_top < 4095){
+            out << "\tADD SP, SP, #" << -current_top << "\n";
+        }else{
+            std::string reg = "X8";
+            int imm = -current_top;
+
+            bool first = true;
+            std::string reg_new;
+            if(reg.front()=='W'){
+                reg_new = "X" + reg.substr(1);
+            }else{
+                reg_new = reg;
+            }
+            // 提取四个 16 位段
+            uint16_t parts[4] = {
+                static_cast<uint16_t>(imm & 0xFFFF),           // bits 0-15
+                static_cast<uint16_t>((imm >> 16) & 0xFFFF),   // bits 16-31
+                static_cast<uint16_t>((imm >> 32) & 0xFFFF),   // bits 32-47
+                static_cast<uint16_t>((imm >> 48) & 0xFFFF)    // bits 48-63
+            };
+            int shifts[4] = {0, 16, 32, 48};
+        
+            for (int i = 3; i >= 0; i--) {
+                if (parts[i] != 0 || (first && i == 0)) {
+                    std::string instr = first ? "MOVZ" : "MOVK";
+                    if (shifts[i] == 0) {
+                        out << "\tADD SP, SP, #" << -current_top << "\n";
+                        out << "\t" << instr << " " << reg_new << ", #" << std::to_string(parts[i]);
+                    } else {
+                        out << "\t" << instr << " " << reg_new << ", #" << std::to_string(parts[i]) << ", LSL #" << std::to_string(shifts[i]);
+                    }
+                    first = false;
+                }
+            }
+            out << "\tADD SP, SP, " << reg_new << "\n";
+            // 如果全为 0
+        }
+    }
     
     // if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
     //     out << "\t; Restore callee-saved registers\n";
