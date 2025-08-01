@@ -102,6 +102,8 @@ int StackAllocator::allocateArray(int elementSize, const std::vector<int>& dimen
         totalSize *= dim;
     }
 
+    totalSize = this->align(totalSize,16);
+
     this->currentTop -= totalSize;
     this->localVarOffsets[name] = this->currentTop;
 
