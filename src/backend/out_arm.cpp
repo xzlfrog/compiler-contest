@@ -1435,7 +1435,7 @@ void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
     OutArm& out_Arm = OutArm::getInstance();
     int offset = this->stackAllocator.align(offsets,16);
     std::string ls_str = isStore? "STR" : "LDR";
-    int diff = offset - offsets;
+    int diff = offsets - offset;
 
     if(offsets = 0){
         OutArm::outString("\t" + ls_str + " " + reg + ", [SP]");
