@@ -1045,14 +1045,14 @@ void GetElementPtrLLVM::out_arm_str()  {
                 if(offset > 0 && offset <= 4095){
                     OutArm::outString("\tADD " + arr_str + ", SP, #" + arr_offset_str );
                 }else if(offset > 4095){
-                    VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                    VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i64);
                     std::string tmp_str = out_Arm.DispatchReg(tmp);
                     OutArm::emitLargeNumber(tmp_str,offset);
                     OutArm::outString("\tADD " + arr_str + ", SP, " + tmp_str );
                 }else if(offset < 0 && offset >= -4095){
                     OutArm::outString("\tSUB " + arr_str + ", SP, #" + arr_offset_str );
                 }else{
-                    VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                    VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i64);
                     std::string tmp_str = out_Arm.DispatchReg(tmp);
                     OutArm::emitLargeNumber(tmp_str,-offset);
                     OutArm::outString("\tSUB " + arr_str + ", SP, " + tmp_str);
@@ -1078,26 +1078,20 @@ void GetElementPtrLLVM::out_arm_str()  {
                         offset += (std::stoi(getSymOut(symbol_ptr))) * multiplier;
                     }//字母时候
                     else{
-                        //给该字母找其寄存器捏 话说需要读取值不？ 好像还真需要？ 不对getelem前会 用phi 一次所以其实不需要。
+                        //给该字母找其寄存器捏 由于变量默认存到W 手动帮其扩展至X -- 小chat说这是ok的
                         std::string tmp_str = out_Arm.DispatchReg(symbol_ptr);
+
+                        if(tmp_str.front()=='W'){
+                            tmp_str = "X" + tmp_str.substr(1);
+                        }
                         std::string tmp_num_str = std::to_string(multiplier * 4);
                         
-                        //最后一维 不用乘？
-                        if(multiplier == 1){
-                            out_Arm.outString("\tMOV "+ tmp_str + ", #" + tmp_num_str);
-                        }else{
-                        //其他维度需要乘 比如对于a[10][20] 读取a[i][j]  第二维度时候直接加 第一维度加i*20
-                            VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
-                            std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
-                            if(multiplier * 4 > 4095){
-                                out_Arm.emitLargeNumber(tmp_tmp_str,multiplier * 4);
-                            }else{
-                                out_Arm.outString("\tMOV " + tmp_tmp_str + ", #" + tmp_num_str);
-                            }
-                            out_Arm.outString("\tMUL " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
-                        }
+                        VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                        std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
+                        out_Arm.emitLargeNumber(tmp_tmp_str,multiplier * 4);
+                        out_Arm.outString("\tMUL " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
+                        OutArm::outString("\tADD " + arr_str + ", " + arr_str + ", " + tmp_str);
 
-                            OutArm::outString("\tADD " + arr_str + ", " + arr_str + ", " + tmp_str);
                     } 
 
                     // 更新乘数和索引
@@ -1108,24 +1102,18 @@ void GetElementPtrLLVM::out_arm_str()  {
                 }
         }
 
+        //有含有数字的偏移
         if(offset!=0){
-            std::string tmp_num_str = std::to_string(offset * 4);
-            if(offset * 4 > 0 && offset * 4 <= 4095){
-                OutArm::outString("\tADD " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
-            }else if(offset * 4 > 4095){
-                VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i64);
-                std::string tmp_str = out_Arm.DispatchReg(tmp);
-                OutArm::emitLargeNumber(tmp_str,offset);
-                OutArm::outString("\tADD " + arr_str + ", " + arr_str  + ", " + tmp_str);
-            }else if(offset * 4 < 0 && offset * 4 >= -4095){
-                OutArm::outString("\tSUB " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
-            }else{
-                VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i64);
-                std::string tmp_str = out_Arm.DispatchReg(tmp);
-                OutArm::emitLargeNumber(tmp_str,-offset);
-                OutArm::outString("\tSUB " + arr_str + ", " + arr_str  + ", #" + tmp_num_str);
+            VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i64);
+            std::string tmp_str = out_Arm.DispatchReg(tmp);
+            out_Arm.emitLargeNumber(tmp_str, offset * 4);
+
+            if(offset > 0){
+                OutArm::outString("\tADD " + arr_str + ", " + arr_str  + tmp_str);
+            }else{//实际上offset不可能为0
+                OutArm::outString("\tSUB " + arr_str + ", " + arr_str  + tmp_str);
             }
-        } 
+        }
 
     }
 }
