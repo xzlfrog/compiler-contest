@@ -90,6 +90,8 @@ class XRegAllocator : public RegisterAllocator {
 
 
         // 访问变量（使用或分配）
+        std::string accessAddress(std::string symbol);
+            
         std::string accessVariable(std::string symbol) override ;
         std::string accessParam(std::string symbol) override;
         

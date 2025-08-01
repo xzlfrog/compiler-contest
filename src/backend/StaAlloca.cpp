@@ -4,13 +4,13 @@
 // 静态成员定义（唯一一份）
 StackAllocator* StackAllocator::stackInstance = nullptr;
 
-//应该是暂时 不用对齐了 统一X0 D0为 8
-// int StackAllocator::align(int value, int alignment) {
-//     if (alignment <= 0 || (alignment & (alignment - 1))) {
-//         throw std::invalid_argument("Alignment must be a power of 2");
-//     }
-//     return (value + alignment - 1) & ~(alignment - 1);
-// }
+
+int StackAllocator::align(int value, int alignment) {
+    if (alignment <= 0 || (alignment & (alignment - 1))) {
+        throw std::invalid_argument("Alignment must be a power of 2");
+    }
+    return (value + alignment - 1) & ~(alignment - 1);
+}
 
 void StackAllocator::addUsedRegister(std::string& reg) {
     if (reg.size() < 2 || reg[0] != 'X') return;
@@ -78,11 +78,8 @@ int StackAllocator::allocateLocal(int size, std::string symbol) {
         throw std::runtime_error("Duplicate variable: " + name);
     }
     
-    //int alignment = size >= 8 ? 8 : 4;
-    
-    //currentOffset = align(currentOffset - size, alignment);
-    this->currentTop += size;
     this->localVarOffsets[name] = this->currentTop;
+    this->currentTop += size;
     
     return address;
 }
@@ -95,16 +92,11 @@ int StackAllocator::allocateArray(int elementSize, const std::vector<int>& dimen
         throw std::runtime_error("Duplicate variable: " + name);
     }
 
-    //int elementSize = getTypeSize(arraySymbol);
-    //const std::vector<int>& dimensions = arraySymbol->getDimensions(); // Assuming this method exists to get the dimensions
     int totalSize = elementSize;
     for (int dim : dimensions) {
         totalSize *= dim;
     }
 
-    // Align the total size to the largest element size
-    //int alignment = elementSize >= 8 ? 8 : 4;
-    //currentOffset = align(currentOffset - totalSize, alignment);
     this->localVarOffsets[name] = this->currentTop;
     this->currentTop += totalSize;
 
@@ -114,7 +106,6 @@ int StackAllocator::allocateArray(int elementSize, const std::vector<int>& dimen
 int StackAllocator::calculateStackSize() {
     int registerSaveSize = calculateRegisterSaveAreaSize();
     int totalSize = -currentTop + registerSaveSize;
-    //return align(totalSize, 16);
     return totalSize;
 }
 
