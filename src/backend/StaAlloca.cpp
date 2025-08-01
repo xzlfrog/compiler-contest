@@ -168,7 +168,7 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
     //out << "\n\t; Function epilogue\n";
     
     if (current_top != 0) {
-        if(current_top < 4095){
+        if(current_top > -4095){
             out << "\tADD SP, SP, #" << -current_top << "\n";
         }else{
             std::string reg = "X8";
