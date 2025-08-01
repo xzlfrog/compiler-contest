@@ -10,6 +10,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <stack>
+#include<cstdint>
 
 class StackAllocator {
     private:
