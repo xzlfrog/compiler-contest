@@ -163,7 +163,7 @@ std::string StackAllocator::emitPrologue(int stackSize) {
 std::string StackAllocator::emitEpilogue(int stackSize) {
     std::ostringstream out;
     int registerSaveSize = calculateRegisterSaveAreaSize();
-    int current_top = this->getCurrentTop();
+    int current_top = this->stack_currentOffset;
     
     //out << "\n\t; Function epilogue\n";
     
