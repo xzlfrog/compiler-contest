@@ -162,6 +162,30 @@ std::string XRegAllocator::accessParam(std::string symbol){
     
 }
 
+std::string XRegAllocator::accessParamAddress(std::string symbol){
+    StackAllocator& stackAllocator = StackAllocator::getInstance();
+    auto it = this->var_to_reg.find(symbol);
+    bool is_in_reg = true;
+    if (it == this->var_to_reg.end()) {
+        is_in_reg = false;
+        this->allocateParamSpace(symbol); // 如果没有分配寄存器，则分配
+        it = this->var_to_reg.find(symbol); // 重新查找
+    }
+
+    bool is_in_stack = stackAllocator.hasVariable(symbol);
+    if (is_in_stack && !is_in_reg) {
+        this->promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
+        return this->getRegister(symbol); // 返回寄存器名称
+    }
+
+    if(!Registers[it->second].empty() && (symbol != Registers[it->second])){
+        this->spillToStack(Registers[it->second]); // 如果寄存器已被占用，先溢出
+    }
+        Registers[it->second] = symbol; // 更新寄存器
+        return "X" + std::to_string(it->second); // 返回寄存器名称
+    
+}
+
 void DRegAllocator::allocateParamSpace(std::string symbol) {
     
     if(this->current_reg_offset1 > DREG_SIZE_END1) {
