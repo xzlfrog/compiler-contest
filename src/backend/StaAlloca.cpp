@@ -64,11 +64,13 @@ int StackAllocator::getOffset(std::string symbol) {
     const std::string& varName = symbol;
     auto it = this->localVarOffsets.find(varName);
     if (it != this->localVarOffsets.end()) {
-        return this->stack_currentOffset - it->second;
+        return it->second - this->stack_currentOffset ;
     }
     
     throw std::runtime_error("Variable not found: " + varName);
 }   
+
+
 
 //返回地址后 偏移量变了 下面数组同理
 int StackAllocator::allocateLocal(int size, std::string symbol) {
@@ -211,6 +213,6 @@ void StackAllocator::addArrayPtrwithOffset(std::string symbol, std::string array
         return; // 如果变量已经存在，则不需要重新添加
     }
     // Store the pointer with its offset
-    localVarOffsets[name] = localVarOffsets[array_symbol] + offset;
+    localVarOffsets[name] = localVarOffsets[array_symbol] - offset;
      //加减指针要打印出来吧。。。 这里不是真正的栈帧顶啦！
 }

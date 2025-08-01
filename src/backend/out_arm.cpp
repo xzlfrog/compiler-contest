@@ -1432,7 +1432,7 @@ void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
 
     if(diff == 0 && offset >= -255 && offset <= 255){
         OutArm::outString("\t" + ls_str + " " + reg + ", [SP, #" + std::to_string(offset) + "]!");
-        out_Arm.stackAllocator.stack_currentOffset -= offset; 
+        out_Arm.stackAllocator.stack_currentOffset += offset; 
         return ;
     }
 
@@ -1443,14 +1443,14 @@ void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
 
         OutArm::outString("\tADD SP, SP, " + tmp_num_str);
         OutArm::outString("\t "+ ls_str + " " + reg + ", [SP, #" + std::to_string(diff) + "]");
-        out_Arm.stackAllocator.stack_currentOffset -= offset;
+        out_Arm.stackAllocator.stack_currentOffset += offset;
     }
     else if(offset < 0){
         OutArm::emitLargeNumber(tmp_num_str,-offset);
 
         OutArm::outString("\tSUB SP, SP, " + tmp_num_str);
         OutArm::outString("\t"+ ls_str + " " + reg + ", [SP, #" + std::to_string(diff) + "]");
-        out_Arm.stackAllocator.stack_currentOffset -= offset;
+        out_Arm.stackAllocator.stack_currentOffset += offset;
     }
     else {
         OutArm::outString("\t"+ ls_str + " " + reg + ", [SP, #" + std::to_string(diff) + "]");
