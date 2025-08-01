@@ -2,7 +2,7 @@
 #include "../../include/backend/StaAlloca.hpp"
 #include "../../include/llvm.hpp"
 #include <variant>
-
+#include <cstdint>
 // extern std:ofstream outputArmFile;
 OutArm* OutArm::instance = nullptr; 
 std::ofstream outputArmFile;
