@@ -169,13 +169,13 @@ std::string StackAllocator::emitPrologue(int stackSize) {
 std::string StackAllocator::emitEpilogue(int stackSize) {
     std::ostringstream out;
     int registerSaveSize = calculateRegisterSaveAreaSize();
-    int variableAreaSize = stackSize - registerSaveSize;
+    int current_top = this->getCurrentTop();
     
     //out << "\n\t; Function epilogue\n";
     
-    // if (variableAreaSize > 0) {
-    //     out << "\tADD SP, SP, #" << variableAreaSize << "\n";
-    // }
+    if (current_top != 0) {
+        out << "\tADD SP, SP, #" << -current_top << "\n";
+    }
     
     // if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
     //     out << "\t; Restore callee-saved registers\n";
