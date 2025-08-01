@@ -729,8 +729,17 @@ void CallLLVM::out_arm_str()  {
         ++i;
     }  
     
+    //新栈顶
+    out_Arm.stackAllocator.func_stackTop.push(out_Arm.stackAllocator.getCurrentTop());
+    out_Arm.stackAllocator.set_top(0);
+
     std::string call_str = "BL " + func_name;
     OutArm::outString("\t"+call_str);
+
+    //跳转回来后
+    out_Arm.stackAllocator.set_top(out_Arm.stackAllocator.func_stackTop.top());
+    out_Arm.stackAllocator.func_stackTop.pop();
+
     if (this->dest_sym) {
         if(this->function->getReturnType() == dataType::f32 || this->function->getReturnType() == dataType::f64) {
             OutArm::outString("\tFMOV " + dest_str + ", S0"); // Assuming S0 is the return register for floating point
