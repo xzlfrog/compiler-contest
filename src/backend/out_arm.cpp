@@ -846,38 +846,41 @@ void LoadLLVM::out_arm_str()  {
     //加载普通变量 数组首位 已计算过【1】【2】地址的数组  ---- ----  全局变量 [i][j] 地址的数组
     if(!out_Arm.globalAllocator.find_symbol(src_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(src_sym->getName())){
         int offset = out_Arm.stackAllocator.getOffset(this->src_sym->getName());
-        if (offset == 0){
-            OutArm::outString("\tLDR " + dest_str + ", [SP]");
-        }
-        else{
-            if(offset >= -255 && offset <= 255){
-                OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
-            }else if(offset < -255){
-                if( offset >= -4095 ){
-                    OutArm::outString("\tMOV X8, #" + std::to_string(-offset));
-                }else if( offset <= -65535){
-                    OutArm::emitLargeNumber("X8",-offset);
-                }
-                else{
-                    OutArm::outString("\tMOVZ X8, #" + std::to_string(-offset));
-                }
-                OutArm::outString("\tSUB SP, SP, X8");
-                OutArm::outString("\tLDR " + dest_str + ", [SP]");
-                out_Arm.stackAllocator.stack_currentOffset -= offset;
-            }else if(offset > 255){
-                if( offset <=4095 ){
-                    OutArm::outString("\tMOV X8, #" + std::to_string(offset));
-                }else if( offset >= 65535){
-                    OutArm::emitLargeNumber("X8",offset);
-                }
-                else{
-                    OutArm::outString("\tMOVZ X8, #" + std::to_string(offset));
-                }
-                OutArm::outString("\tADD SP, SP, X8");
-                OutArm::outString("\tLDR " + dest_str + ", [SP]");
-                out_Arm.stackAllocator.stack_currentOffset -= offset;
-            }
-        }
+
+        out_Arm.SPmove(false, dest_str, offset);
+        // int offset = out_Arm.stackAllocator.getOffset(this->src_sym->getName());
+        // if (offset == 0){
+        //     OutArm::outString("\tLDR " + dest_str + ", [SP]");
+        // }
+        // else{
+        //     if(offset >= -255 && offset <= 255){
+        //         OutArm::outString("\tLDR " + dest_str + ", [SP, #" + std::to_string(offset) + "]");
+        //     }else if(offset < -255){
+        //         if( offset >= -4095 ){
+        //             OutArm::outString("\tMOV X8, #" + std::to_string(-offset));
+        //         }else if( offset <= -65535){
+        //             OutArm::emitLargeNumber("X8",-offset);
+        //         }
+        //         else{
+        //             OutArm::outString("\tMOVZ X8, #" + std::to_string(-offset));
+        //         }
+        //         OutArm::outString("\tSUB SP, SP, X8");
+        //         OutArm::outString("\tLDR " + dest_str + ", [SP]");
+        //         out_Arm.stackAllocator.stack_currentOffset -= offset;
+        //     }else if(offset > 255){
+        //         if( offset <=4095 ){
+        //             OutArm::outString("\tMOV X8, #" + std::to_string(offset));
+        //         }else if( offset >= 65535){
+        //             OutArm::emitLargeNumber("X8",offset);
+        //         }
+        //         else{
+        //             OutArm::outString("\tMOVZ X8, #" + std::to_string(offset));
+        //         }
+        //         OutArm::outString("\tADD SP, SP, X8");
+        //         OutArm::outString("\tLDR " + dest_str + ", [SP]");
+        //         out_Arm.stackAllocator.stack_currentOffset -= offset;
+        //     }
+        // }
 
     }else{
         std::string src_str = out_Arm.DispatchReg(this->src_sym);
@@ -1453,6 +1456,9 @@ void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
     std::string ls_str = isStore? "STR" : "LDR";
     int diff = offset - offsets;
 
+        offset = -offset;
+        diff = -diff;
+        
     if(diff == 0 && offset >= -255 && offset <= 255){
         OutArm::outString("\t" + ls_str + " " + reg + ", [SP, #" + std::to_string(offset) + "]!");
         out_Arm.stackAllocator.stack_currentOffset -= offset; 
