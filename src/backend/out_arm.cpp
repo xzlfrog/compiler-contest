@@ -215,8 +215,10 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
     else{
         if(symbol->data->getType() == (dataType::f32) || symbol->data->getType() == (dataType::f64)) {
             reg_name = out_Arm.dRegAllocator.accessVariable(symbol->getName());
-        }else if(symbol->data->getType() == (dataType::i32) || symbol->data->getType() == (dataType::i64) || symbol->data->getType() == (dataType::i16) || symbol->data->getType() == (dataType::i8) || symbol->data->getType() == (dataType::i1)||symbol->data->getType() == (dataType::array_data)) {
+        }else if(symbol->data->getType() == (dataType::i32) || symbol->data->getType() == (dataType::i16) || symbol->data->getType() == (dataType::i8) || symbol->data->getType() == (dataType::i1)) {
             reg_name = out_Arm.xRegAllocator.accessVariable(symbol->getName());
+        }else if(symbol->data->getType() == (dataType::i64) || symbol->data->getType() == (dataType::array_data)){
+            reg_name = out_Arm.xRegAllocator.accessAddress(symbol->getName());
         }
     }
     return reg_name;
