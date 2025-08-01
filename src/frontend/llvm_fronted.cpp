@@ -1159,6 +1159,8 @@ void create_var_init_list(Expression* exp){
             add_init_item();
         }
     }
+    //else
+        //array_init_idx[cnt_array_init-1]++;
 }
 
 void create_var_init_list(Expression* exp1,Expression* exp2){
@@ -1193,6 +1195,8 @@ void reduce_var_init_list(Expression* exp){
         }
     }
     cnt_array_init--;
+    //if(flag&&cnt_array_init>0)
+        //array_init_idx[cnt_array_init-1]++;
     if(flag&&cnt_array_init>0)
         array_init_idx[cnt_array_init-1]++;
 }
