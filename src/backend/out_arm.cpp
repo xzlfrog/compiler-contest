@@ -639,38 +639,70 @@ void CallLLVM::out_arm_str()  {
     for (const auto& arg : this->arguments) {
         ori_str = ori_strs[i];
         if (auto* array_symbol = dynamic_cast<ArraySymbol*>(arg)) {
+
+                //全局变量 - 全局数组 
                 if(out_Arm.globalAllocator.find_symbol(array_symbol->getName())){
                     VarSymbol* tmp_sym =SymbolFactory::createTmpVarSymbol (dataType::i64);
                     std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
                     //全局变量 而不是临时变量
-                if(!out_Arm.globalAllocator.symbol_to_global.count(array_symbol->getName())){
-                    
-                    OutArm::outString("\tADRP " + tmp_str + ", " + array_symbol->getName().substr(1));
-                    OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + array_symbol->getName().substr(1));
-                }else{//临时变量
-                    std::string tmp_src_str = out_Arm.globalAllocator.symbol_to_global[array_symbol->getName()].first;
-                    //out_Arm.stackAllocator.Tmp_StackAddress_InReg[tmp_src_str] = tmp_str;
-                    tmp_src_str = tmp_src_str.substr(1);
-                    OutArm::outString("\tADRP " + tmp_str + ", " + tmp_src_str);
-                    OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + tmp_src_str);
-                }
-                //有偏移情况
-                if(out_Arm.globalAllocator.symbol_to_global.count(array_symbol->getName())){
-                    int offset = out_Arm.globalAllocator.symbol_to_global[array_symbol->getName()].second ;
-                    if(offset > 4095){
-                        VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
-                        std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
-                        OutArm::emitLargeNumber(tmp_tmp_str,offset);
-                        OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
-                    }else if( offset == 0){
+                    if(!out_Arm.globalAllocator.symbol_to_global.count(array_symbol->getName())){
+                        
+                        OutArm::outString("\tADRP " + tmp_str + ", " + array_symbol->getName().substr(1));
+                        OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + array_symbol->getName().substr(1));
+                    }else{//临时变量——全局数组嘛
+                        std::string tmp_src_str = out_Arm.globalAllocator.symbol_to_global[array_symbol->getName()].first;
+                        //out_Arm.stackAllocator.Tmp_StackAddress_InReg[tmp_src_str] = tmp_str;
+                        tmp_src_str = tmp_src_str.substr(1);
+                        OutArm::outString("\tADRP " + tmp_str + ", " + tmp_src_str);
+                        OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + tmp_src_str);
 
-                    }else{
-                        OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + std::to_string(offset));
+                        //偏移情况
+                        int offset = out_Arm.globalAllocator.symbol_to_global[array_symbol->getName()].second ;
+                        if(offset > 4095){
+                            VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                            std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
+                            OutArm::emitLargeNumber(tmp_tmp_str,offset);
+                            OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
+                        }else if( offset == 0){
+
+                        }else{
+                            OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", " + std::to_string(offset));
+                        }
                     }
-                }
-                    arg_str = tmp_str;
-            }else{
+                        //经计算后 读取地址应该在
+                        arg_str = tmp_str;
+            }
+            else if(out_Arm.xRegAllocator.var_to_reg.count(array_symbol->getName()))
+                //参数数组（递归）
+                {
+                arg_str = out_Arm.xRegAllocator.getRegister(array_symbol->getName());
+            }
+            else{
+                //普通数组 直接找到首地址并传递
+                int offset = out_Arm.stackAllocator.getOffset(array_symbol->getName());
                 arg_str = out_Arm.DispatchReg(array_symbol);
+                if(offset>0){
+                    if(offset>4095){
+                        VarSymbol* tmp_num = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                        std::string tmp_num_str = out_Arm.DispatchReg(tmp_num);
+                        out_Arm.emitLargeNumber(tmp_num_str,offset);
+                        OutArm::outString("\tADD " + arg_str + ", SP, " + tmp_num_str);
+                    }else{
+                        OutArm::outString("\tADD " + arg_str + ", SP, #" + std::to_string(offset));
+                    }
+                }else if(offset<0){
+                    if(offset<-4095){
+                        VarSymbol* tmp_num = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                        std::string tmp_num_str = out_Arm.DispatchReg(tmp_num);
+                        out_Arm.emitLargeNumber(tmp_num_str,-offset);
+                        OutArm::outString("\tSUB " + arg_str + ", SP, " + tmp_num_str);
+                    }else{
+                        OutArm::outString("\tSUB " + arg_str + ", SP, #" + std::to_string(-offset));
+                    }
+                }else{
+                    OutArm::outString("\tMOV " + arg_str + ", SP");
+                }
+                
             }
 
             if(ori_str.front() == 'S'){
@@ -1710,7 +1742,7 @@ void OutArm::FuncSpillToStack(bool isDreg, std::string sym_name ,int index){
         // 整数寄存器：X0 ~ X31
         // 保存到高地址区域：SP + 32*8 + index*8
         reg = "X" + sym_name;
-        offset = 32 * 8 + index * 8;  // 基础偏移 256 字节
+        offset = 32 * 4 + index * 8;  // 基础偏移 256 字节
         inst = "\tSTR X" + std::to_string(index) + ", [SP, #" + std::to_string(offset) + "]";
     }
 
@@ -1733,7 +1765,7 @@ void OutArm::FuncPromoteToRegister(bool isDreg, std::string sym_name ,int index)
         // 整数寄存器：X0 ~ X31
         // 保存到高地址区域：SP + 32*8 + index*8
         reg = "X" + sym_name;
-        offset = 32 * 8 + index * 8;  // 基础偏移 256 字节
+        offset = 32 * 4 + index * 8;  // 基础偏移 256 字节
         inst = "\tLDR X" + std::to_string(index) + ", [SP, #" + std::to_string(offset) + "]";
     }
 
