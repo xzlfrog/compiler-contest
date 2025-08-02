@@ -118,13 +118,13 @@ public:
 class ArraySymbol: public Symbol{
 private:
     std::vector<int> dimensions; //数组的维度信息 
-    bool isInitialed=false;//是否被初始化
 
 public:
-    ArrayInitial* initialedData;//在数组的初始化阶段需要使用，对于初始化，不考虑在初始化之后再对数组元素修改的情况，只解决了数组初始化的问题
+    ArrayInitial* initialedData=new ArrayInitial();//在数组的初始化阶段需要使用，对于初始化，不考虑在初始化之后再对数组元素修改的情况，只解决了数组初始化的问题
     dataType arrayType;//比如int a[2][3]，类型就是int，或者用llvm ir中的数据类型 i32
     bool isConst=false;
     bool dynamic_length=false;
+    bool isInitialed=false;//是否被初始化
 
     ~ArraySymbol()=default;
     symType getType() override;
