@@ -1353,6 +1353,7 @@ void TypeConversionOperation::out_arm_str()  {
 
     switch (this->llvmType) {
         case llvm_trunc:
+            OutArm::outString("\tAND " + src_str + ", #1" );
             OutArm::outString("\tMOV " + dest_str + ", " + src_str);
             break;
         case zext:
