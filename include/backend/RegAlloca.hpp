@@ -28,7 +28,7 @@ class RegisterAllocator {
 
         std::list<int> lru_list_param;
         std::list<int> lru_list;
-        std::vector<std::string> Registers; // 实际情况 寄存器数组，存储指向 变量 的指针
+        std::unordered_map<int, std::string> Registers; // 实际情况 寄存器数组，存储指向 变量 的指针
         std::unordered_map<std::string, int> var_to_reg; // 理论映射 变量 到 索引的映射
 
         // 为某个Symbol分配一个物理寄存器
@@ -79,7 +79,6 @@ class XRegAllocator : public RegisterAllocator {
                                               "X19", "X20", "X21", "X22", "X23", "X24", "X25",
                                               "X26", "X27", "X28",
                                               "X30", "X31"}) {
-            Registers.resize(32); // 初始化寄存器数组
                                               }
 
         int current_reg_offset1 = 0; // 当前偏移量 0-7
@@ -110,7 +109,6 @@ class DRegAllocator : public RegisterAllocator {
                                               "D15", "D16", "D17", "D18", "D19", "D20", "D21",
                                               "D22", "D23", "D24", "D25", "D26", "D27", "D28",
                                               "D29", "D30", "D31"}) {
-            Registers.resize(32); // 初始化寄存器数组
                                               }
 
         int current_reg_offset1 = 0; // 当前偏移量 0-7

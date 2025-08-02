@@ -15,17 +15,17 @@
 // 检查寄存器是否已被使用
 
 bool RegisterAllocator::isRegisterUsed(std::string symbol) const{
-    auto it = var_to_reg.find(symbol);
+    auto it = this->var_to_reg.find(symbol);
 
     // 检查映射中是否存在symbol，并且寄存器数组中对应位置的指针是symbol
-    return it != var_to_reg.end() && Registers[it->second] == symbol && it->second < Registers.size(); 
+    return it != this->var_to_reg.end() && this->Registers[it->second] == symbol && it->second < this->Registers.size(); 
     // 确保索引在范围内
 }
 
 // 检查是否所有寄存器都已被使用
 bool RegisterAllocator::isAllRegistersUsed() const{
-    for (const auto& reg : Registers) {
-        if (reg.empty()) {
+    for (const auto& reg : this->Registers) {
+        if (reg.second.empty()) {
             return false; // 只要有一个寄存器是空闲的，就返回false
         }
     }
@@ -42,10 +42,10 @@ void RegisterAllocator::freeRegister(std::string reg_name){
     
      
     if (index < 32 ) {
-        if(var_to_reg.count(Registers[index])){
-            var_to_reg.erase(Registers[index]); // 从映射中删除变量
+        if(this->var_to_reg.count(Registers[index])){
+            this->var_to_reg.erase(Registers[index]); // 从映射中删除变量
         }
-        Registers[index] = ""; // 释放寄存器
+        this->Registers[index] = ""; // 释放寄存器
     } else {
         throw std::runtime_error("Register " + reg_name + " is not invalid");
     }
@@ -74,18 +74,18 @@ void XRegAllocator::allocateParamSpace(std::string symbol) {
     if(this->lru_list.size() < 8){
 
         this->var_to_reg[symbol] = this->current_reg_offset1; // 更新
-        this->Registers[current_reg_offset1] = symbol;
-        this->lru_list.push_back(current_reg_offset1);
+        this->Registers[this->current_reg_offset1] = symbol;
+        this->lru_list.push_back(this->current_reg_offset1);
         this->current_reg_offset1++; // 更新偏移量
 
         return;
     }else{
 
         int new_reg = this->lru_list.front();
-        lru_list.pop_front();
-        lru_list.push_back(new_reg);
-        this->spillToStack(Registers[new_reg]);
-        this->var_to_reg.erase(Registers[new_reg]);
+        this->lru_list.pop_front();
+        this->lru_list.push_back(new_reg);
+        this->spillToStack(this->Registers[new_reg]);
+        this->var_to_reg.erase(this->Registers[new_reg]);
 
         this->Registers[new_reg] = symbol;
         this->var_to_reg[symbol] = new_reg;
@@ -97,21 +97,20 @@ void XRegAllocator::allocateOtherSpace(std::string symbol) {
     if(this->lru_list.size() < 17){
 
         this->var_to_reg[symbol] = this->current_reg_offset2; // 更新
-        this->Registers[current_reg_offset2] = symbol;
-        this->lru_list.push_back(current_reg_offset2);
+        this->Registers[this->current_reg_offset2] = symbol;
+        this->lru_list.push_back(this->current_reg_offset2);
         this->current_reg_offset2++; // 更新偏移量
-        if(current_reg_offset2 == 16){
-            current_reg_offset2 = 19;
+        if(this->current_reg_offset2 == 16){
+            this->current_reg_offset2 = 19;
         }
-
         return;
     }else{
 
         int new_reg = this->lru_list.front();
-        lru_list.pop_front();
-        lru_list.push_back(new_reg);
-        this->spillToStack(Registers[new_reg]);
-        this->var_to_reg.erase(Registers[new_reg]);
+        this->lru_list.pop_front();
+        this->lru_list.push_back(new_reg);
+        this->spillToStack(this->Registers[new_reg]);
+        this->var_to_reg.erase(this->Registers[new_reg]);
 
         this->Registers[new_reg] = symbol;
         this->var_to_reg[symbol] = new_reg;
@@ -140,15 +139,15 @@ std::string XRegAllocator::accessVariable(std::string symbol){
     }else{
         int target_reg = it->second;  // 要删除的寄存器编号
 
-        for (auto iter = lru_list.begin(); iter != lru_list.end(); ) {
+        for (auto iter = this->lru_list.begin(); iter != this->lru_list.end(); ) {
             if (*iter == target_reg) {
-                iter = lru_list.erase(iter);  // erase 返回下一个有效迭代器
+                iter = this->lru_list.erase(iter);  // erase 返回下一个有效迭代器
                 break;  // 找到并删除后退出（假设只出现一次）
             } else {
                 ++iter;
             }
         }
-        lru_list.push_back(it->second);     // 插入尾部
+        this->lru_list.push_back(it->second);     // 插入尾部
     }
 
     bool is_in_stack = stackAllocator.hasVariable(symbol);
@@ -172,15 +171,15 @@ std::string XRegAllocator::accessAddress(std::string symbol){
     }else{
         int target_reg = it->second;  // 要删除的寄存器编号
 
-        for (auto iter = lru_list.begin(); iter != lru_list.end(); ) {
+        for (auto iter = this->lru_list.begin(); iter != this->lru_list.end(); ) {
             if (*iter == target_reg) {
-                iter = lru_list.erase(iter);  // erase 返回下一个有效迭代器
+                iter = this->lru_list.erase(iter);  // erase 返回下一个有效迭代器
                 break;  // 找到并删除后退出（假设只出现一次）
             } else {
                 ++iter;
             }
         }
-        lru_list.push_back(it->second);     // 插入尾部
+        this->lru_list.push_back(it->second);     // 插入尾部
     }
 
         return "X" + std::to_string(it->second); // 返回寄存器名称  
@@ -197,15 +196,15 @@ std::string XRegAllocator::accessParam(std::string symbol){
     }else{
         int target_reg = it->second;  // 要删除的寄存器编号
 
-        for (auto iter = lru_list.begin(); iter != lru_list.end(); ) {
+        for (auto iter = this->lru_list.begin(); iter != this->lru_list.end(); ) {
             if (*iter == target_reg) {
-                iter = lru_list.erase(iter);  // erase 返回下一个有效迭代器
+                iter = this->lru_list.erase(iter);  // erase 返回下一个有效迭代器
                 break;  // 找到并删除后退出（假设只出现一次）
             } else {
                 ++iter;
             }
         }
-        lru_list.push_back(it->second);     // 插入尾部
+        this->lru_list.push_back(it->second);     // 插入尾部
     }
 
     bool is_in_stack = stackAllocator.hasVariable(symbol);
@@ -213,7 +212,7 @@ std::string XRegAllocator::accessParam(std::string symbol){
         this->promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
         return this->getRegister(symbol); // 返回寄存器名称
     }
-        Registers[it->second] = symbol; // 更新寄存器
+    this->Registers[it->second] = symbol; // 更新寄存器
         return "W" + std::to_string(it->second); // 返回寄存器名称
     
 }
@@ -230,15 +229,15 @@ std::string XRegAllocator::accessParamAddress(std::string symbol){
     }else{
         int target_reg = it->second;  // 要删除的寄存器编号
 
-        for (auto iter = lru_list.begin(); iter != lru_list.end(); ) {
+        for (auto iter = this->lru_list.begin(); iter != this->lru_list.end(); ) {
             if (*iter == target_reg) {
-                iter = lru_list.erase(iter);  // erase 返回下一个有效迭代器
+                iter = this->lru_list.erase(iter);  // erase 返回下一个有效迭代器
                 break;  // 找到并删除后退出（假设只出现一次）
             } else {
                 ++iter;
             }
         }
-        lru_list.push_back(it->second);     // 插入尾部
+        this->lru_list.push_back(it->second);     // 插入尾部
     }
 
         return "X" + std::to_string(it->second); // 返回寄存器名称 
@@ -250,7 +249,7 @@ void DRegAllocator::allocateParamSpace(std::string symbol) {
     if(this->lru_list.size() < 8){
 
         this->var_to_reg[symbol] = this->current_reg_offset1; // 更新
-        this->Registers[current_reg_offset1] = symbol;
+        this->Registers[this->current_reg_offset1] = symbol;
         this->lru_list.push_back(current_reg_offset1);
         this->current_reg_offset1++; // 更新偏移量
 
@@ -258,8 +257,8 @@ void DRegAllocator::allocateParamSpace(std::string symbol) {
     }else{
 
         int new_reg = this->lru_list.front();
-        lru_list.pop_front();
-        lru_list.push_back(new_reg);
+        this->lru_list.pop_front();
+        this->lru_list.push_back(new_reg);
         this->spillToStack(Registers[new_reg]);
         this->var_to_reg.erase(Registers[new_reg]);
 
@@ -273,18 +272,18 @@ void DRegAllocator::allocateOtherSpace(std::string symbol) {
     if(this->lru_list.size() < 24){
 
         this->var_to_reg[symbol] = this->current_reg_offset2; // 更新
-        this->Registers[current_reg_offset2] = symbol;
-        this->lru_list.push_back(current_reg_offset2);
+        this->Registers[this->current_reg_offset2] = symbol;
+        this->lru_list.push_back(this->current_reg_offset2);
         this->current_reg_offset2++; // 更新偏移量
 
         return;
     }else{
 
         int new_reg = this->lru_list.front();
-        lru_list.pop_front();
-        lru_list.push_back(new_reg);
-        this->spillToStack(Registers[new_reg]);
-        this->var_to_reg.erase(Registers[new_reg]);
+        this->lru_list.pop_front();
+        this->lru_list.push_back(new_reg);
+        this->spillToStack(this->Registers[new_reg]);
+        this->var_to_reg.erase(this->Registers[new_reg]);
 
         this->Registers[new_reg] = symbol;
         this->var_to_reg[symbol] = new_reg;
@@ -311,15 +310,15 @@ std::string DRegAllocator::accessVariable(std::string symbol){
     }else{
         int target_reg = it->second;  // 要删除的寄存器编号
 
-        for (auto iter = lru_list.begin(); iter != lru_list.end(); ) {
+        for (auto iter = this->lru_list.begin(); iter != this->lru_list.end(); ) {
             if (*iter == target_reg) {
-                iter = lru_list.erase(iter);  // erase 返回下一个有效迭代器
+                iter = this->lru_list.erase(iter);  // erase 返回下一个有效迭代器
                 break;  // 找到并删除后退出（假设只出现一次）
             } else {
                 ++iter;
             }
         }
-        lru_list.push_back(it->second);     // 插入尾部
+        this->lru_list.push_back(it->second);     // 插入尾部
     }
 
     bool is_in_stack = stackAllocator.hasVariable(symbol);
@@ -343,14 +342,14 @@ std::string DRegAllocator::accessParam(std::string symbol){
     }else{
         int target_reg = it->second;  // 要删除的寄存器编号
 
-        for (auto iter = lru_list.begin(); iter != lru_list.end(); ) {
+        for (auto iter = this->lru_list.begin(); iter != this->lru_list.end(); ) {
             if (*iter == target_reg) {
-                iter = lru_list.erase(iter);  // erase 返回下一个有效迭代器
+                iter = this->lru_list.erase(iter);  // erase 返回下一个有效迭代器
                 break;  // 找到并删除后退出（假设只出现一次）
             } else {
                 ++iter;
             }
         }
-        lru_list.push_back(it->second);     // 插入尾部
+        this->lru_list.push_back(it->second);     // 插入尾部
     }
 }
