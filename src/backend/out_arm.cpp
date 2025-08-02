@@ -885,19 +885,24 @@ void AllocaArrayLLVM::out_arm_str()  {
         totaltimes *= dim;
     }
 
-    out_Arm.SPmove(1,"WZR",out_Arm.stackAllocator.getOffset(this->getArray()->getName()));
+    int first_address = out_Arm.stackAllocator.getOffset(this->getArray()->getName());
+    OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(first_address) + "]!");
+    out_Arm.stackAllocator.stack_currentOffset += first_address;
     totaltimes--;
 
-    std::string offsets[] = {"4", "8", "12", "16"};
+    int offset = 4;
+    int side_offset = 240;
 
     for (int i = 0; i < totaltimes; ++i) {
-        int idx = i % 4;
-        if (idx == 3) {
-            OutArm::outString("\tSTR WZR, [SP, #" + offsets[idx] + "]!");
-            out_Arm.stackAllocator.stack_currentOffset +=16;
+        if (offset == side_offset) {
+            OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]!");
+            out_Arm.stackAllocator.stack_currentOffset += offset;
+            offset = 4;//重置
         } else {
-            OutArm::outString("\tSTR WZR, [SP, #" + offsets[idx] + "]");
+            OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]");
         }
+
+        offset+=4;
     }
 
 }
@@ -1640,12 +1645,12 @@ void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
         return;
     }
 
-    if(offsets < 16 && offsets >-16){
+    if(offsets <= 255 && offsets >=-255){
         OutArm::outString("\t" + ls_str + " " + reg + ", [SP, #" + std::to_string(offsets) + "]");
         return ;
     }
 
-    int offset = this->stackAllocator.align(offsets,16);
+    int offset = this->stackAllocator.align(offsets,-16);
     int diff = offsets - offset;
 
     if(diff == 0 && offset >= -255 && offset <= 255){
