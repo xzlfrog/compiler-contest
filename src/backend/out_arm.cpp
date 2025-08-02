@@ -371,7 +371,7 @@ std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
 
     return op1 + " " + tmp_str + ", " + b_str + ", " + c_str + "\n\t" +
            op2 + " " + tmp_str + ", " + tmp_str + ", " + c_str + "\n\t" +
-           op3 + " " + a_str + ", " + a_str + ", " + tmp_str;
+           op3 + " " + a_str + ", " + b_str + ", " + tmp_str;
     
 }
 
@@ -580,8 +580,8 @@ void ConditionalBranchLLVM::out_arm_str()  {
     if (!false_branch_str.empty()) {
         false_branch_str = false_branch_str.substr(1);  // 从第1个字符开始，取到末尾
     }
-    OutArm::outString("\tCBZ " + condition_str + ", " + true_branch_str);
-    OutArm::outString("\tCBNZ " + condition_str + ", " + false_branch_str);
+    OutArm::outString("\tCBZ " + condition_str + ", " + false_branch_str);
+    OutArm::outString("\tCBNZ " + condition_str + ", " + true_branch_str);
 }
 
 void ReturnLLVM::out_arm_str()  {
@@ -1353,10 +1353,10 @@ void TypeConversionOperation::out_arm_str()  {
 
     switch (this->llvmType) {
         case llvm_trunc:
-            //OutArm::outString("\tTRUNC " + dest_str + ", " + src_str);
+            OutArm::outString("\tMOV " + dest_str + ", " + src_str);
             break;
         case zext:
-            //OutArm::outString("\tZEXT " + dest_str + ", " + src_str);
+            OutArm::outString("\tMOV " + dest_str + ", " + src_str);
             break;
         case sext:
             OutArm::outString("\tSEXT " + dest_str + ", " + src_str);
