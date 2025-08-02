@@ -1352,13 +1352,10 @@ void TypeConversionOperation::out_arm_str()  {
     }
 
     switch (this->llvmType) {
-        case llvm_trunc:
-            VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
-            std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
-            OutArm::outString("\tMOV " + tmp_tmp_str + ", #1" );
-            OutArm::outString("\tAND " + src_str + ", " + tmp_tmp_str );
+        case llvm_trunc:{
             OutArm::outString("\tMOV " + dest_str + ", " + src_str);
             break;
+        }
         case zext:
             OutArm::outString("\tMOV " + dest_str + ", " + src_str);
             break;
