@@ -1054,7 +1054,7 @@ void GetElementPtrLLVM::out_arm_str()  {
         }
     }
 
-    //也统一通过X8传递
+    //参数 也统一通过X8传递
     if(out_Arm.params.count(arr_name)){
         std::vector<int> dims = this->getSrcSymbol()->getDimensions();
         std::string poi_name = this->getDestSymbol()->getName();
@@ -1746,12 +1746,14 @@ void OutArm::protectRegs(){
     OutArm::outString("\tSUB SP, SP , #" + protect_size);
 
     OutArm& out_Arm = OutArm::getInstance();
-    std::vector<std::pair<std::string, int>> XRegs_to_besaved;
-    std::vector<std::pair<std::string, int>> SRegs_to_besaved;
+
+    // std::vector<std::pair<std::string, int>> XRegs_to_besaved;
+    // std::vector<std::pair<std::string, int>> SRegs_to_besaved;
+
     for (int i = 0; i < out_Arm.xRegAllocator.Registers.size(); ++i) {
         const std::string& reg = out_Arm.xRegAllocator.Registers[i];
         if (!reg.empty()) {
-            XRegs_to_besaved.push_back({reg, i});  // 把 {变量名, 寄存器编号} 存进去
+            out_Arm.stackAllocator.func_xregister_save.push_back({reg, i});  // 把 {变量名, 寄存器编号} 存进去
             out_Arm.FuncSpillToStack(false,reg,i);
         }
     }
@@ -1759,7 +1761,7 @@ void OutArm::protectRegs(){
     for (int i = 0; i < out_Arm.dRegAllocator.Registers.size(); ++i) {
         const std::string& reg = out_Arm.dRegAllocator.Registers[i];
         if (!reg.empty()) {
-            SRegs_to_besaved.push_back({reg, i});  // 把 {变量名, 寄存器编号} 存进去
+            out_Arm.stackAllocator.func_sregister_save.push_back({reg, i});  // 把 {变量名, 寄存器编号} 存进去
             out_Arm.FuncSpillToStack(true,reg,i);
         }
     }
@@ -1776,7 +1778,7 @@ void OutArm::restoreRegs(){
     SRegs_to_besaved = out_Arm.stackAllocator.func_sregister_save;
 
     out_Arm.stackAllocator.func_xregister_save.clear();
-    out_Arm.stackAllocator.func_xregister_save.clear();
+    out_Arm.stackAllocator.func_sregister_save.clear();
 
     for (int i = 0; i < XRegs_to_besaved.size(); ++i) {
         const std::string& reg = XRegs_to_besaved[i].first;
