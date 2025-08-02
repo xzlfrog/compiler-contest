@@ -908,6 +908,11 @@ void AllocaArrayLLVM::out_arm_str()  {
     for (int dim : dims) {
         totaltimes *= dim;
     }
+    std::vector<int> dims = this->getDimensions();
+    int totaltimes = 1;
+    for (int dim : dims) {
+        totaltimes *= dim;
+    }
 
     int first_address = out_Arm.stackAllocator.getOffset(this->getArray()->getName());
     if(first_address <= 255 && first_address >= -255){
@@ -934,7 +939,17 @@ void AllocaArrayLLVM::out_arm_str()  {
         } else {
             OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]");
         }
+    for (int i = 0; i < totaltimes; ++i) {
+        if (offset == side_offset) {
+            OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]!");
+            out_Arm.stackAllocator.stack_currentOffset += offset;
+            offset = 4;//重置
+        } else {
+            OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]");
+        }
 
+        offset+=4;
+    }
         offset+=4;
     }
 
