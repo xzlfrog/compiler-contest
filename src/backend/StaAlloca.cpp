@@ -1,5 +1,4 @@
 #include "../../include/backend/StaAlloca.hpp"
-#include <stdexcept>
 
 // 静态成员定义（唯一一份）
 StackAllocator* StackAllocator::stackInstance = nullptr;
