@@ -230,3 +230,70 @@ std::string getSymOut(Symbol* symbol){
         throw std::runtime_error("the type of b is wrong");
     }
 }
+
+int cmp_vector_int(const std::vector<int>& a,const std::vector<int>&b,int offset){
+    if(a.size()!=b.size())
+        throw std::runtime_error("the vector size of a and b is not the same");
+    for(int i=0;i<a.size();i++){
+        if(a[i]>b[i]+offset)
+            return 1;
+        else if(a[i]<b[i]+offset)
+            return -1;
+    }
+    return 0;
+}
+
+void add_item(std::vector<int>&a,const std::vector<int>&dimension){
+    int n=a.size();
+    a[n-1]++;
+    while(n!=0&&a[n-1]>=dimension[n-1]){
+        if(n!=1)
+            a[n-1]-=dimension[n-1];
+        n--;
+        if(n!=0)
+            a[n-1]++;
+    }
+}
+
+Data* getZeroData1(dataType dtype){
+    switch (dtype)
+    {
+    case dataType::i32:
+        return createData(dtype,0);
+        break;
+    case dataType::f32:
+        return createData(dtype,0.0f);
+    default:
+        break;
+    }
+    return nullptr;
+}
+
+std::vector<std::pair<std::vector<int>,Data*>>& ArraySymbol::getAllData(){
+    static std::vector<std::pair<std::vector<int>,Data*>> res;
+    res.clear();
+    const std::vector<std::pair<std::vector<int>,Data*>>& init_data=this->getInitializedData();
+    int n=this->dimensions.size();
+    std::vector<int> pos;
+    for(int i=0;i<n;i++){
+        pos.push_back(0);
+    }
+    int flag;
+    int i_flag=0;
+    while(cmp_vector_int(pos,this->dimensions,-1)!=1){
+        flag=-1;
+        for(int i=i_flag;i<init_data.size();i++){
+            if(cmp_vector_int(pos,init_data[i].first,0)==0){
+                flag=i;
+                i_flag=flag;
+                break;
+            }
+        }
+        if(flag!=-1)
+            res.push_back({pos,init_data[flag].second});
+        else
+            res.push_back({pos,getZeroData1(this->getArrayType())});
+        add_item(pos,this->dimensions);
+    }
+    return res;
+}

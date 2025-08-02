@@ -490,6 +490,18 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
     LLVMList* llvmlist=new LLVMList();
     BasicSymbol* bs;
     PointerSymbol* ps;
+    //需要删除
+    // if(sym->getType()==symType::array){
+        // ArraySymbol* array_tmp=dynamic_cast<ArraySymbol*>(sym);
+        // std::cout<<array_tmp->name<<"\n";
+        // std::vector<std::pair<std::vector<int>,Data*>>& tmp111=array_tmp->getAllData();
+        // for(int i=0;i<tmp111.size();i++){
+            // for(int j=0;j<tmp111[i].first.size();j++){
+                // std::cout<<tmp111[i].first[j]<<" ";
+            // }
+            // std::cout<<my_to_string(tmp111[i].second)<<"\n";
+        // }
+    // }
     if(sym!=nullptr){
         if(exps->size()!=0){
             if(sym->getType()!=symType::array){

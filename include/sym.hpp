@@ -139,6 +139,7 @@ public:
     void setScope(int scope) override;
     std::string getName(){return this->name;}
     bool isInitialized() const { return isInitialed; }
+    std::vector<std::pair<std::vector<int>,Data*>>& getAllData();
     
 };
 

@@ -12,7 +12,9 @@
 #include <fstream>
 #include <sstream>
 #include <stack>
-#include<cstdint>
+#include <stdexcept>
+#include <climits>
+
 
 class StackAllocator {
     private:

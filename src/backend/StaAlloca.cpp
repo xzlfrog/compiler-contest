@@ -1,5 +1,4 @@
 #include "../../include/backend/StaAlloca.hpp"
-#include <stdexcept>
 
 // 静态成员定义（唯一一份）
 StackAllocator* StackAllocator::stackInstance = nullptr;
@@ -9,10 +8,22 @@ void StackAllocator::set_top(int value){
 }
 
 int StackAllocator::align(int value, int alignment) {
-    if (alignment <= 0 || (alignment & (alignment - 1))) {
-        throw std::invalid_argument("Alignment must be a power of 2");
+    // 提取对齐大小（绝对值），并检查是否为 2 的幂
+    int abs_align = (alignment == INT_MIN) ? INT_MAX + 1U : std::abs(alignment);
+
+    // 检查是否为正的 2 的幂
+    if (abs_align == 0 || (abs_align & (abs_align - 1)) != 0) {
+        throw std::invalid_argument("Alignment magnitude must be a positive power of 2");
     }
-    return (value + alignment - 1) & ~(alignment - 1);
+
+    // 判断是向上对齐还是向下对齐
+    if (alignment > 0) {
+        // 正 alignment：向上对齐（标准行为）
+        return (value + abs_align - 1) & ~(abs_align - 1);
+    } else {
+        // 负 alignment：向下对齐
+        return value & ~(abs_align - 1);  // 直接截断到对齐边界（向下）
+    }
 }
 
 void StackAllocator::addUsedRegister(std::string& reg) {
@@ -102,7 +113,8 @@ int StackAllocator::allocateArray(int elementSize, const std::vector<int>& dimen
         totalSize *= dim;
     }
 
-    totalSize = this->align(totalSize,16);
+    totalSize = this->align(totalSize,-16);
+    this->currentTop = this->align(this->currentTop,-16);
 
     this->currentTop -= totalSize;
     this->localVarOffsets[name] = this->currentTop;

@@ -74,7 +74,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 test:
-	./build/bin/compiler -S -o ./test/test1.s ./test/test1.sy
+	./build/bin/compiler -S -o ./test/test3.s ./test/test3.sy
 
 debug:
 	gdb --args ./build/bin/compiler ./test/test3.sy

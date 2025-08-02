@@ -615,7 +615,7 @@ void ReturnLLVM::out_arm_str()  {
         if(out_Arm.exit){
             OutArm::outString("\tMOV X8, #93\n\tSVC #0");
         }else{
-            OutArm::outString(out_Arm.stackAllocator.emitEpilogue(out_Arm.stackAllocator.calculateStackSize()));
+            //OutArm::outString(out_Arm.stackAllocator.emitEpilogue(out_Arm.stackAllocator.calculateStackSize()));
             OutArm::outString("\tRET");
         }
 }
@@ -844,7 +844,7 @@ void FuncDefination::out_arm_str()  {
     OutArm::outString(func_name + ":");
     
     int stack_size = out_Arm.stackAllocator.calculateStackSize();
-    OutArm::outString(out_Arm.stackAllocator.emitPrologue(stack_size));
+    //OutArm::outString(out_Arm.stackAllocator.emitPrologue(stack_size));
 
     std::string param_str;
     std::vector<std::string> param_strs;
@@ -885,19 +885,24 @@ void AllocaArrayLLVM::out_arm_str()  {
         totaltimes *= dim;
     }
 
-    out_Arm.SPmove(1,"WZR",out_Arm.stackAllocator.getOffset(this->getArray()->getName()));
+    int first_address = out_Arm.stackAllocator.getOffset(this->getArray()->getName());
+    OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(first_address) + "]!");
+    out_Arm.stackAllocator.stack_currentOffset += first_address;
     totaltimes--;
 
-    int offsets[] = {4, 8, 12, 16};
+    int offset = 4;
+    int side_offset = 240;
 
     for (int i = 0; i < totaltimes; ++i) {
-        int idx = i % 4;
-        if (idx == 3) {
-            std::cout << "STR XZR, [SP, #" << offsets[idx] << "]!" << std::endl;
-            out_Arm.stackAllocator.stack_currentOffset +=16;
+        if (offset == side_offset) {
+            OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]!");
+            out_Arm.stackAllocator.stack_currentOffset += offset;
+            offset = 4;//重置
         } else {
-            std::cout << "STR XZR, [SP, #" << offsets[idx] << "]" << std::endl;
+            OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]");
         }
+
+        offset+=4;
     }
 
 }
@@ -1640,12 +1645,12 @@ void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
         return;
     }
 
-    if(offsets < 16 && offsets >-16){
+    if(offsets <= 255 && offsets >=-255){
         OutArm::outString("\t" + ls_str + " " + reg + ", [SP, #" + std::to_string(offsets) + "]");
         return ;
     }
 
-    int offset = this->stackAllocator.align(offsets,16);
+    int offset = this->stackAllocator.align(offsets,-16);
     int diff = offsets - offset;
 
     if(diff == 0 && offset >= -255 && offset <= 255){
