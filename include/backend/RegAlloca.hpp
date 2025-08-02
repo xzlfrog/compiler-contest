@@ -28,7 +28,7 @@ class RegisterAllocator {
 
         std::list<int> lru_list_param;
         std::list<int> lru_list;
-        std::vector<std::string> Registers; // 实际情况 寄存器数组，存储指向 变量 的指针
+        std::vector<std::string> Registers=std::vector<std::string>(32); // 实际情况 寄存器数组，存储指向 变量 的指针
         std::unordered_map<std::string, int> var_to_reg; // 理论映射 变量 到 索引的映射
 
         // 为某个Symbol分配一个物理寄存器

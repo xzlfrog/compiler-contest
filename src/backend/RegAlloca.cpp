@@ -53,7 +53,8 @@ void RegisterAllocator::freeRegister(std::string reg_name){
 
 void XRegAllocator::reset() {
     this->lru_list.clear();
-    this->Registers.clear();
+    //this->Registers.clear();
+    this->Registers=std::vector<std::string>(32);
     this->var_to_reg.clear();
     this->current_reg_offset1 = 0; // 当前偏移量 0-7
     this->current_reg_offset2 = 9; // 当前偏移量 9-15
@@ -63,7 +64,8 @@ void XRegAllocator::reset() {
 
 void DRegAllocator::reset() {
     this->lru_list.clear();
-    this->Registers.clear();
+    //this->Registers.clear();
+    this->Registers=std::vector<std::string>(32);
     this->var_to_reg.clear();
     this->current_reg_offset1 = 0; // 当前偏移量 0-7
     this->current_reg_offset2 = 8;
