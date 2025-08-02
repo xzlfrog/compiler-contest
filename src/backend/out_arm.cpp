@@ -755,7 +755,7 @@ void CallLLVM::out_arm_str()  {
 
     int diff_bl = tmp_top - out_Arm.stackAllocator.stack_currentOffset;
     if(diff_bl <= 4095 && diff_bl >= -4096){
-        OutArm::outString("\tSUB, SP, SP , #" + std::to_string(-diff_bl));
+        OutArm::outString("\tSUB SP, SP , #" + std::to_string(-diff_bl));
     }else{
         out_Arm.emitLargeNumber("X8",-diff_bl);
         out_Arm.outString("\tSUB, SP, SP , X8");
@@ -772,10 +772,10 @@ void CallLLVM::out_arm_str()  {
     out_Arm.stackAllocator.func_stackTop.pop();
     out_Arm.stackAllocator.stack_currentOffset = out_Arm.stackAllocator.func_currentoffset.top();
     if(diff_bl <= 4095 && diff_bl >= -4096){
-        OutArm::outString("\tADD, SP, SP , #" + std::to_string(-diff_bl));
+        OutArm::outString("\tADD SP, SP , #" + std::to_string(-diff_bl));
     }else{
         out_Arm.emitLargeNumber("X8",-diff_bl);
-        out_Arm.outString("\tADD, SP, SP , X8");
+        out_Arm.outString("\tADD SP, SP , X8");
     }
     out_Arm.stackAllocator.func_currentoffset.pop();
 
@@ -903,11 +903,6 @@ void AllocaArrayLLVM::out_arm_str()  {
     //int datasize = OutArm::getDataSize(this->array);
     int size = out_Arm.stackAllocator.allocateArray( 4 ,this->getDimensions(),this->array->getName());
 
-    std::vector<int> dims = this->getDimensions();
-    int totaltimes = 1;
-    for (int dim : dims) {
-        totaltimes *= dim;
-    }
     std::vector<int> dims = this->getDimensions();
     int totaltimes = 1;
     for (int dim : dims) {
