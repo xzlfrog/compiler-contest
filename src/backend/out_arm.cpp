@@ -1710,7 +1710,7 @@ void OutArm::FuncSpillToStack(bool isDreg, std::string sym_name ,int index){
         // 整数寄存器：X0 ~ X31
         // 保存到高地址区域：SP + 32*8 + index*8
         reg = "X" + sym_name;
-        offset = 32 * 8 + index * 8;  // 基础偏移 256 字节
+        offset = 32 * 4 + index * 8;  // 基础偏移 256 字节
         inst = "\tSTR X" + std::to_string(index) + ", [SP, #" + std::to_string(offset) + "]";
     }
 
@@ -1733,7 +1733,7 @@ void OutArm::FuncPromoteToRegister(bool isDreg, std::string sym_name ,int index)
         // 整数寄存器：X0 ~ X31
         // 保存到高地址区域：SP + 32*8 + index*8
         reg = "X" + sym_name;
-        offset = 32 * 8 + index * 8;  // 基础偏移 256 字节
+        offset = 32 * 4 + index * 8;  // 基础偏移 256 字节
         inst = "\tLDR X" + std::to_string(index) + ", [SP, #" + std::to_string(offset) + "]";
     }
 

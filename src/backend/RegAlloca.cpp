@@ -77,15 +77,15 @@ void XRegAllocator::allocateParamSpace(std::string symbol) {
 
         this->var_to_reg[symbol] = this->current_reg_offset1; // 更新
         this->Registers[current_reg_offset1] = symbol;
-        this->lru_list.push_back(current_reg_offset1);
+        this->lru_list_param.push_back(current_reg_offset1);
         this->current_reg_offset1++; // 更新偏移量
 
         return;
     }else{
 
         int new_reg = this->lru_list.front();
-        lru_list.pop_front();
-        lru_list.push_back(new_reg);
+        lru_list_param.pop_front();
+        lru_list_param.push_back(new_reg);
         this->spillToStack(Registers[new_reg]);
         this->var_to_reg.erase(Registers[new_reg]);
 
@@ -253,15 +253,15 @@ void DRegAllocator::allocateParamSpace(std::string symbol) {
 
         this->var_to_reg[symbol] = this->current_reg_offset1; // 更新
         this->Registers[current_reg_offset1] = symbol;
-        this->lru_list.push_back(current_reg_offset1);
+        this->lru_list_param.push_back(current_reg_offset1);
         this->current_reg_offset1++; // 更新偏移量
 
         return;
     }else{
 
         int new_reg = this->lru_list.front();
-        lru_list.pop_front();
-        lru_list.push_back(new_reg);
+        lru_list_param.pop_front();
+        lru_list_param.push_back(new_reg);
         this->spillToStack(Registers[new_reg]);
         this->var_to_reg.erase(Registers[new_reg]);
 
