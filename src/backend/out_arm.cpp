@@ -2,7 +2,7 @@
 #include "../../include/backend/StaAlloca.hpp"
 #include "../../include/llvm.hpp"
 #include <variant>
-
+#include <cstdint>
 // extern std:ofstream outputArmFile;
 OutArm* OutArm::instance = nullptr; 
 std::ofstream outputArmFile;
@@ -878,6 +878,28 @@ void AllocaArrayLLVM::out_arm_str()  {
     //好吧 数组还是需要的哈  额额 实际不需要
     //int datasize = OutArm::getDataSize(this->array);
     int size = out_Arm.stackAllocator.allocateArray( 4 ,this->getDimensions(),this->array->getName());
+
+    std::vector<int> dims = this->getDimensions();
+    int totaltimes = 1;
+    for (int dim : dims) {
+        totaltimes *= dim;
+    }
+
+    out_Arm.SPmove(1,"WZR",out_Arm.stackAllocator.getOffset(this->getArray()->getName()));
+    totaltimes--;
+
+    int offsets[] = {4, 8, 12, 16};
+
+    for (int i = 0; i < totaltimes; ++i) {
+        int idx = i % 4;
+        if (idx == 3) {
+            std::cout << "STR XZR, [SP, #" << offsets[idx] << "]!" << std::endl;
+            out_Arm.stackAllocator.stack_currentOffset +=16;
+        } else {
+            std::cout << "STR XZR, [SP, #" << offsets[idx] << "]" << std::endl;
+        }
+    }
+
 }
 
 void LoadLLVM::out_arm_str()  {
