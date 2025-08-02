@@ -758,7 +758,7 @@ void CallLLVM::out_arm_str()  {
         OutArm::outString("\tSUB SP, SP , #" + std::to_string(-diff_bl));
     }else{
         out_Arm.emitLargeNumber("X8",-diff_bl);
-        out_Arm.outString("\tSUB, SP, SP , X8");
+        out_Arm.outString("\tSUB SP, SP , X8");
     }
     
     out_Arm.stackAllocator.set_top(0);
@@ -903,19 +903,11 @@ void AllocaArrayLLVM::out_arm_str()  {
     //int datasize = OutArm::getDataSize(this->array);
     int size = out_Arm.stackAllocator.allocateArray( 4 ,this->getDimensions(),this->array->getName());
 
-<<<<<<< HEAD
     std::vector<int> dims = this->getDimensions();
     int totaltimes = 1;
     for (int dim : dims) {
         totaltimes *= dim;
     }
-=======
-    // std::vector<int> dims = this->getDimensions();
-    // int totaltimes = 1;
-    // for (int dim : dims) {
-    //     totaltimes *= dim;
-    // }
->>>>>>> 7d97f8fc3a095d7ed2922ef0c7e08b9bc9e84f36
 
     // int first_address = out_Arm.stackAllocator.getOffset(this->getArray()->getName());
     // if(first_address <= 255 && first_address >= -255){
@@ -964,12 +956,6 @@ void LoadLLVM::out_arm_str()  {
 
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
 
-    // if(out_Arm.params.count(src_sym->getName())){
-    //     std::string src_str = out_Arm.DispatchReg(this->src_sym);
-    //     OutArm::outString("\tLDR " + dest_str + ", " + "[" + src_str + "]");
-
-    //     return;
-    // }
 
     //加载普通变量 数组首位 已计算过【1】【2】地址的数组  ---- ----  全局变量 [i][j] 地址的数组
     if(!out_Arm.globalAllocator.find_symbol(src_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(src_sym->getName())){
@@ -1646,7 +1632,7 @@ void OutArm::global_offset_move(bool isStore, const std::string& global_reg, con
     //int offset = this->stackAllocator.align(offsets,16); 全局变量不用对齐
     std::string ls_str = isStore? "STR" : "LDR";
 
-    if(offset = 0){
+    if(offset == 0){
         OutArm::outString("\t" + ls_str + " " + symbol_reg + ", [" + global_reg + "]");
         return;
     }
