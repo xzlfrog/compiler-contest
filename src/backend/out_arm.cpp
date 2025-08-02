@@ -615,7 +615,7 @@ void ReturnLLVM::out_arm_str()  {
         if(out_Arm.exit){
             OutArm::outString("\tMOV X8, #93\n\tSVC #0");
         }else{
-            OutArm::outString(out_Arm.stackAllocator.emitEpilogue(out_Arm.stackAllocator.calculateStackSize()));
+            //OutArm::outString(out_Arm.stackAllocator.emitEpilogue(out_Arm.stackAllocator.calculateStackSize()));
             OutArm::outString("\tRET");
         }
 }
@@ -844,7 +844,7 @@ void FuncDefination::out_arm_str()  {
     OutArm::outString(func_name + ":");
     
     int stack_size = out_Arm.stackAllocator.calculateStackSize();
-    OutArm::outString(out_Arm.stackAllocator.emitPrologue(stack_size));
+    //OutArm::outString(out_Arm.stackAllocator.emitPrologue(stack_size));
 
     std::string param_str;
     std::vector<std::string> param_strs;
