@@ -908,11 +908,6 @@ void AllocaArrayLLVM::out_arm_str()  {
     for (int dim : dims) {
         totaltimes *= dim;
     }
-    std::vector<int> dims = this->getDimensions();
-    int totaltimes = 1;
-    for (int dim : dims) {
-        totaltimes *= dim;
-    }
 
     int first_address = out_Arm.stackAllocator.getOffset(this->getArray()->getName());
     if(first_address <= 255 && first_address >= -255){
