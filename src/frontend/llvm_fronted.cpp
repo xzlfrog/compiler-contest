@@ -720,7 +720,7 @@ LLVMList* create_const_decl(int btype,std::vector<Symbol*>* syms){
             if(a->getType()==symType::array){
                 ArraySymbol* array=dynamic_cast<ArraySymbol*>(a);
                 array->arrayType=dtype;
-                for(auto &b : array->initialedData->initializedData){
+                for(auto &b : array->getAllData()/*array->initialedData->initializedData*/){
                     b={b.first,typeConversion(dtype,b.second)};
                 }
                 llvmlist->InsertTail(LLVMfactory::createConstantArrayVarDefination(array));
@@ -777,6 +777,7 @@ Symbol* create_var_def(std::string name,std::vector<int>* idxs){
     else{
         ArraySymbol* array=SymbolFactory::createArraySymbolWithScope(name,*idxs,scope);
         array->setInitialedData(new ArrayInitial());
+        array->isInitialed=false;
         variable_table[scope][name]=array;
         return array;
     }
@@ -837,13 +838,15 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
                 else{
                     llvmlist->InsertTail(LLVMfactory::createAllocaArrayLLVM(array));
                     PointerSymbol* ps;
-                    for(auto & element :array->getInitializedData()){
-                        ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
-                        llvmlist->InsertTail(LLVMfactory::createGetElementPtrLLVM(ps,array,intVectorToBasicSymbolVector(element.first)));
-                        if(element.second!=nullptr&&element.second->getType()!=dataType::data_undefined)
-                            llvmlist->InsertTail(LLVMfactory::createStoreLLVM(SymbolFactory::createConstSymbol(element.second),ps));
-                        else
-                            throw std::runtime_error("the constant do not have a value");
+                    if(array->isInitialized()==true){
+                        for(auto & element :array->getAllData()){
+                            ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
+                            llvmlist->InsertTail(LLVMfactory::createGetElementPtrLLVM(ps,array,intVectorToBasicSymbolVector(element.first)));
+                            if(element.second!=nullptr&&element.second->getType()!=dataType::data_undefined)
+                                llvmlist->InsertTail(LLVMfactory::createStoreLLVM(SymbolFactory::createConstSymbol(element.second),ps));
+                            else
+                                throw std::runtime_error("the constant do not have a value");
+                        }
                     }
                     if(assign_queue.front()!=nullptr)
                         llvmlist->InsertTail(assign_queue.front()->llvmlist);
@@ -883,7 +886,7 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
             if(a->getType()==symType::array){
                 ArraySymbol* array=dynamic_cast<ArraySymbol*>(a);
                 array->arrayType=dtype;
-                for(auto &b : array->initialedData->initializedData){
+                for(auto &b : array->getAllData()){
                     b={b.first,typeConversion(dtype,b.second)};
                 }
                 if(a->scope==GLOBAL_SCOPE||array->isConst==true){
@@ -892,13 +895,15 @@ LLVMList* create_var_decl(int btype,std::vector<Symbol*>* syms){
                 else{
                     llvmlist->InsertTail(LLVMfactory::createAllocaArrayLLVM(array));
                     PointerSymbol* ps;
-                    for(auto & element :array->getInitializedData()){
-                        ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
-                        llvmlist->InsertTail(LLVMfactory::createGetElementPtrLLVM(ps,array,intVectorToBasicSymbolVector(element.first)));
-                        if(element.second!=nullptr&&element.second->getType()!=dataType::data_undefined)
-                            llvmlist->InsertTail(LLVMfactory::createStoreLLVM(SymbolFactory::createConstSymbol(element.second),ps));
-                        else
-                            throw std::runtime_error("the constant do not have a value");
+                    if(array->isInitialized()==true){
+                        for(auto & element :array->getAllData()){
+                            ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
+                            llvmlist->InsertTail(LLVMfactory::createGetElementPtrLLVM(ps,array,intVectorToBasicSymbolVector(element.first)));
+                            if(element.second!=nullptr&&element.second->getType()!=dataType::data_undefined)
+                                llvmlist->InsertTail(LLVMfactory::createStoreLLVM(SymbolFactory::createConstSymbol(element.second),ps));
+                            else
+                                throw std::runtime_error("the constant do not have a value");
+                        }
                     }
                     if(assign_queue.front()!=nullptr)
                         llvmlist->InsertTail(assign_queue.front()->llvmlist);

@@ -21,7 +21,7 @@ public:
 
 class ArrayInitial : public Data{
 public:
-    std::vector<std::pair<std::vector<int>,Data*>> initializedData;
+    std::vector<std::pair<std::vector<int>,Data*>> initializedData=std::vector<std::pair<std::vector<int>,Data*>>(0);
     void initialize(std::vector<int>position,Data* data);//将某一个初始化为非0的值的位置和值
     //传入该函数
     const std::vector<std::pair<std::vector<int>,Data*>>& getInitializedData();//得到被初始化的
