@@ -1542,7 +1542,7 @@ void XRegAllocator::spillToStack(std::string symbol) {
     }
    
     // 清除寄存器映射
-    //this->freeRegister(reg_name);
+    this->freeRegister(reg_name);
 }
 
 
@@ -1624,7 +1624,7 @@ void DRegAllocator::spillToStack(std::string symbol) {
     }
    
     // 清除寄存器映射
-    //this->freeRegister(reg_name);
+    this->freeRegister(reg_name);
 }
 
 void OutArm::global_offset_move(bool isStore, const std::string& global_reg, const std::string& symbol_reg, int offset){

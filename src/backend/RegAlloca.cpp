@@ -35,11 +35,13 @@ bool RegisterAllocator::isAllRegistersUsed() const{
 // 释放寄存器（用于临时值）
 void RegisterAllocator::freeRegister(std::string reg_name){
     size_t index = std::stoi(reg_name.substr(1)); // 获取寄存器索引
-    if (index < Registers.size() && !Registers[index].empty()) {
-        //var_to_reg.erase(Registers[index]); // 从映射中删除变量
-        Registers[index] = nullptr; // 释放寄存器
+    if (index < 32) {
+        if(var_to_reg.count(Registers[index])){
+            var_to_reg.erase(Registers[index]); // 从映射中删除变量
+        }
+        Registers[index] = ""; // 释放寄存器
     } else {
-        throw std::runtime_error("Register " + reg_name + " is not allocated or invalid");
+        throw std::runtime_error("Register " + reg_name + " is not invalid");
     }
 }
 
