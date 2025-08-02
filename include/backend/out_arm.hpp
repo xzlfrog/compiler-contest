@@ -70,6 +70,12 @@ public:
     //记录函数参数 进入新函数时候clear
     std::unordered_set<std::string> params;
     void resetReg();
+
+    void protectRegs();
+    void restoreRegs();
+    void FuncSpillToStack(bool isDreg, std::string sym_name ,int index);
+    void FuncPromoteToRegister(bool isDreg, std::string sym_name ,int index);
+
     void params_offset(const std::string& reg, int offsets);
     void SPmove(bool isStore, const std::string& reg, int offsets);
     void global_offset_move(bool isStore, const std::string& global_reg, const std::string& symbol_reg, int offsets);

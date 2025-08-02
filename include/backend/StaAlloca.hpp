@@ -14,7 +14,7 @@
 #include <stack>
 #include <stdexcept>
 #include <climits>
-
+#include <list>
 
 class StackAllocator {
     private:
@@ -30,9 +30,12 @@ class StackAllocator {
         
     public:
         // 函数名，其跳转时的栈顶
-        std::stack<int> func_stackTop;
-        std::stack<int> func_currentoffset;
-        std::stack<std::vector<std::pair<std::string, bool>>> func_register_save; //0为x 1为d
+        // std::stack<int> func_stackTop;
+        // std::stack<int> func_currentoffset;
+        std::stack<std::list<int>> func_lru_list;
+
+        std::vector<std::pair<std::string, int>> func_xregister_save; //0为x 1为d
+        std::vector<std::pair<std::string, int>> func_sregister_save;
         int stack_currentOffset = 0;    // 栈帧指针；
         std::unordered_map<std::string, std::string> RegVar_StackVar; //寄存器 栈帧 映射
         std::unordered_set<std::string> Tmp_StackAddress_InReg; //前变量 后 寄存器（统一为X8） ；getelem时候 临时存一下  

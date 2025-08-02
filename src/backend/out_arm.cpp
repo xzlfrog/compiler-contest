@@ -729,29 +729,10 @@ void CallLLVM::out_arm_str()  {
         ++i;
     }  
     
-
-    std::vector<std::pair<std::string, bool>> Regs_to_besaved;
-    for(auto reg : out_Arm.xRegAllocator.Registers){
-        if(!reg.empty()){
-            Regs_to_besaved.push_back({reg,0});
-            out_Arm.xRegAllocator.spillToStack(reg);
-        }
-        
-    }
-    for(auto reg : out_Arm.dRegAllocator.Registers){
-        if(!reg.empty()){
-            Regs_to_besaved.push_back({reg,1});
-            out_Arm.dRegAllocator.spillToStack(reg);
-        }
-    }
-    out_Arm.stackAllocator.func_register_save.push(Regs_to_besaved);
-    
     //新栈顶
     int tmp_top = out_Arm.stackAllocator.align(out_Arm.stackAllocator.getCurrentTop(),-16);
     out_Arm.stackAllocator.set_top(tmp_top);
     
-    out_Arm.stackAllocator.func_stackTop.push(out_Arm.stackAllocator.getCurrentTop());
-    out_Arm.stackAllocator.func_currentoffset.push(out_Arm.stackAllocator.stack_currentOffset);
 
     int diff_bl = tmp_top - out_Arm.stackAllocator.stack_currentOffset;
     if(diff_bl <= 4095 && diff_bl >= -4096){
@@ -761,36 +742,20 @@ void CallLLVM::out_arm_str()  {
         out_Arm.outString("\tSUB SP, SP , X8");
     }
     
-    out_Arm.stackAllocator.set_top(0);
-    out_Arm.stackAllocator.stack_currentOffset = 0;
+    out_Arm.protectRegs();
 
     std::string call_str = "BL " + func_name;
     OutArm::outString("\t"+call_str);
 
     //跳转回来后
-    out_Arm.stackAllocator.set_top(out_Arm.stackAllocator.func_stackTop.top());
-    out_Arm.stackAllocator.func_stackTop.pop();
-    out_Arm.stackAllocator.stack_currentOffset = out_Arm.stackAllocator.func_currentoffset.top();
+    out_Arm.restoreRegs();
+
+    //将栈指针放回
     if(diff_bl <= 4095 && diff_bl >= -4096){
         OutArm::outString("\tADD SP, SP , #" + std::to_string(-diff_bl));
     }else{
         out_Arm.emitLargeNumber("X8",-diff_bl);
         out_Arm.outString("\tADD SP, SP , X8");
-    }
-    out_Arm.stackAllocator.func_currentoffset.pop();
-
-    Regs_to_besaved = out_Arm.stackAllocator.func_register_save.top();
-    out_Arm.stackAllocator.func_register_save.pop();
-    for(auto reg : Regs_to_besaved){
-        if(reg.second == 0){
-            if(!reg.first.empty()){
-                out_Arm.xRegAllocator.promoteToRegister(reg.first);
-            }
-        }else if(reg.second == 1){
-            if(!reg.first.empty()){
-                out_Arm.xRegAllocator.promoteToRegister(reg.first);
-            }
-        }
     }
 
     if (this->dest_sym) {
@@ -860,10 +825,7 @@ void FuncDefination::out_arm_str()  {
     if(!func_name.empty()) {
         func_name = func_name.substr(1);  // 从第1个字符开始，取到末尾
     }
-    if(func_name == "main"){
-        //func_name = "_start";
-        //out_Arm.exit = true;
-    }
+
     out_Arm.globalAllocator.allocateFunc(func_name);
     OutArm::outString(func_name + ":");
     
@@ -1353,10 +1315,6 @@ void TypeConversionOperation::out_arm_str()  {
 
     switch (this->llvmType) {
         case llvm_trunc:
-            VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
-            std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
-            OutArm::outString("\tMOV " + tmp_tmp_str + ", #1" );
-            OutArm::outString("\tAND " + src_str + ", " + tmp_tmp_str );
             OutArm::outString("\tMOV " + dest_str + ", " + src_str);
             break;
         case zext:
@@ -1571,7 +1529,8 @@ void DRegAllocator::promoteToRegister(std::string symbol) {
         }else{
             OutArm::emitLargeNumber(reg_name,stack_offset);
             OutArm::outString("\tLDR " + reg_name + ", [" + reg_name + "]");
-        }       
+        }
+
         int position = this->var_to_reg[symbol]; 
         if(!Registers[position].empty()){
             this->spillToStack(Registers[position]); // 将原寄存器内容溢出到栈
@@ -1735,6 +1694,105 @@ void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
     }
     
 }
+
+void OutArm::FuncSpillToStack(bool isDreg, std::string sym_name ,int index){
+    std::string reg;
+    std::string inst;
+    int offset;
+
+    if (isDreg) {
+        // 浮点寄存器：D0 ~ D31
+        // 使用 STR D, [SP, #offset]，offset = index * 8
+        reg = "D" + sym_name;  // 假设 sym_name 是 "0", "1" 等
+        offset = index * 4;
+        inst = "\tSTR S" + std::to_string(index) + ", [SP, #" + std::to_string(offset) + "]";
+    } else {
+        // 整数寄存器：X0 ~ X31
+        // 保存到高地址区域：SP + 32*8 + index*8
+        reg = "X" + sym_name;
+        offset = 32 * 8 + index * 8;  // 基础偏移 256 字节
+        inst = "\tSTR X" + std::to_string(index) + ", [SP, #" + std::to_string(offset) + "]";
+    }
+
+    OutArm::outString(inst);
+}   
+
+void OutArm::FuncPromoteToRegister(bool isDreg, std::string sym_name ,int index){
+    OutArm& out_Arm = OutArm::getInstance();
+    std::string reg;
+    std::string inst;
+    int offset;
+
+    if (isDreg) {
+        // 浮点寄存器：D0 ~ D31
+        // 使用 STR D, [SP, #offset]，offset = index * 8
+        reg = "D" + sym_name;  // 假设 sym_name 是 "0", "1" 等
+        offset = index * 4;
+        inst = "\tLDR S" + std::to_string(index) + ", [SP, #" + std::to_string(offset) + "]";
+    } else {
+        // 整数寄存器：X0 ~ X31
+        // 保存到高地址区域：SP + 32*8 + index*8
+        reg = "X" + sym_name;
+        offset = 32 * 8 + index * 8;  // 基础偏移 256 字节
+        inst = "\tLDR X" + std::to_string(index) + ", [SP, #" + std::to_string(offset) + "]";
+    }
+
+    OutArm::outString(inst);
+}
+
+void OutArm::protectRegs(){
+    //固定分配
+    std::string protect_size ="384";
+    OutArm::outString("\tSUB SP, SP , #" + protect_size);
+
+    OutArm& out_Arm = OutArm::getInstance();
+    std::vector<std::pair<std::string, int>> XRegs_to_besaved;
+    std::vector<std::pair<std::string, int>> SRegs_to_besaved;
+    for (int i = 0; i < out_Arm.xRegAllocator.Registers.size(); ++i) {
+        const std::string& reg = out_Arm.xRegAllocator.Registers[i];
+        if (!reg.empty()) {
+            XRegs_to_besaved.push_back({reg, i});  // 把 {变量名, 寄存器编号} 存进去
+            out_Arm.FuncSpillToStack(false,reg,i);
+        }
+    }
+
+    for (int i = 0; i < out_Arm.dRegAllocator.Registers.size(); ++i) {
+        const std::string& reg = out_Arm.dRegAllocator.Registers[i];
+        if (!reg.empty()) {
+            SRegs_to_besaved.push_back({reg, i});  // 把 {变量名, 寄存器编号} 存进去
+            out_Arm.FuncSpillToStack(true,reg,i);
+        }
+    }
+
+}
+
+void OutArm::restoreRegs(){
+    std::string protect_size ="384";
+
+    OutArm& out_Arm = OutArm::getInstance();
+    std::vector<std::pair<std::string, int>> XRegs_to_besaved;
+    std::vector<std::pair<std::string, int>> SRegs_to_besaved;
+    XRegs_to_besaved = out_Arm.stackAllocator.func_xregister_save;
+    SRegs_to_besaved = out_Arm.stackAllocator.func_sregister_save;
+
+    out_Arm.stackAllocator.func_xregister_save.clear();
+    out_Arm.stackAllocator.func_xregister_save.clear();
+
+    for (int i = 0; i < XRegs_to_besaved.size(); ++i) {
+        const std::string& reg = XRegs_to_besaved[i].first;
+        int index = XRegs_to_besaved[i].second;
+        out_Arm.FuncPromoteToRegister(false,reg,index);
+    }
+
+    for (int i = 0; i < SRegs_to_besaved.size(); ++i) {
+        const std::string& reg = SRegs_to_besaved[i].first;
+        int index = SRegs_to_besaved[i].second;
+        out_Arm.FuncPromoteToRegister(true,reg,index);
+        }
+
+        OutArm::outString("\tADD SP, SP , #" + protect_size);
+    }
+
 
 void OutArm::resetReg(){
     OutArm& Out_Arm = OutArm::getInstance();
