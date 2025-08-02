@@ -1491,12 +1491,19 @@ void XRegAllocator::promoteToRegister(std::string symbol) {
 void XRegAllocator::spillToStack(std::string symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     StackAllocator& stackAllocator = StackAllocator::getInstance();
+    std::string reg_name = this->getRegister(symbol);
+    if(reg_name == ""){
+        this->freeRegister(reg_name);
+        return;
+    }
+
+    int stack_offset;
+
     //临时的直接不管了 溢出的干活
     if(stackAllocator.isTmpVar(symbol) || stackAllocator.Tmp_StackAddress_InReg.count(symbol)){
+        this->freeRegister(reg_name);
         return ;
     }
-    std::string reg_name = this->getRegister(symbol);
-    int stack_offset;
 
     if(stackAllocator.RegVar_StackVar.count(symbol)){
         std::string symbol_stack = stackAllocator.RegVar_StackVar[symbol];
@@ -1574,12 +1581,19 @@ void DRegAllocator::promoteToRegister(std::string symbol) {
 void DRegAllocator::spillToStack(std::string symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     StackAllocator& stackAllocator = StackAllocator::getInstance();
-    if(stackAllocator.isTmpVar(symbol) || stackAllocator.Tmp_StackAddress_InReg.count(symbol)){
-        return ;
-    }
+    
     std::string reg_name = this->getRegister(symbol);
 
+    if(reg_name == ""){
+        this->freeRegister(reg_name);
+        return;
+    }
+
     int stack_offset;
+    if(stackAllocator.isTmpVar(symbol) || stackAllocator.Tmp_StackAddress_InReg.count(symbol)){
+        this->freeRegister(reg_name);
+        return ;
+    }
 
     if(stackAllocator.RegVar_StackVar.count(symbol)){
         std::string symbol_stack = stackAllocator.RegVar_StackVar[symbol];
