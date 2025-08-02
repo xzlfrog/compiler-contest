@@ -675,7 +675,7 @@ void CallLLVM::out_arm_str()  {
             else if(out_Arm.xRegAllocator.var_to_reg.count(array_symbol->getName()))
                 //参数数组（递归）
                 {
-                arg_str = out_Arm.xRegAllocator.getRegister(array_symbol->getName());
+                arg_str = out_Arm.xRegAllocator.getAddress(array_symbol->getName());
             }
             else{
                 //普通数组 直接找到首地址并传递

@@ -87,7 +87,8 @@ class XRegAllocator : public RegisterAllocator {
     
         void allocateParamSpace(std::string symbol) override ;
         void allocateOtherSpace(std::string symbol) override ;
-        std::string getRegister(std::string symbol) const override;;
+        std::string getRegister(std::string symbol) const override;
+        std::string getAddress(std::string symbol) const ;
 
 
         // 访问变量（使用或分配）

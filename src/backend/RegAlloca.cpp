@@ -130,6 +130,15 @@ std::string XRegAllocator::getRegister(std::string symbol) const {
     return ""; // 如果没有分配寄存器，返回空字符串
 }
 
+std::string XRegAllocator::getAddress(std::string symbol) const {
+    auto it = this->var_to_reg.find(symbol);
+    if (it != this->var_to_reg.end()) {
+        size_t index = it->second;
+        return "X" + std::to_string(index); // 返回寄存器名称
+    }
+    return ""; // 如果没有分配寄存器，返回空字符串
+}
+
 std::string XRegAllocator::accessVariable(std::string symbol){
     StackAllocator& stackAllocator = StackAllocator::getInstance();
     auto it = this->var_to_reg.find(symbol);
