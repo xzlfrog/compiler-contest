@@ -1317,6 +1317,7 @@ void TypeConversionOperation::out_arm_str()  {
         case llvm_trunc:
             OutArm::outString("\tMOV " + dest_str + ", " + src_str);
             break;
+        }
         case zext:
             OutArm::outString("\tMOV " + dest_str + ", " + src_str);
             break;

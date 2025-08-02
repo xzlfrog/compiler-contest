@@ -306,19 +306,24 @@ Expression* create_unary_expr(int op, Expression* a){
     {
         case SINGLE_NOT:
             if(a->sym->data->getType()==dataType::i32){
-                exp=constFolding(constExpType::const_exp_and,a->sym,SymbolFactory::createConstSymbol(createData(dataType::i32,-1)));
+                exp=constFolding(constExpType::const_exp_xor,a->sym,SymbolFactory::createConstSymbol(createData(dataType::i32,-1)));
                 if(exp!=nullptr){
                     return exp;
                 }
-                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,res,dynamic_cast<BasicSymbol*>(a->sym),SymbolFactory::createConstSymbol(createData(dataType::i32,-1))));
+                //llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,res,dynamic_cast<BasicSymbol*>(a->sym),SymbolFactory::createConstSymbol(createData(dataType::i32,-1))));
+                BasicSymbol* tmp1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::icmp_eq,tmp1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::i32)));
+                //BasicSymbol* tmp2=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                //llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,tmp2,tmp1,SymbolFactory::createConstSymbol(createData(dataType::i1,true))));
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,tmp1,res));
                 break;
             }
             else if(a->sym->data->getType()==dataType::f32){
                 BasicSymbol* tmp1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
                 llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_oeq,tmp1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::f32)));
-                BasicSymbol* tmp2=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
-                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,tmp2,tmp1,SymbolFactory::createConstSymbol(createData(dataType::i1,true))));
-                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,tmp2,res));
+                //BasicSymbol* tmp2=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                //llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,tmp2,tmp1,SymbolFactory::createConstSymbol(createData(dataType::i1,true))));
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,tmp1,res));
                 break;
             }
         case SINGLE_NEGTIVE:
