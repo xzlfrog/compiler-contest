@@ -106,7 +106,7 @@ void GlobalAllocator::allocateGlobalNonArray(GlobalNonArrayVarDefination* GNAVD)
 void GlobalAllocator::allocateConstantArray(ConstantArrayVarDefination* CAVD){
     std::string dest_str = CAVD->dest_sym->getName();
     std::vector<Data*> value_set;
-    for(auto value : CAVD->getInitializedData()){
+    for(auto value : CAVD->dest_sym->getAllData()){
     Data* res = value.second;
     value_set.push_back(res);
     }
@@ -122,7 +122,7 @@ void GlobalAllocator::allocateGlobalArray(GlobalArrayVarDefination* GAVD){
     }else{
         value = "\n\t.word\t";
     }
-    value += this->getArrayValue(GAVD->getInitializedData(),GAVD->getDimensions());
+    value += this->getArrayValue(GAVD->dest_sym->getAllData(),GAVD->getDimensions());
     this->data[dest_str] = value;
 }
 
