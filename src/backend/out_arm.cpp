@@ -755,7 +755,7 @@ void CallLLVM::out_arm_str()  {
 
     int diff_bl = tmp_top - out_Arm.stackAllocator.stack_currentOffset;
     if(diff_bl <= 4095 && diff_bl >= -4096){
-        OutArm::outString("\tSUB, SP, SP , #" + std::to_string(-diff_bl));
+        OutArm::outString("\tSUB SP, SP , #" + std::to_string(-diff_bl));
     }else{
         out_Arm.emitLargeNumber("X8",-diff_bl);
         out_Arm.outString("\tSUB, SP, SP , X8");
@@ -772,10 +772,10 @@ void CallLLVM::out_arm_str()  {
     out_Arm.stackAllocator.func_stackTop.pop();
     out_Arm.stackAllocator.stack_currentOffset = out_Arm.stackAllocator.func_currentoffset.top();
     if(diff_bl <= 4095 && diff_bl >= -4096){
-        OutArm::outString("\tADD, SP, SP , #" + std::to_string(-diff_bl));
+        OutArm::outString("\tADD SP, SP , #" + std::to_string(-diff_bl));
     }else{
         out_Arm.emitLargeNumber("X8",-diff_bl);
-        out_Arm.outString("\tADD, SP, SP , X8");
+        out_Arm.outString("\tADD SP, SP , X8");
     }
     out_Arm.stackAllocator.func_currentoffset.pop();
 
@@ -903,50 +903,58 @@ void AllocaArrayLLVM::out_arm_str()  {
     //int datasize = OutArm::getDataSize(this->array);
     int size = out_Arm.stackAllocator.allocateArray( 4 ,this->getDimensions(),this->array->getName());
 
+<<<<<<< HEAD
     std::vector<int> dims = this->getDimensions();
     int totaltimes = 1;
     for (int dim : dims) {
         totaltimes *= dim;
     }
+=======
+    // std::vector<int> dims = this->getDimensions();
+    // int totaltimes = 1;
+    // for (int dim : dims) {
+    //     totaltimes *= dim;
+    // }
+>>>>>>> 7d97f8fc3a095d7ed2922ef0c7e08b9bc9e84f36
 
-    int first_address = out_Arm.stackAllocator.getOffset(this->getArray()->getName());
-    if(first_address <= 255 && first_address >= -255){
-        OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(first_address) + "]!");
-        out_Arm.stackAllocator.stack_currentOffset += first_address;
-        totaltimes--;
-    }else{
-        std::string tmp_str = "X8";
-        out_Arm.emitLargeNumber("X8",first_address);
-        OutArm::outString("\tADD SP, SP, X8");
-        OutArm::outString("\tSTR WZR, [SP]");
-        out_Arm.stackAllocator.stack_currentOffset += first_address;
+    // int first_address = out_Arm.stackAllocator.getOffset(this->getArray()->getName());
+    // if(first_address <= 255 && first_address >= -255){
+    //     OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(first_address) + "]!");
+    //     out_Arm.stackAllocator.stack_currentOffset += first_address;
+    //     totaltimes--;
+    // }else{
+    //     std::string tmp_str = "X8";
+    //     out_Arm.emitLargeNumber("X8",first_address);
+    //     OutArm::outString("\tADD SP, SP, X8");
+    //     OutArm::outString("\tSTR WZR, [SP]");
+    //     out_Arm.stackAllocator.stack_currentOffset += first_address;
         
-    } 
+    // } 
 
-    int offset = 4;
-    int side_offset = 240;
+    // int offset = 4;
+    // int side_offset = 240;
 
-    for (int i = 0; i < totaltimes; ++i) {
-        if (offset == side_offset) {
-            OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]!");
-            out_Arm.stackAllocator.stack_currentOffset += offset;
-            offset = 4;//重置
-        } else {
-            OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]");
-        }
-    for (int i = 0; i < totaltimes; ++i) {
-        if (offset == side_offset) {
-            OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]!");
-            out_Arm.stackAllocator.stack_currentOffset += offset;
-            offset = 4;//重置
-        } else {
-            OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]");
-        }
+    // for (int i = 0; i < totaltimes; ++i) {
+    //     if (offset == side_offset) {
+    //         OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]!");
+    //         out_Arm.stackAllocator.stack_currentOffset += offset;
+    //         offset = 4;//重置
+    //     } else {
+    //         OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]");
+    //     }
+    // for (int i = 0; i < totaltimes; ++i) {
+    //     if (offset == side_offset) {
+    //         OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]!");
+    //         out_Arm.stackAllocator.stack_currentOffset += offset;
+    //         offset = 4;//重置
+    //     } else {
+    //         OutArm::outString("\tSTR WZR, [SP, #" + std::to_string(offset) + "]");
+    //     }
 
-        offset+=4;
-    }
-        offset+=4;
-    }
+    //     offset+=4;
+    // }
+    //     offset+=4;
+    // }
 
 }
 
