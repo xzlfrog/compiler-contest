@@ -31,6 +31,7 @@ class StackAllocator {
     public:
         // 函数名，其跳转时的栈顶
         std::stack<int> func_stackTop;
+        std::stack<int> func_currentoffset;
         std::stack<std::vector<std::pair<std::string, bool>>> func_register_save; //0为x 1为d
         int stack_currentOffset = 0;    // 栈帧指针；
         std::unordered_map<std::string, std::string> RegVar_StackVar; //寄存器 栈帧 映射

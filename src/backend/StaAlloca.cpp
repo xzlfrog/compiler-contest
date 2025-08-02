@@ -135,7 +135,7 @@ void StackAllocator::addArrayPtrwithOffset(std::string symbol, std::string array
 
 int StackAllocator::calculateStackSize() {
     int registerSaveSize = calculateRegisterSaveAreaSize();
-    int totalSize = -currentTop + registerSaveSize;
+    int totalSize = stack_currentOffset + registerSaveSize;
     return totalSize;
 }
 
