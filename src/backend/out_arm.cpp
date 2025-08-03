@@ -2099,6 +2099,8 @@ void OutArm::resetReg(){
     OutArm& Out_Arm = OutArm::getInstance();
     Out_Arm.dRegAllocator.reset();
     Out_Arm.xRegAllocator.reset();
+    Out_Arm.stackAllocator.set_top(0);
+    Out_Arm.stackAllocator.stack_currentOffset = 0;
     Out_Arm.stackAllocator.func_Params_Stacks.clear();
     Out_Arm.stackAllocator.func_overflowstacksize.clear();
     Out_Arm.stackAllocator.RegVar_StackVar.clear();

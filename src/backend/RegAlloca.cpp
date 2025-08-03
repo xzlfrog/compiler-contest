@@ -209,15 +209,15 @@ std::string XRegAllocator::accessParam(std::string symbol){
     }else{
         int target_reg = it->second;  // 要删除的寄存器编号
 
-        for (auto iter = this->lru_list.begin(); iter != this->lru_list.end(); ) {
+        for (auto iter = this->lru_list_param.begin(); iter != this->lru_list_param.end(); ) {
             if (*iter == target_reg) {
-                iter = this->lru_list.erase(iter);  // erase 返回下一个有效迭代器
+                iter = this->lru_list_param.erase(iter);  // erase 返回下一个有效迭代器
                 break;  // 找到并删除后退出（假设只出现一次）
             } else {
                 ++iter;
             }
         }
-        this->lru_list.push_back(it->second);     // 插入尾部
+        this->lru_list_param.push_back(it->second);     // 插入尾部
     }
 
     bool is_in_stack = stackAllocator.hasVariable(symbol);
@@ -355,14 +355,23 @@ std::string DRegAllocator::accessParam(std::string symbol){
     }else{
         int target_reg = it->second;  // 要删除的寄存器编号
 
-        for (auto iter = this->lru_list.begin(); iter != this->lru_list.end(); ) {
+        for (auto iter = this->lru_list_param.begin(); iter != this->lru_list_param.end(); ) {
             if (*iter == target_reg) {
-                iter = this->lru_list.erase(iter);  // erase 返回下一个有效迭代器
+                iter = this->lru_list_param.erase(iter);  // erase 返回下一个有效迭代器
                 break;  // 找到并删除后退出（假设只出现一次）
             } else {
                 ++iter;
             }
         }
-        this->lru_list.push_back(it->second);     // 插入尾部
+        this->lru_list_param.push_back(it->second);     // 插入尾部
     }
+
+    bool is_in_stack = stackAllocator.hasVariable(symbol);
+    if (is_in_stack && !is_in_reg) {
+        this->promoteToRegister(symbol); // 如果在栈中，先提升到寄存器
+        return this->getRegister(symbol); // 返回寄存器名称
+    }
+    this->Registers[it->second] = symbol; // 更新寄存器
+        return "S" + std::to_string(it->second); // 返回寄存器名称
+    
 }
