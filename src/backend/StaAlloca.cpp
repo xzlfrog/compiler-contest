@@ -78,7 +78,7 @@ int StackAllocator::getOffset(std::string symbol) {
     }
     
     auto its = this->func_Params_Stacks.find(varName);
-    if (it != this->localVarOffsets.end()) {
+    if (its != this->func_Params_Stacks.end()) {
         return this->func_overflowstacksize[varName] + its->second + 16 - this->stack_currentOffset ;
     }
     throw std::runtime_error("Variable not found: " + varName);

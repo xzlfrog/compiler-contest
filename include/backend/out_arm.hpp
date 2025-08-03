@@ -81,6 +81,7 @@ public:
     void global_offset_move(bool isStore, const std::string& global_reg, const std::string& symbol_reg, int offsets);
     static void outString(const std::string &str);
 
+    static void emitSmallNumber(const std::string& reg, uint32_t imm);
     static void emitLargeNumber(const std::string& reg, uint64_t imm);
     static void emitLoadFloat(const std::string& reg, float value);
     void emitLoadFloatSymbol(const std::string& reg, Symbol* float_symbol);
