@@ -1149,7 +1149,7 @@ LLVMList* assign_array_item(Expression* LVal,Expression* exp){
     LVal->llvmlist->Remove(llvm);
     LLVMList* llvmlist=new LLVMList();
     llvmlist->InsertHead(LVal->llvmlist);
-    llvmlist->InsertTail(exp->llvmlist);
+    llvmlist->InsertHead(exp->llvmlist);
     if(llvm!=nullptr){
         PointerSymbol* ps=llvm->src_sym;
         if(ps->isConst==false)

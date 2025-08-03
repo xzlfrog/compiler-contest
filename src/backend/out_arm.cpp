@@ -877,7 +877,6 @@ void CallLLVM::out_arm_str()  {
         } else if (arguments[i]->getType() == symType::constant_nonvar){
             ConstSymbol* const_symbol=dynamic_cast<ConstSymbol*>(arguments[i]);
             if(arg_index < side_of_stack){
-                OutArm::outString("\2]" );
                 if(const_symbol->getDataType()==dataType::i32 || const_symbol->getDataType()==dataType::i1){
                     int val = std::get<int>(const_symbol->data->getValue());
                     OutArm::emitSmallNumber(ori_str,val);
@@ -893,9 +892,7 @@ void CallLLVM::out_arm_str()  {
                     }
                 }
             }else{
-                OutArm::outString("\3]" );
                 if(const_symbol->getDataType()==dataType::i32 || const_symbol->getDataType()==dataType::i1){
-                    OutArm::outString("\4]" );
                     int val = std::get<int>(const_symbol->data->getValue());
                     VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
                     std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
@@ -904,7 +901,6 @@ void CallLLVM::out_arm_str()  {
                     int tmp_offset = -((arg_index-8)*8);
                     OutArm::outString("\tSTR " + tmp_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
                 }else{
-                    OutArm::outString("\5]" );
                     if(const_symbol->getName() == ""){
                         std::string name = generate_tmp_var_name();
                         VarSymbol* tmp_float_sym = SymbolFactory::createVarSymbol(name,const_symbol->data);
@@ -2012,7 +2008,7 @@ void OutArm::protectRegs(){
         }
     }
 
-    OutArm::outString("\tSUB SP, SP , #" + diff);
+    OutArm::outString("\tSUB SP, SP , # 256");
 
 }
 
