@@ -807,7 +807,7 @@ void CallLLVM::out_arm_str()  {
                     OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
                 }
             }else{
-                int tmp_offset = -((arg_index-8)*8);
+                int tmp_offset = -((arg_index-9)*8);
                 OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
             }
 
@@ -830,7 +830,7 @@ void CallLLVM::out_arm_str()  {
                     OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
                 }
             }else{
-                int tmp_offset = -((arg_index-8)*8);
+                int tmp_offset = -((arg_index-9)*8);
                 OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
             }
 
@@ -874,7 +874,7 @@ void CallLLVM::out_arm_str()  {
                         OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
                     }
                     }else{
-                        int tmp_offset = -((arg_index-8)*8);
+                        int tmp_offset = -((arg_index-9)*8);
                         OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
                     }
             }else if(out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(pointer_symbol->getName())){
@@ -886,7 +886,7 @@ void CallLLVM::out_arm_str()  {
                         OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
                     }
                 }else{
-                    int tmp_offset = -((arg_index-8)*8);
+                    int tmp_offset = -((arg_index-9)*8);
                     OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
                 }
             }else if(out_Arm.stackAllocator.hasVariable(pointer_symbol->getName())){
@@ -921,7 +921,7 @@ void CallLLVM::out_arm_str()  {
                     std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
                     OutArm::emitLargeNumber(tmp_str,val);
                     
-                    int tmp_offset = -((arg_index-8)*8);
+                    int tmp_offset = -((arg_index-9)*8);
                     OutArm::outString("\tSTR " + tmp_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
                 }else{
                     if(const_symbol->getName() == ""){
@@ -930,7 +930,7 @@ void CallLLVM::out_arm_str()  {
                         std::string tmp_float_str = out_Arm.DispatchReg(tmp_float_sym);
                         out_Arm.emitLoadFloatSymbol(tmp_float_str,tmp_float_sym);
 
-                        int tmp_offset = -((arg_index-8)*8);
+                        int tmp_offset = -((arg_index-9)*8);
                         OutArm::outString("\tSTR " + tmp_float_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
 
                     }else{
@@ -938,7 +938,7 @@ void CallLLVM::out_arm_str()  {
                         std::string tmp_float_str = out_Arm.DispatchReg(tmp_float_sym);
                         out_Arm.emitLoadFloatSymbol(tmp_float_str,const_symbol);
                         
-                        int tmp_offset = -((arg_index-8)*8);
+                        int tmp_offset = -((arg_index-9)*8);
                         OutArm::outString("\tSTR " + tmp_float_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
 
                         
@@ -959,7 +959,7 @@ void CallLLVM::out_arm_str()  {
                 if(arg_index < side_of_stack){
                     OutArm::emitLargeNumber(ori_str,val);
                 }else{
-                    int tmp_offset = -((arg_index-8)*8);
+                    int tmp_offset = -((arg_index-9)*8);
                     OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
                 }
             }else{
@@ -967,7 +967,7 @@ void CallLLVM::out_arm_str()  {
                     if(arg_index < side_of_stack){
                         out_Arm.emitLoadFloatSymbol(ori_str,const_var_symbol);
                     }else{
-                        int tmp_offset = -((arg_index-8)*8);
+                        int tmp_offset = -((arg_index-9)*8);
                         out_Arm.emitLoadFloatSymbol(arg_str,const_var_symbol);
                         OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
                     }
@@ -977,7 +977,7 @@ void CallLLVM::out_arm_str()  {
                     if(arg_index < side_of_stack){
                         OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
                     }else{
-                        int tmp_offset = -((arg_index-8)*8);
+                        int tmp_offset = -((arg_index-9)*8);
                         OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
                     }
                 }
@@ -1102,8 +1102,10 @@ void FuncDefination::out_arm_str()  {
                 OutArm::outString("funcde没考虑到");
             }
         }else{
+            //总溢出参数栈帧大小
             out_Arm.stackAllocator.func_overflowstacksize[param->getName()] = stack_size;
-            out_Arm.stackAllocator.func_Params_Stacks[param->getName()] = -((arg_index - side_of_stack)*8);
+            //
+            out_Arm.stackAllocator.func_Params_Stacks[param->getName()] = -((arg_index - side_of_stack - 1)*8);
         }
         
             param_strs.push_back(param_str);
