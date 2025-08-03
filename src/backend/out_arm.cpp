@@ -741,6 +741,13 @@ void CallLLVM::out_arm_str()  {
             }//参数是传入参数的情况
             else if(out_Arm.params.count(array_symbol->getName())){
                 arg_str = out_Arm.xRegAllocator.getAddress(array_symbol->getName());
+                if(arg_str ==""){//说明是在栈上
+                    int offset = out_Arm.stackAllocator.getOffset(array_symbol->getName());
+                    VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                    std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
+                    out_Arm.SPmove(true,tmp_str,offset);
+                    arg_str = tmp_str;
+                }
             }
             else if(out_Arm.xRegAllocator.var_to_reg.count(array_symbol->getName()))
                 //参数数组（递归）
@@ -789,6 +796,13 @@ void CallLLVM::out_arm_str()  {
         }
         else if (auto* var_symbol = dynamic_cast<VarSymbol*>(arg)) {
             arg_str = out_Arm.DispatchReg(var_symbol);
+            if(arg_str ==""){//说明是在栈上
+                int offset = out_Arm.stackAllocator.getOffset(var_symbol->getName());
+                VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
+                out_Arm.SPmove(true,tmp_str,offset);
+                arg_str = tmp_str;
+            }
             if(arg_index < side_of_stack){
                 if(ori_str.front() == 'S'){
                     OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
@@ -841,6 +855,18 @@ void CallLLVM::out_arm_str()  {
                     }else{
                         OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
                     }
+                    }else{
+                        int tmp_offset = -((arg_index-8)*8);
+                        OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+                    }
+            }else if(out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(pointer_symbol->getName())){
+                arg_str = "X8";
+                if(arg_index < side_of_stack){
+                    if(ori_str.front() == 'S'){
+                        OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+                    }else{
+                        OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
+                    }
                 }else{
                     int tmp_offset = -((arg_index-8)*8);
                     OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
@@ -851,6 +877,7 @@ void CallLLVM::out_arm_str()  {
         } else if (arguments[i]->getType() == symType::constant_nonvar){
             ConstSymbol* const_symbol=dynamic_cast<ConstSymbol*>(arguments[i]);
             if(arg_index < side_of_stack){
+                OutArm::outString("\2]" );
                 if(const_symbol->getDataType()==dataType::i32 || const_symbol->getDataType()==dataType::i1){
                     int val = std::get<int>(const_symbol->data->getValue());
                     OutArm::emitSmallNumber(ori_str,val);
@@ -866,7 +893,9 @@ void CallLLVM::out_arm_str()  {
                     }
                 }
             }else{
+                OutArm::outString("\3]" );
                 if(const_symbol->getDataType()==dataType::i32 || const_symbol->getDataType()==dataType::i1){
+                    OutArm::outString("\4]" );
                     int val = std::get<int>(const_symbol->data->getValue());
                     VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
                     std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
@@ -875,6 +904,7 @@ void CallLLVM::out_arm_str()  {
                     int tmp_offset = -((arg_index-8)*8);
                     OutArm::outString("\tSTR " + tmp_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
                 }else{
+                    OutArm::outString("\5]" );
                     if(const_symbol->getName() == ""){
                         std::string name = generate_tmp_var_name();
                         VarSymbol* tmp_float_sym = SymbolFactory::createVarSymbol(name,const_symbol->data);
