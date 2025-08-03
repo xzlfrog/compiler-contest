@@ -225,10 +225,10 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
             }else{
                 tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
             }
-            std::string reg_name = out_Arm.DispatchReg(tmp_sym);
+            reg_name = out_Arm.DispatchReg(tmp_sym);
             out_Arm.SPmove(false,reg_name,offset);
         }
-
+        return reg_name;
     }
     //全局变量情况
     else if(out_Arm.globalAllocator.find_symbol(symbol->getName())){
@@ -243,10 +243,12 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
             reg_name = symbol->getName() ;
             reg_name = reg_name.substr(1);
         }
+        return reg_name;
         // }
     }//计算数组offset情况 好像都被我手动分配了X8 在外面
     else if(out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(symbol->getName())){
             reg_name = "X8" ;
+            return reg_name;
     }//常数情况
     else if(symbol->getType() == symType::constant_nonvar){
             if(symbol->getDataType() == dataType::i32){
@@ -271,6 +273,7 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
             reg_name = out_Arm.DispatchReg(tmp_sym);
             out_Arm.emitLoadFloatSymbol(reg_name, symbol);
         }
+        return reg_name;
     }//数组情况
     else if(auto* array_Symbol = dynamic_cast<ArraySymbol*>(symbol)) {       
 
@@ -279,7 +282,7 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
     }else if(auto* pointer_symbol = dynamic_cast<PointerSymbol*>(symbol)){
 
         reg_name = out_Arm.xRegAllocator.accessAddress(pointer_symbol->getName());
-   // }
+
     }
     else{
         if(symbol->data->getType() == (dataType::f32) || symbol->data->getType() == (dataType::f64)) {
@@ -1275,7 +1278,7 @@ void StoreLLVM::out_arm_str()  {
                 OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + tmp_dest_str);
 
                 int offset = out_Arm.globalAllocator.symbol_to_global[dest_sym->getName()].second ;
-                out_Arm.global_offset_move(false, tmp_str, src_str,offset);
+                out_Arm.global_offset_move(true, tmp_str, src_str,offset);
 
             }
         }else{//临时变量情况(Tmp_StackAddress_InReg)

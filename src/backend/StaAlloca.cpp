@@ -255,7 +255,10 @@ void StackAllocator::printAllocation(std::ostream& out) const {
 }
 
 bool StackAllocator::hasVariable(const std::string& varName) {
-    return localVarOffsets.find(varName) != localVarOffsets.end();
+    bool a=0,b=0;
+    if(localVarOffsets.find(varName) != localVarOffsets.end()) {a=1;}
+    if(func_Params_Stacks.find(varName) != func_Params_Stacks.end()){b=1;}
+    return a || b ;
 }
 
 int StackAllocator::getCurrentTop() const {
