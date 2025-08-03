@@ -1500,7 +1500,7 @@ void GetElementPtrLLVM::out_arm_str()  {
                     OutArm::emitLargeNumber(tmp_str,offset);
                     OutArm::outString("\tADD " + arr_str + ", SP, " + tmp_str );
                 }else if(offset < 0 && offset >= -4095){
-                    OutArm::outString("\tSUB " + arr_str + ", SP, #" + arr_offset_str );
+                    OutArm::outString("\tSUB " + arr_str + ", SP, #" + std::to_string(-offset) );
                 }else{
                     VarSymbol* tmp = SymbolFactory::createTmpVarSymbol(dataType::i64);
                     std::string tmp_str = out_Arm.DispatchReg(tmp);
