@@ -52,14 +52,10 @@ void StackAllocator::addUsedFloatRegister(std::string& reg) {
     }
 }
 
-int StackAllocator::calculateRegisterSaveAreaSize() {
+int StackAllocator::calculateRegisterSaveAreaSize(int overflow_size) {
     int size = 16; // FP(x29)和LR(x30)必须保存
     
-    // 被调用者保存的通用寄存器 (x19-x28)
-    size += usedRegisters.size() * 8;
-    
-    // 被调用者保存的浮点寄存器 (D8-D31s)
-    size += usedFloatRegisters.size() * 8;
+    size += overflow_size;
     
     // 确保16字节对齐
     return size;
@@ -81,6 +77,10 @@ int StackAllocator::getOffset(std::string symbol) {
         return it->second - this->stack_currentOffset ;
     }
     
+    auto its = this->func_Params_Stacks.find(varName);
+    if (it != this->localVarOffsets.end()) {
+        return this->func_overflowstacksize[varName] + its->second + 16 - this->stack_currentOffset ;
+    }
     throw std::runtime_error("Variable not found: " + varName);
 }   
 
@@ -133,8 +133,8 @@ void StackAllocator::addArrayPtrwithOffset(std::string symbol, std::string array
      //加减指针要打印出来吧。。。 这里不是真正的栈帧顶啦！
 }
 
-int StackAllocator::calculateStackSize() {
-    int registerSaveSize = calculateRegisterSaveAreaSize();
+int StackAllocator::calculateStackSize(int overflowsize) {
+    int registerSaveSize = calculateRegisterSaveAreaSize(overflowsize);
     int totalSize = stack_currentOffset + registerSaveSize;
     return totalSize;
 }
@@ -164,11 +164,14 @@ void StackAllocator::emitRegisterRestore(std::ostream& out, int offset) const {
 }
 std::string StackAllocator::emitPrologue(int stackSize) {
     std::ostringstream out;
-    int registerSaveSize = calculateRegisterSaveAreaSize();
-    int variableAreaSize = stackSize - registerSaveSize;
+    int str_lpfp = 16;
+    
+    if(stackSize!=0){
+        out << "\tSUB SP, SP," << std::to_string(-stackSize) << "\n";
+    }
     
     //out << "\t; Function prologue\n";
-    out << "\tSTP X29, X30, [SP, #-" << registerSaveSize << "]!\n";
+    out << "\tSTP X29, X30, [SP, #-" << str_lpfp << "]!\n";
     out << "\tMOV X29, SP\n";
     
     return out.str();
@@ -176,11 +179,10 @@ std::string StackAllocator::emitPrologue(int stackSize) {
 
 std::string StackAllocator::emitEpilogue(int stackSize) {
     std::ostringstream out;
-    int registerSaveSize = calculateRegisterSaveAreaSize();
+    int ldr_spfp = 16;
+
+    //将指针移至 spfp 处
     int current_top = this->stack_currentOffset;
-    
-    //out << "\n\t; Function epilogue\n";
-    
     if (current_top != 0) {
         if(current_top > -4095){
             out << "\tADD SP, SP, #" << -current_top << "\n";
@@ -220,12 +222,12 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
         }
     }
     
-    // if (!usedRegisters.empty() || !usedFloatRegisters.empty()) {
-    //     out << "\t; Restore callee-saved registers\n";
-    //     emitRegisterRestore(out, 16);
-    // }
-    
-    out << "\tLDP X29, X30, [SP], #" << registerSaveSize << "\n";  
+    //加载 spfp
+    out << "\tLDP X29, X30, [SP], #" << ldr_spfp << "\n";
+    //移除多的栈空间 如果有
+    if(stackSize!=0){
+        out << "\tADD SP, SP, " << stackSize << "\n";  
+    }  
     return out.str();
 }
 

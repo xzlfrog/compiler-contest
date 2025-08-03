@@ -615,7 +615,17 @@ void ReturnLLVM::out_arm_str()  {
         if(out_Arm.exit){
             OutArm::outString("\tMOV X8, #93\n\tSVC #0");
         }else{
-            OutArm::outString(out_Arm.stackAllocator.emitEpilogue(out_Arm.stackAllocator.calculateStackSize()));
+            int tmp_offset = out_Arm.stackAllocator.func_overflowstacksize.size() * 8;
+            OutArm::outString(out_Arm.stackAllocator.emitEpilogue(tmp_offset));
+            
+            out_Arm.stackAllocator.func_Params_Stacks.clear();
+            out_Arm.stackAllocator.func_overflowstacksize.clear();
+            out_Arm.stackAllocator.RegVar_StackVar.clear();
+            out_Arm.stackAllocator.Tmp_StackAddress_InReg.clear();
+
+            out_Arm.xRegAllocator.reset();
+            out_Arm.dRegAllocator.reset();
+
             OutArm::outString("\tRET");
         }
 }
@@ -693,6 +703,10 @@ void CallLLVM::out_arm_str()  {
                 {
                 arg_str = out_Arm.xRegAllocator.getAddress(array_symbol->getName());
             }
+            //参数是传入参数的情况
+            else if(out_Arm.params.count(array_symbol->getName())){
+                arg_str = out_Arm.xRegAllocator.getAddress(array_symbol->getName());
+            }
             else{
                 //普通数组 直接找到首地址并传递
                 int offset = out_Arm.stackAllocator.getOffset(array_symbol->getName());
@@ -728,9 +742,8 @@ void CallLLVM::out_arm_str()  {
                     OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
                 }
             }else{
-                int tmp_offset = -(arg_index*8);
+                int tmp_offset = -((arg_index-8)*8);
                 OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-                out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
             }
 
         }
@@ -745,9 +758,8 @@ void CallLLVM::out_arm_str()  {
                     OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
                 }
             }else{
-                int tmp_offset = -(arg_index*4);
+                int tmp_offset = -((arg_index-8)*8);
                 OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-                out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
             }
 
         }else if (auto* pointer_symbol = dynamic_cast<ConstSymbol*>(arg)){
@@ -775,9 +787,8 @@ void CallLLVM::out_arm_str()  {
                     std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
                     OutArm::emitLargeNumber(tmp_str,val);
                     
-                    int tmp_offset = -(arg_index*4);
+                    int tmp_offset = -((arg_index-8)*8);
                     OutArm::outString("\tSTR " + tmp_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-                    out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
                 }else{
                     if(const_symbol->getName() == ""){
                         std::string name = generate_tmp_var_name();
@@ -785,18 +796,16 @@ void CallLLVM::out_arm_str()  {
                         std::string tmp_float_str = out_Arm.DispatchReg(tmp_float_sym);
                         out_Arm.emitLoadFloatSymbol(tmp_float_str,tmp_float_sym);
 
-                        int tmp_offset = -(arg_index*4);
+                        int tmp_offset = -((arg_index-8)*8);
                         OutArm::outString("\tSTR " + tmp_float_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-                        out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
 
                     }else{
                         VarSymbol* tmp_float_sym = SymbolFactory::createTmpVarSymbol(dataType::f32);
                         std::string tmp_float_str = out_Arm.DispatchReg(tmp_float_sym);
                         out_Arm.emitLoadFloatSymbol(tmp_float_str,const_symbol);
                         
-                        int tmp_offset = -(arg_index*4);
+                        int tmp_offset = -((arg_index-8)*8);
                         OutArm::outString("\tSTR " + tmp_float_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-                        out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
 
                         
                     }
@@ -816,19 +825,17 @@ void CallLLVM::out_arm_str()  {
                 if(arg_index < side_of_stack){
                     OutArm::emitLargeNumber(ori_str,val);
                 }else{
-                    int tmp_offset = -(arg_index*4);
+                    int tmp_offset = -((arg_index-8)*8);
                     OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-                    out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
                 }
             }else{
                  if(arg_str.front() == '=' || arg_str.front() == '#'){
                     if(arg_index < side_of_stack){
                         out_Arm.emitLoadFloatSymbol(ori_str,const_var_symbol);
                     }else{
-                        int tmp_offset = -(arg_index*4);
+                        int tmp_offset = -((arg_index-8)*8);
                         out_Arm.emitLoadFloatSymbol(arg_str,const_var_symbol);
                         OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-                        out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
                     }
                 }
                 else{
@@ -836,9 +843,8 @@ void CallLLVM::out_arm_str()  {
                     if(arg_index < side_of_stack){
                         OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
                     }else{
-                        int tmp_offset = -(arg_index*4);
+                        int tmp_offset = -((arg_index-8)*8);
                         OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-                        out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
                     }
                 }
                 
@@ -934,22 +940,38 @@ void FuncDefination::out_arm_str()  {
     out_Arm.globalAllocator.allocateFunc(func_name);
     OutArm::outString(func_name + ":");
     
-    int stack_size = out_Arm.stackAllocator.calculateStackSize();
+    int stack_size = 0;
+    if(this->params.size() > 8){
+        for(int i=8; i<params.size(); ++i){
+            stack_size -= 8;
+        }
+    }
+    stack_size = out_Arm.stackAllocator.align(stack_size,-16);
     OutArm::outString(out_Arm.stackAllocator.emitPrologue(stack_size));
 
     std::string param_str;
     std::vector<std::string> param_strs;
     // 输出函数参数
-        
+    
+    int side_of_stack = 8;
+    int arg_index = 0;
     for (const auto& param : this->params) {
         out_Arm.params.insert(param->getName());
-        if (auto* array_symbol = dynamic_cast<ArraySymbol*>(param)) {
-            param_str = out_Arm.DispatchRegParamArray(array_symbol);
+        if(arg_index<side_of_stack){
+            out_Arm.params.insert(param->getName());
+            if (auto* array_symbol = dynamic_cast<ArraySymbol*>(param)) {
+                param_str = out_Arm.DispatchRegParamArray(array_symbol);
+            }
+            else if (auto* var_symbol = dynamic_cast<VarSymbol*>(param)) {
+                param_str = out_Arm.DispatchRegParam(var_symbol);
+            }
+        }else{
+            out_Arm.stackAllocator.func_overflowstacksize[param->getName()] = stack_size;
+            out_Arm.stackAllocator.func_Params_Stacks[param->getName()] = -((arg_index - side_of_stack)*8);
         }
-        else if (auto* var_symbol = dynamic_cast<VarSymbol*>(param)) {
-            param_str = out_Arm.DispatchRegParam(var_symbol);
-        }
+        
             param_strs.push_back(param_str);
+            ++arg_index;
     }
     
     out_Arm.func_Params_Regs[func_name] = param_strs;
@@ -1291,9 +1313,12 @@ void GetElementPtrLLVM::out_arm_str()  {
         std::string arr_offset_str;
         
         //先把数组的首地址正确传递
-        //非全局变量 (全局变量只需要记录 offset) 参数数组也不用算首地址 都在他寄存器里
-        if(!out_Arm.globalAllocator.find_symbol(arr_name) && !out_Arm.params.count(arr_name)) // "&&" out_Arm.stackAllocator.hasVariable(poi_name) 可能会加载别的值b = a[1]->a[2]，故省略
-        {   
+        if(out_Arm.params.count(arr_name)){
+            out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
+            arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
+
+        }else if(!out_Arm.globalAllocator.find_symbol(arr_name) && !out_Arm.params.count(arr_name)) // "&&" out_Arm.stackAllocator.hasVariable(poi_name) 可能会加载别的值b = a[1]->a[2]，故省略
+        {   //非全局变量 (全局变量只需要记录 offset) 参数数组也不用算首地址 都在他寄存器里
             out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
             int offset = out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName());
             //out_Arm.SPmove
@@ -1317,9 +1342,6 @@ void GetElementPtrLLVM::out_arm_str()  {
                     OutArm::outString("\tSUB " + arr_str + ", SP, " + tmp_str);
                 }
             }
-        }else if(out_Arm.params.count(arr_name)){
-            out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
-            arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
         }
         else{
             out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);

@@ -53,6 +53,7 @@ void RegisterAllocator::freeRegister(std::string reg_name){
 
 void XRegAllocator::reset() {
     this->lru_list.clear();
+    this->lru_list_param.clear();
     //this->Registers.clear();
     this->Registers=std::vector<std::string>(32);
     this->var_to_reg.clear();
@@ -64,6 +65,7 @@ void XRegAllocator::reset() {
 
 void DRegAllocator::reset() {
     this->lru_list.clear();
+    this->lru_list_param.clear();
     //this->Registers.clear();
     this->Registers=std::vector<std::string>(32);
     this->var_to_reg.clear();

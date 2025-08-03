@@ -29,10 +29,12 @@ class StackAllocator {
         StackAllocator() = default;
         
     public:
-        // 函数名，其跳转时的栈顶
-        // std::stack<int> func_stackTop;
-        // std::stack<int> func_currentoffset;
-        std::stack<std::list<int>> func_lru_list;
+        
+        //前为函数名 后为 溢出参数对应的（按顺序）栈帧位置
+        std::unordered_map<std::string, int> func_Params_Stacks;
+
+        //前为溢出参数  总栈帧大小
+        std::unordered_map<std::string,int> func_overflowstacksize;
 
         std::vector<std::pair<std::string, int>> func_xregister_save; //0为x 1为d
         std::vector<std::pair<std::string, int>> func_sregister_save;
@@ -56,11 +58,11 @@ class StackAllocator {
         int allocateArray(int elementSize, const std::vector<int>& dimensions ,std::string arraySymbol);
         void addArrayPtrwithOffset(std::string symbol, std::string array_symbol, int offset);
 
-        int calculateRegisterSaveAreaSize();
+        int calculateRegisterSaveAreaSize(int overflowsize);
         void emitRegisterSave(std::ostream& out, int offset) const;
         void emitRegisterRestore(std::ostream& out, int offset) const;
 
-        int calculateStackSize();
+        int calculateStackSize(int overflowsize);
         int getOffset(std::string symbol);
         bool isTmpVar(std::string symbol);
         std::string emitPrologue(int stackSize) ;
