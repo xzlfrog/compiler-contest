@@ -67,6 +67,9 @@ public:
         {"stoptime", {}}
     };
 
+    //前为函数名 后为 溢出参数对应的（按顺序）栈帧位置
+    std::unordered_map<std::string, std::vector<std::pair<std::string,int>>> func_Params_Stacks;
+
     //记录函数参数 进入新函数时候clear
     std::unordered_set<std::string> params;
     void resetReg();

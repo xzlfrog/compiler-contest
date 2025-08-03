@@ -629,13 +629,29 @@ void CallLLVM::out_arm_str()  {
     }
 
     std::string dest_str; 
-    if(this->dest_sym) {
-        dest_str= out_Arm.DispatchReg(this->dest_sym);
-    }
+    
     std::string arg_str;
     std::string ori_str;//目的地 （源参数说是）
     std::vector<std::string> ori_strs = out_Arm.func_Params_Regs[func_name];
     int i = 0;
+    
+    //新栈顶
+    int tmp_top = out_Arm.stackAllocator.align(out_Arm.stackAllocator.getCurrentTop(),-16);
+    out_Arm.stackAllocator.set_top(tmp_top);
+    
+
+    int diff_bl = tmp_top - out_Arm.stackAllocator.stack_currentOffset;
+    if(diff_bl <= 4095 && diff_bl >= -4096){
+        OutArm::outString("\tSUB SP, SP , #" + std::to_string(-diff_bl));
+    }else{
+        out_Arm.emitLargeNumber("X8",-diff_bl);
+        out_Arm.outString("\tSUB SP, SP , X8");
+    }
+    
+    out_Arm.protectRegs();
+
+    int side_of_stack = 8;
+    int arg_index = 0;
     for (const auto& arg : this->arguments) {
         ori_str = ori_strs[i];
         if (auto* array_symbol = dynamic_cast<ArraySymbol*>(arg)) {
@@ -705,35 +721,85 @@ void CallLLVM::out_arm_str()  {
                 
             }
 
-            if(ori_str.front() == 'S'){
-                OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+            if(arg_index < side_of_stack){
+                if(ori_str.front() == 'S'){
+                    OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+                }else{
+                    OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
+                }
             }else{
-                OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
+                int tmp_offset = -(arg_index*8);
+                OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+                out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
             }
+
         }
         else if (auto* var_symbol = dynamic_cast<VarSymbol*>(arg)) {
             arg_str = out_Arm.DispatchReg(var_symbol);
-            if(ori_str.front() == 'S'){
-                OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
-            }else if(arg_str.front() == 'S' && ori_str.front() == 'X'){
-                OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
-            }else{
-                OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
-            }
-        }else if (auto* pointer_symbol = dynamic_cast<ConstSymbol*>(arg)){
-
-        } else if (auto* const_symbol = dynamic_cast<ConstSymbol*>(arg)){
-            if(const_symbol->getDataType()==dataType::i32 || const_symbol->getDataType()==dataType::i1){
-                int val = std::get<int>(const_symbol->data->getValue());
-                OutArm::emitLargeNumber(ori_str,val);
-            }else{
-                if(const_symbol->getName() == ""){
-                    std::string name = generate_tmp_var_name();
-                    VarSymbol* tmp_float_sym = SymbolFactory::createVarSymbol(name,const_symbol->data);
-                    std::string tmp_float_str = out_Arm.DispatchReg(tmp_float_sym);
-                    out_Arm.emitLoadFloatSymbol(tmp_float_str,tmp_float_sym);
+            if(arg_index < side_of_stack){
+                if(ori_str.front() == 'S'){
+                    OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+                }else if(arg_str.front() == 'S' && ori_str.front() == 'X'){
+                    OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
                 }else{
-                    out_Arm.emitLoadFloatSymbol(ori_str,const_symbol);
+                    OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
+                }
+            }else{
+                int tmp_offset = -(arg_index*4);
+                OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+                out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
+            }
+
+        }else if (auto* pointer_symbol = dynamic_cast<ConstSymbol*>(arg)){
+            //pointer 没有作为函数传递过？
+        } else if (auto* const_symbol = dynamic_cast<ConstSymbol*>(arg)){
+            if(arg_index < side_of_stack){
+                if(const_symbol->getDataType()==dataType::i32 || const_symbol->getDataType()==dataType::i1){
+                    int val = std::get<int>(const_symbol->data->getValue());
+                    OutArm::emitLargeNumber(ori_str,val);
+                }else{
+                    if(const_symbol->getName() == ""){
+                        std::string name = generate_tmp_var_name();
+                        VarSymbol* tmp_float_sym = SymbolFactory::createVarSymbol(name,const_symbol->data);
+                        std::string tmp_float_str = out_Arm.DispatchReg(tmp_float_sym);
+                        out_Arm.emitLoadFloatSymbol(tmp_float_str,tmp_float_sym);
+                        OutArm::outString("\tFMOV " + ori_str + ", " + tmp_float_str );
+                    }else{
+                        out_Arm.emitLoadFloatSymbol(ori_str,const_symbol);
+                    }
+                }
+            }else{
+                if(const_symbol->getDataType()==dataType::i32 || const_symbol->getDataType()==dataType::i1){
+                    int val = std::get<int>(const_symbol->data->getValue());
+                    VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                    std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
+                    OutArm::emitLargeNumber(tmp_str,val);
+                    
+                    int tmp_offset = -(arg_index*4);
+                    OutArm::outString("\tSTR " + tmp_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+                    out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
+                }else{
+                    if(const_symbol->getName() == ""){
+                        std::string name = generate_tmp_var_name();
+                        VarSymbol* tmp_float_sym = SymbolFactory::createVarSymbol(name,const_symbol->data);
+                        std::string tmp_float_str = out_Arm.DispatchReg(tmp_float_sym);
+                        out_Arm.emitLoadFloatSymbol(tmp_float_str,tmp_float_sym);
+
+                        int tmp_offset = -(arg_index*4);
+                        OutArm::outString("\tSTR " + tmp_float_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+                        out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
+
+                    }else{
+                        VarSymbol* tmp_float_sym = SymbolFactory::createTmpVarSymbol(dataType::f32);
+                        std::string tmp_float_str = out_Arm.DispatchReg(tmp_float_sym);
+                        out_Arm.emitLoadFloatSymbol(tmp_float_str,const_symbol);
+                        
+                        int tmp_offset = -(arg_index*4);
+                        OutArm::outString("\tSTR " + tmp_float_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+                        out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
+
+                        
+                    }
                 }
             }
         }else if (auto* const_var_symbol = dynamic_cast<ConstVarSymbol*>(arg)){
@@ -747,35 +813,41 @@ void CallLLVM::out_arm_str()  {
                 }else{
                     val = std::get<int>(const_var_symbol->data->getValue());
                 }
-                OutArm::emitLargeNumber(ori_str,val);
+                if(arg_index < side_of_stack){
+                    OutArm::emitLargeNumber(ori_str,val);
+                }else{
+                    int tmp_offset = -(arg_index*4);
+                    OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+                    out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
+                }
             }else{
                  if(arg_str.front() == '=' || arg_str.front() == '#'){
-                    out_Arm.emitLoadFloatSymbol(ori_str,const_var_symbol);
+                    if(arg_index < side_of_stack){
+                        out_Arm.emitLoadFloatSymbol(ori_str,const_var_symbol);
+                    }else{
+                        int tmp_offset = -(arg_index*4);
+                        out_Arm.emitLoadFloatSymbol(arg_str,const_var_symbol);
+                        OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+                        out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
+                    }
                 }
                 else{
-                    OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+                   
+                    if(arg_index < side_of_stack){
+                        OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+                    }else{
+                        int tmp_offset = -(arg_index*4);
+                        OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+                        out_Arm.func_Params_Stacks[func_name].push_back({array_symbol->getName(),tmp_offset});
+                    }
                 }
                 
             }
         }
         ++i;
+        ++arg_index;
     }  
     
-    //新栈顶
-    int tmp_top = out_Arm.stackAllocator.align(out_Arm.stackAllocator.getCurrentTop(),-16);
-    out_Arm.stackAllocator.set_top(tmp_top);
-    
-
-    int diff_bl = tmp_top - out_Arm.stackAllocator.stack_currentOffset;
-    if(diff_bl <= 4095 && diff_bl >= -4096){
-        OutArm::outString("\tSUB SP, SP , #" + std::to_string(-diff_bl));
-    }else{
-        out_Arm.emitLargeNumber("X8",-diff_bl);
-        out_Arm.outString("\tSUB SP, SP , X8");
-    }
-    
-    out_Arm.protectRegs();
-
     std::string call_str = "BL " + func_name;
     OutArm::outString("\t"+call_str);
 
@@ -791,6 +863,7 @@ void CallLLVM::out_arm_str()  {
     }
 
     if (this->dest_sym) {
+        dest_str= out_Arm.DispatchReg(this->dest_sym);
         if(this->function->getReturnType() == dataType::f32 || this->function->getReturnType() == dataType::f64) {
             OutArm::outString("\tFMOV " + dest_str + ", S0"); // Assuming S0 is the return register for floating point
         } else if(this->function->getReturnType() == dataType::i32){
