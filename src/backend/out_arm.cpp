@@ -871,7 +871,12 @@ void CallLLVM::out_arm_str()  {
                     int tmp_offset = -((arg_index-8)*8);
                     OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
                 }
-            }else{
+            }else if(out_Arm.stackAllocator.hasVariable(pointer_symbol->getName())){
+                int offset = out_Arm.stackAllocator.getOffset(pointer_symbol->getName());
+                arg_str = out_Arm.DispatchReg(pointer_symbol);
+                out_Arm.SPmove(true, arg_str,offset);
+            }
+            else {
                 OutArm::outString("遗漏的地方");
             }
         } else if (arguments[i]->getType() == symType::constant_nonvar){
@@ -1300,10 +1305,20 @@ void GetElementPtrLLVM::out_arm_str()  {
         std::string poi_name = this->getDestSymbol()->getName();
         out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
         //std::string poi_str = out_Arm.DispatchReg(this->getDestSymbol());
-        std::string arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
+        std::string arr_str = out_Arm.xRegAllocator.getAddress(this->getSrcSymbol()->getName());
+
         //也统一通过X8传递
         std::string poi_str = "X8";
-        OutArm::outString("\tMOV " + poi_str + ", " + arr_str);
+
+        if(arr_str == ""){
+            //栈上的arr啊
+            int offset = out_Arm.stackAllocator.getOffset(this->getSrcSymbol()->getName());
+            out_Arm.SPmove(false,poi_str,offset);
+        }else{
+            
+            OutArm::outString("\tMOV " + poi_str + ", " + arr_str);
+        }
+        
         //arr[]情况
         if(this->getDimensions().size() == 0){
             //常数时候
@@ -1322,10 +1337,13 @@ void GetElementPtrLLVM::out_arm_str()  {
                 if(tmp_str.front()=='W'){
                     tmp_str = "X" + tmp_str.substr(1);
                 }
+                VarSymbol* tmp_sym_forptr = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                std::string tmp_forptr_str = out_Arm.DispatchReg(tmp_sym_forptr);
+                out_Arm.outString("\tMOV " + tmp_forptr_str + ", " + tmp_str);
 
+                out_Arm.outString("\tLSL " + tmp_forptr_str + ", " + tmp_forptr_str + ", #2");
+                OutArm::outString("\tADD " + poi_str + ", " + poi_str + ", " + tmp_forptr_str);
                 //LSL X0, X1, #2 其实乘以4
-                out_Arm.outString("\tLSL " + tmp_str + ", " + tmp_str + ", #2");
-                OutArm::outString("\tADD " + poi_str + ", " + poi_str + ", " + tmp_str);
 
             } 
 
@@ -1347,15 +1365,24 @@ void GetElementPtrLLVM::out_arm_str()  {
                     tmp_str = "X" + tmp_str.substr(1);
                 }
                 if(multiplier == 1){
-                    out_Arm.outString("\tLSL " + tmp_str + ", " + tmp_str + ", #2");
+                    VarSymbol* tmp_sym_forptr = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                    std::string tmp_forptr_str = out_Arm.DispatchReg(tmp_sym_forptr);
+                    out_Arm.outString("\tMOV " + tmp_forptr_str + ", " + tmp_str);
+                    out_Arm.outString("\tLSL " + tmp_forptr_str + ", " + tmp_forptr_str + ", #2");
+                    OutArm::outString("\tADD " + poi_str + ", " + poi_str + ", " + tmp_forptr_str);
                 }else{
                     std::string tmp_num_str = std::to_string(multiplier * 4);
                     VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
                     std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
                     out_Arm.emitLargeNumber(tmp_tmp_str,multiplier * 4);
-                    out_Arm.outString("\tMUL " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
+
+                    VarSymbol* tmp_sym_forptr = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                    std::string tmp_forptr_str = out_Arm.DispatchReg(tmp_sym_forptr);
+                    out_Arm.outString("\tMOV " + tmp_forptr_str + ", " + tmp_str);
+                    out_Arm.outString("\tMUL " + tmp_forptr_str + ", " + tmp_forptr_str + ", " + tmp_tmp_str);
+                    OutArm::outString("\tADD " + poi_str + ", " + poi_str + ", " + tmp_forptr_str);
                 }             
-                OutArm::outString("\tADD " + poi_str + ", " + poi_str + ", " + tmp_str);
+               
             }
 
             // 更新乘数和索引
@@ -1407,6 +1434,7 @@ void GetElementPtrLLVM::out_arm_str()  {
             out_Arm.globalAllocator.addSymbolToGlobal(this->dest_sym->getName(),this->ptrval->getName(),offset);
         }else if(out_Arm.params.count(this->ptrval->getName())){
             std::string arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
+            out_Arm.outString("这不该有输出。");
             out_Arm.params_offset(arr_str,offset);
         }
         else{
@@ -1429,6 +1457,11 @@ void GetElementPtrLLVM::out_arm_str()  {
         if(out_Arm.params.count(arr_name)){
             out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
             arr_str = out_Arm.DispatchReg(this->getSrcSymbol());
+            VarSymbol* tmp_sym_forptr = SymbolFactory::createTmpVarSymbol(dataType::i64);
+            std::string tmp_forptr_str = out_Arm.DispatchReg(tmp_sym_forptr);
+            out_Arm.outString("\tMOV " + tmp_forptr_str + ", " + arr_str);
+            arr_str = tmp_forptr_str;
+            //不要瞎改指针啊喂
 
         }else if(!out_Arm.globalAllocator.find_symbol(arr_name) && !out_Arm.params.count(arr_name)) // "&&" out_Arm.stackAllocator.hasVariable(poi_name) 可能会加载别的值b = a[1]->a[2]，故省略
         {   //非全局变量 (全局变量只需要记录 offset) 参数数组也不用算首地址 都在他寄存器里
@@ -1479,17 +1512,21 @@ void GetElementPtrLLVM::out_arm_str()  {
                     else{
                         //给该字母找其寄存器捏 由于变量默认存到W 手动帮其扩展至X -- 小chat说这是ok的
                         std::string tmp_str = out_Arm.DispatchReg(symbol_ptr);
-
                         if(tmp_str.front()=='W'){
                             tmp_str = "X" + tmp_str.substr(1);
                         }
-                        std::string tmp_num_str = std::to_string(multiplier * 4);
                         
+                        std::string tmp_num_str = std::to_string(multiplier * 4);
                         VarSymbol* tmp_tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
                         std::string tmp_tmp_str = out_Arm.DispatchReg(tmp_tmp_sym);
                         out_Arm.emitLargeNumber(tmp_tmp_str,multiplier * 4);
-                        out_Arm.outString("\tMUL " + tmp_str + ", " + tmp_str + ", " + tmp_tmp_str);
-                        OutArm::outString("\tADD " + arr_str + ", " + arr_str + ", " + tmp_str);
+
+                        VarSymbol* tmp_sym_forptr = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                        std::string tmp_forptr_str = out_Arm.DispatchReg(tmp_sym_forptr);
+                        out_Arm.outString("\tMOV " + tmp_forptr_str + ", " + tmp_str);
+
+                        out_Arm.outString("\tMUL " + tmp_forptr_str + ", " + tmp_forptr_str + ", " + tmp_tmp_str);
+                        OutArm::outString("\tADD " + arr_str + ", " + arr_str + ", " + tmp_forptr_str);
 
                     } 
 
