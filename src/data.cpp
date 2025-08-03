@@ -343,6 +343,9 @@ Data* ConstExp::constFolding(){
         case constExpType::const_exp_frem :
             data=constExp_frem(this->constData1,this->constData2);
             break;
+        case constExpType::const_exp_not:
+            data=constExp_not(this->constData1);
+            break;
     }
     return data;
 }
@@ -351,6 +354,13 @@ Data* constExp_add(Data* data1,Data* data2){
     int a=std::get<int>(data1->getValue());
     int b=std::get<int>(data2->getValue());
     return createData(dataType::i32,a+b);
+}
+
+Data* constExp_not(Data* data1){
+    if(data1->getType()==dataType::i32)
+        return createData(dataType::i32,std::get<int>(data1->getValue())==0?1:0);
+    else if(data1->getType()==dataType::f32)
+        return createData(dataType::i32,(std::get<float>(data1->getValue())-0.0)<1e-7?1:0);
 }
 
 Data* constExp_sub(Data* data1,Data* data2){

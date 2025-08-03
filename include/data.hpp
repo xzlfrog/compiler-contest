@@ -48,7 +48,8 @@ enum constExpType{
     const_exp_fcmp_one,//float not equal
     const_exp_sitofp,//有符号整数转浮点
     const_exp_srem,
-    const_exp_frem
+    const_exp_frem,
+    const_exp_not
 };
 
 //初始化方式
@@ -224,6 +225,7 @@ Data* constExp_fcmp_one(Data* data1,Data* data2);//float not equal
 Data* constExp_sitofp(Data* data1);//有符号整数转浮点
 Data* constExp_srem(Data* data1,Data* data2);
 Data* constExp_frem(Data* data1,Data* data2);
+Data* constExp_not(Data* data1);
 
 std::string my_to_string(Data* data);
 
