@@ -1278,7 +1278,7 @@ void StoreLLVM::out_arm_str()  {
                 OutArm::outString("\tADD " + tmp_str + ", " + tmp_str + ", :lo12:" + tmp_dest_str);
 
                 int offset = out_Arm.globalAllocator.symbol_to_global[dest_sym->getName()].second ;
-                out_Arm.global_offset_move(false, tmp_str, src_str,offset);
+                out_Arm.global_offset_move(true, tmp_str, src_str,offset);
 
             }
         }else{//临时变量情况(Tmp_StackAddress_InReg)
