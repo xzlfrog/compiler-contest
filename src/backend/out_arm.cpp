@@ -1942,13 +1942,13 @@ void OutArm::FuncPromoteToRegister(bool isDreg, std::string sym_name ,int index)
         // 使用 STR D, [SP, #offset]，offset = index * 8
         reg = "D" + sym_name;  // 假设 sym_name 是 "0", "1" 等
         offset = index * 4;
-        inst = "\tLDR S" + std::to_string(index) + ", [SP, #" + std::to_string(offset) + "]";
+        inst = "\tLDR S" + std::to_string(index) + ", [SP, #" + std::to_string(384-offset) + "]";
     } else {
         // 整数寄存器：X0 ~ X31
         // 保存到高地址区域：SP + 32*8 + index*8
         reg = "X" + sym_name;
         offset = 32 * 4 + index * 8;  // 基础偏移 256 字节
-        inst = "\tLDR X" + std::to_string(index) + ", [SP, #" + std::to_string(offset) + "]";
+        inst = "\tLDR X" + std::to_string(index) + ", [SP, #" + std::to_string(384-offset) + "]";
     }
 
     OutArm::outString(inst);
