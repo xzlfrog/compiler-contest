@@ -95,20 +95,42 @@ Expression* create_binary_expr(int op, Expression* a, Expression* b){
                 }
                 llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::srem,res,dynamic_cast<BasicSymbol*>(a->sym),dynamic_cast<BasicSymbol*>(b->sym)));
                 break;
-            case BINARY_AND:
+            case BINARY_AND:{
                 exp=constFolding(constExpType::const_exp_and,a->sym,b->sym);
                 if(exp!=nullptr){
                     return exp;
                 }
-                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_and,res,dynamic_cast<BasicSymbol*>(a->sym),dynamic_cast<BasicSymbol*>(b->sym)));
-                break;
-            case BINARY_OR:
+                llvmlist->InsertHead(a->llvmlist);
+                BasicSymbol* res_i1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::icmp_ne,res_i1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::i32)));
+                LabelSymbol* z_label=SymbolFactory::createTmpLabelSymbolWithScope(scope);
+                LabelSymbol* uz_label=SymbolFactory::createTmpLabelSymbolWithScope(scope);
+                llvmlist->InsertTail(LLVMfactory::createConditionalBranchLLVM(res_i1,uz_label,z_label));
+                llvmlist->InsertTail(LLVMfactory::createLableLLVM(uz_label));
+                llvmlist->InsertTail(b->llvmlist);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::icmp_ne,res_i1,dynamic_cast<BasicSymbol*>(b->sym),getZeroSym(dataType::i32)));
+                llvmlist->InsertTail(LLVMfactory::createLableLLVM(z_label));
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,res_i1,res));
+                return new Expression(llvmlist,res);
+            }
+            case BINARY_OR:{
                 exp=constFolding(constExpType::const_exp_or,a->sym,b->sym);
                 if(exp!=nullptr){
                     return exp;
                 }
-                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_or,res,dynamic_cast<BasicSymbol*>(a->sym),dynamic_cast<BasicSymbol*>(b->sym)));
-                break;
+                llvmlist->InsertHead(a->llvmlist);
+                BasicSymbol* res_i1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::icmp_ne,res_i1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::i32)));
+                LabelSymbol* z_label=SymbolFactory::createTmpLabelSymbolWithScope(scope);
+                LabelSymbol* uz_label=SymbolFactory::createTmpLabelSymbolWithScope(scope);
+                llvmlist->InsertTail(LLVMfactory::createConditionalBranchLLVM(res_i1,uz_label,z_label));
+                llvmlist->InsertTail(LLVMfactory::createLableLLVM(z_label));
+                llvmlist->InsertTail(b->llvmlist);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::icmp_ne,res_i1,dynamic_cast<BasicSymbol*>(b->sym),getZeroSym(dataType::i32)));
+                llvmlist->InsertTail(LLVMfactory::createLableLLVM(uz_label));
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,res_i1,res));
+                return new Expression(llvmlist,res);
+            }
             case BINARY_EQ:
                 exp=constFolding(constExpType::const_exp_icmp_eq,a->sym,b->sym);
                 if(exp!=nullptr){
@@ -205,24 +227,32 @@ Expression* create_binary_expr(int op, Expression* a, Expression* b){
                 llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::llvm_frem,res,dynamic_cast<BasicSymbol*>(a->sym),dynamic_cast<BasicSymbol*>(b->sym)));
                 break;
             case BINARY_AND:{
-                BasicSymbol* tmp1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
-                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,tmp1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::f32)));
-                BasicSymbol* tmp2=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
-                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,tmp2,dynamic_cast<BasicSymbol*>(b->sym),getZeroSym(dataType::f32)));
-                BasicSymbol* tmp3=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
-                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_and,tmp3,tmp1,tmp2));
-                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,tmp3,res));
-                break;
+                llvmlist->InsertHead(a->llvmlist);
+                BasicSymbol* res_i1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,res_i1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::i32)));
+                LabelSymbol* z_label=SymbolFactory::createTmpLabelSymbolWithScope(scope);
+                LabelSymbol* uz_label=SymbolFactory::createTmpLabelSymbolWithScope(scope);
+                llvmlist->InsertTail(LLVMfactory::createConditionalBranchLLVM(res_i1,uz_label,z_label));
+                llvmlist->InsertTail(LLVMfactory::createLableLLVM(uz_label));
+                llvmlist->InsertTail(b->llvmlist);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,res_i1,dynamic_cast<BasicSymbol*>(b->sym),getZeroSym(dataType::i32)));
+                llvmlist->InsertTail(LLVMfactory::createLableLLVM(z_label));
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,res_i1,res));
+                return new Expression(llvmlist,res);
             }
             case BINARY_OR:{
-                BasicSymbol* tmp1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
-                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,tmp1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::f32)));
-                BasicSymbol* tmp2=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
-                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,tmp2,dynamic_cast<BasicSymbol*>(b->sym),getZeroSym(dataType::f32)));
-                BasicSymbol* tmp3=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
-                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_or,tmp3,tmp1,tmp2));
-                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,tmp3,res));
-                break;
+                llvmlist->InsertHead(a->llvmlist);
+                BasicSymbol* res_i1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,res_i1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::i32)));
+                LabelSymbol* z_label=SymbolFactory::createTmpLabelSymbolWithScope(scope);
+                LabelSymbol* uz_label=SymbolFactory::createTmpLabelSymbolWithScope(scope);
+                llvmlist->InsertTail(LLVMfactory::createConditionalBranchLLVM(res_i1,uz_label,z_label));
+                llvmlist->InsertTail(LLVMfactory::createLableLLVM(z_label));
+                llvmlist->InsertTail(b->llvmlist);
+                llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,res_i1,dynamic_cast<BasicSymbol*>(b->sym),getZeroSym(dataType::i32)));
+                llvmlist->InsertTail(LLVMfactory::createLableLLVM(uz_label));
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,res_i1,res));
+                return new Expression(llvmlist,res);
             }
                 break;
             case BINARY_EQ:
@@ -1170,6 +1200,8 @@ void add_init_item(){
     int n=dim_array.size();
     int i=n-1;
     array_init_idx[i]++;
+    if(i>=array_init_idx.size())
+        throw std::runtime_error("index error");
     while(array_init_idx[i]>=dim_array[i]){
         array_init_idx[i]-=dim_array[i];
         if(i==0)
@@ -1191,8 +1223,8 @@ void create_var_init_list(Expression* exp){
             add_init_item();
         }
     }
-    else
-        array_init_idx[cnt_array_init-1]++;
+    //else
+        //array_init_idx[cnt_array_init-1]++;
 }
 
 void create_var_init_list(Expression* exp1,Expression* exp2){
@@ -1212,6 +1244,8 @@ void create_var_init_list(Expression* exp1,Expression* exp2){
     exp1->llvmlist->InsertTail(exp2->llvmlist);
     if(exp1->sym!=nullptr)
         arrayInitial1 = dynamic_cast<ArrayInitial*>(exp1->sym->data);
+    else
+        exp1->sym=exp2->sym;
     if(arrayInitial2!=nullptr&&arrayInitial1!=nullptr)
         arrayInitial1->merge(arrayInitial2);
     else if(arrayInitial1==nullptr&&arrayInitial2!=nullptr)
@@ -1229,7 +1263,9 @@ void reduce_var_init_list(Expression* exp){
     cnt_array_init--;
     //if(flag&&cnt_array_init>0)
         //array_init_idx[cnt_array_init-1]++;
-    if(flag&&cnt_array_init>0)
+    //if(cnt_array_init-1>=array_init_idx.size())
+        //throw std::runtime_error("index error");
+    if((flag||exp->sym==nullptr)&&cnt_array_init>0)
         array_init_idx[cnt_array_init-1]++;
 }
 
