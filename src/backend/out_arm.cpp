@@ -716,8 +716,13 @@ void CallLLVM::out_arm_str()  {
         out_Arm.emitLargeNumber("X8",-diff_bl);
         out_Arm.outString("\tSUB SP, SP , X8");
     }
-    
+
+    out_Arm.stackAllocator.stack_currentOffset -= diff_bl;
+  
     out_Arm.protectRegs();
+    out_Arm.stackAllocator.stack_currentOffset -= 384;
+
+    int tmp_fp = out_Arm.stackAllocator.stack_currentOffset;
 
     int side_of_stack = 8;
     int arg_index = 0;
@@ -988,11 +993,35 @@ void CallLLVM::out_arm_str()  {
         ++arg_index;
     }  
     
+    if(out_Arm.stackAllocator.stack_currentOffset != tmp_fp){
+        int tmp_offset = tmp_fp - out_Arm.stackAllocator.stack_currentOffset ;
+        if(tmp_offset>0){
+            if(tmp_offset<4096){
+                OutArm::outString("ADD SP, SP, #" + std::to_string(tmp_offset));
+            }else{
+                VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
+                out_Arm.emitLargeNumber(tmp_str,tmp_offset);
+                OutArm::outString("ADD SP, SP, " + tmp_str);
+            }
+        }else if(tmp_offset<0){
+            if(tmp_offset>-4096){
+                OutArm::outString("SUB SP, SP, #" + std::to_string(-tmp_offset));
+            }else{
+                VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
+                out_Arm.emitLargeNumber(tmp_str,-tmp_offset);
+                OutArm::outString("SUB SP, SP, " + tmp_str);
+            }
+        }
+    }
+
     std::string call_str = "BL " + func_name;
     OutArm::outString("\t"+call_str);
 
     //跳转回来后
     out_Arm.restoreRegs();
+    out_Arm.stackAllocator.stack_currentOffset += 384;
 
     //将栈指针放回
     if(diff_bl <= 4095 && diff_bl >= -4096){
@@ -1001,6 +1030,8 @@ void CallLLVM::out_arm_str()  {
         out_Arm.emitLargeNumber("X8",-diff_bl);
         out_Arm.outString("\tADD SP, SP , X8");
     }
+
+    out_Arm.stackAllocator.stack_currentOffset += diff_bl;
 
     if (this->dest_sym) {
         dest_str= out_Arm.DispatchReg(this->dest_sym);

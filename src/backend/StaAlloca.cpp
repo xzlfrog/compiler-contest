@@ -113,7 +113,7 @@ int StackAllocator::allocateArray(int elementSize, const std::vector<int>& dimen
         totalSize *= dim;
     }
 
-    totalSize = this->align(totalSize,-16);
+    totalSize = this->align(totalSize,16);
     this->currentTop = this->align(this->currentTop,-16);
 
     this->currentTop -= totalSize;
