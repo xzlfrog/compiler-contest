@@ -214,6 +214,21 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
         else{
             reg_name = out_Arm.xRegAllocator.getRegister(symbol->getName());
         }
+
+        if(reg_name == ""){
+            int offset = out_Arm.stackAllocator.getOffset(symbol->getName());
+            VarSymbol* tmp_sym;
+            if(symbol->getDataType() == dataType::f32){
+                tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::f32);
+            }else if(symbol->getDataType() == dataType::i32){
+                tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+            }else{
+                tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+            }
+            std::string reg_name = out_Arm.DispatchReg(tmp_sym);
+            out_Arm.SPmove(false,reg_name,offset);
+        }
+
     }
     //全局变量情况
     else if(out_Arm.globalAllocator.find_symbol(symbol->getName())){
