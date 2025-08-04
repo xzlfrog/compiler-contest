@@ -717,7 +717,7 @@ void CallLLVM::out_arm_str()  {
         out_Arm.outString("\tSUB SP, SP , X8");
     }
 
-    out_Arm.stackAllocator.stack_currentOffset -= diff_bl;
+    out_Arm.stackAllocator.stack_currentOffset += diff_bl;
   
     out_Arm.protectRegs();
     out_Arm.stackAllocator.stack_currentOffset -= 384;
@@ -993,6 +993,7 @@ void CallLLVM::out_arm_str()  {
         ++arg_index;
     }  
     
+    //释放传参用空间
     if(out_Arm.stackAllocator.stack_currentOffset != tmp_fp){
         int tmp_offset = tmp_fp - out_Arm.stackAllocator.stack_currentOffset ;
         if(tmp_offset>0){
@@ -1031,7 +1032,7 @@ void CallLLVM::out_arm_str()  {
         out_Arm.outString("\tADD SP, SP , X8");
     }
 
-    out_Arm.stackAllocator.stack_currentOffset += diff_bl;
+    out_Arm.stackAllocator.stack_currentOffset -= diff_bl;
 
     if (this->dest_sym) {
         dest_str= out_Arm.DispatchReg(this->dest_sym);
@@ -2073,6 +2074,7 @@ void OutArm::protectRegs(){
     std::string tmp_move = "128";
     std::string diff = "256";
     OutArm::outString("\tSUB SP, SP , #" + tmp_move);
+    
 
     OutArm& out_Arm = OutArm::getInstance();
 
