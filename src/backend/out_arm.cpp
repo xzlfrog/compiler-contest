@@ -898,8 +898,38 @@ void CallLLVM::out_arm_str()  {
                 }
             }else if(out_Arm.stackAllocator.hasVariable(pointer_symbol->getName())){
                 int offset = out_Arm.stackAllocator.getOffset(pointer_symbol->getName());
-                arg_str = out_Arm.DispatchReg(pointer_symbol);
-                out_Arm.SPmove(true, arg_str,offset);
+                if(offset>0){
+                    if(offset<4095){
+                        OutArm::outString("\tADD " + arg_str + ", SP, #" + std::to_string(offset));
+                    }else{
+                        VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                        std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
+                        out_Arm.emitLargeNumber(tmp_str,offset);
+                        OutArm::outString("\tADD " + arg_str + ", SP, " + tmp_str);
+                    }
+                }else if(offset<0){
+                    if(offset>-4095){
+                        OutArm::outString("\tSUB " + arg_str + ", SP, #" + std::to_string(-offset));
+                    }else{
+                        VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                        std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
+                        out_Arm.emitLargeNumber(tmp_str,-offset);
+                        OutArm::outString("\tSUB " + arg_str + ", SP, " + tmp_str);
+                    }
+                }else{
+                    OutArm::outString("\tMOV " + arg_str + ", [SP]");
+                }
+
+                if(arg_index < side_of_stack){
+                    if(ori_str.front() == 'S'){
+                        OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+                    }else{
+                        OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
+                    }
+                }else{
+                    int tmp_offset = -((arg_index-8)*8);
+                    OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+                }
             }
             else {
                 OutArm::outString("遗漏的地方");
