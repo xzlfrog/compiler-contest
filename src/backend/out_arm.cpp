@@ -1063,16 +1063,17 @@ void CallLLVM::out_arm_str()  {
 
     //跳转回来后
     out_Arm.restoreRegs();
-    out_Arm.stackAllocator.stack_currentOffset += 384;
-    
     if (this->dest_sym) {
         dest_str= out_Arm.DispatchReg(this->dest_sym);
         if(this->function->getReturnType() == dataType::f32 || this->function->getReturnType() == dataType::f64) {
-            OutArm::outString("\tLDR " + dest_str + ", [SP, #-400]"); // Assuming S0 is the return register for floating point
+            OutArm::outString("\tLDR " + dest_str + ", [SP, #-16]"); // Assuming S0 is the return register for floating point
         } else{
-            OutArm::outString("\tLDR " + dest_str + ", [SP, #-400]"); // Assuming X0 is the return register for integers
+            OutArm::outString("\tLDR " + dest_str + ", [SP, #-16]"); // Assuming X0 is the return register for integers
         } 
     }
+    OutArm::outString("\tADD SP, SP , #" + std::to_string(384));
+    out_Arm.stackAllocator.stack_currentOffset += 384;
+    
 
     //将栈指针放回
     if(diff_bl <= 4095 && diff_bl >= -4096){
@@ -2214,7 +2215,6 @@ void OutArm::restoreRegs(){
         out_Arm.FuncPromoteToRegister(true,reg,index);
         }
 
-        OutArm::outString("\tADD SP, SP , #" + protect_size);
     }
 
 
