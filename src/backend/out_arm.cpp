@@ -683,6 +683,7 @@ void ReturnLLVM::out_arm_str()  {
             OutArm::outString("\tMOV X8, #93\n\tSVC #0");
         }else{
             int tmp_offset = out_Arm.stackAllocator.func_overflowstacksize.size() * 8;
+            tmp_offset = out_Arm.stackAllocator.align(tmp_offset,16);
             OutArm::outString(out_Arm.stackAllocator.emitEpilogue(tmp_offset));
 
             OutArm::outString("\tRET");

@@ -1180,6 +1180,16 @@ LLVMList* assign_array_item(Expression* LVal,Expression* exp){
     LLVMList* llvmlist=new LLVMList();
     llvmlist->InsertHead(LVal->llvmlist);
     llvmlist->InsertHead(exp->llvmlist);
+    if(LVal->sym->getDataType()==dataType::i32&&exp->sym->getDataType()==dataType::f32){
+        BasicSymbol* int_bs=SymbolFactory::createTmpVarSymbolWithScope(dataType::i32,exp->sym->scope);
+        llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::fptosi,dynamic_cast<BasicSymbol*>(exp->sym),int_bs));
+        exp->sym=int_bs;
+    }
+    else if(LVal->sym->getDataType()==dataType::f32&&exp->sym->getDataType()==dataType::i32){
+        BasicSymbol* float_bs=SymbolFactory::createTmpVarSymbolWithScope(dataType::f32,exp->sym->scope);
+        llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::sitofp,dynamic_cast<BasicSymbol*>(exp->sym),float_bs));
+        exp->sym=float_bs;
+    }
     if(llvm!=nullptr){
         PointerSymbol* ps=llvm->src_sym;
         if(ps->isConst==false)
