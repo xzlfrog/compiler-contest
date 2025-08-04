@@ -1053,9 +1053,26 @@ void CallLLVM::out_arm_str()  {
     std::string call_str = "BL " + func_name;
     OutArm::outString("\t"+call_str);
 
+    if (this->dest_sym) {
+        if(this->function->getReturnType() == dataType::f32 || this->function->getReturnType() == dataType::f64) {
+            OutArm::outString("\tSTR D0, [SP, #-16]"); // Assuming S0 is the return register for floating point
+        } else{
+            OutArm::outString("\tSTR X0, [SP, #-16]"); // Assuming X0 is the return register for integers
+        } 
+    }
+
     //跳转回来后
     out_Arm.restoreRegs();
     out_Arm.stackAllocator.stack_currentOffset += 384;
+    
+    if (this->dest_sym) {
+        dest_str= out_Arm.DispatchReg(this->dest_sym);
+        if(this->function->getReturnType() == dataType::f32 || this->function->getReturnType() == dataType::f64) {
+            OutArm::outString("\tLDR " + dest_str + ", [SP, #-400]"); // Assuming S0 is the return register for floating point
+        } else{
+            OutArm::outString("\tLDR " + dest_str + ", [SP, #-400]"); // Assuming X0 is the return register for integers
+        } 
+    }
 
     //将栈指针放回
     if(diff_bl <= 4095 && diff_bl >= -4096){
@@ -1066,18 +1083,6 @@ void CallLLVM::out_arm_str()  {
     }
 
     out_Arm.stackAllocator.stack_currentOffset -= diff_bl;
-
-    if (this->dest_sym) {
-        dest_str= out_Arm.DispatchReg(this->dest_sym);
-        if(this->function->getReturnType() == dataType::f32 || this->function->getReturnType() == dataType::f64) {
-            OutArm::outString("\tFMOV " + dest_str + ", S0"); // Assuming S0 is the return register for floating point
-        } else if(this->function->getReturnType() == dataType::i32){
-            OutArm::outString("\tMOV " + dest_str + ", W0"); // Assuming X0 is the return register for integers
-        } else{
-            OutArm::outString("\tMOV " + dest_str + ", X0");
-        }
-    }
-
 
 }
 
