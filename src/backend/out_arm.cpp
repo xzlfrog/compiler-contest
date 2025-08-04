@@ -1357,7 +1357,6 @@ void GetElementPtrLLVM::out_arm_str()  {
         out_Arm.stackAllocator.Tmp_StackAddress_InReg.insert(poi_name);
         //std::string poi_str = out_Arm.DispatchReg(this->getDestSymbol());
         std::string arr_str = out_Arm.xRegAllocator.getAddress(this->getSrcSymbol()->getName());
-
         //也统一通过X8传递
         std::string poi_str = "X8";
 

@@ -79,12 +79,21 @@ int StackAllocator::getOffset(std::string symbol) {
     
     auto its = this->func_Params_Stacks.find(varName);
     if (its != this->func_Params_Stacks.end()) {
-        return this->func_overflowstacksize[varName] + its->second + 16 - this->stack_currentOffset ;
+    return this->func_overflowstacksize[varName] + its->second + 16 - this->stack_currentOffset ;
     }
+
     throw std::runtime_error("Variable not found: " + varName);
 }   
 
-
+int StackAllocator::getParamOffset(std::string symbol) {
+    const std::string& varName = symbol;
+    
+    auto its = this->func_Params_Stacks.find(varName);
+    if (its != this->func_Params_Stacks.end()) {
+        return this->func_overflowstacksize[varName] + its->second + 16 - this->stack_currentOffset ;
+    }
+    throw std::runtime_error("Variable not found: " + varName);
+}  
 
 //返回地址后 偏移量变了 下面数组同理
 int StackAllocator::allocateLocal(int size, std::string symbol) {

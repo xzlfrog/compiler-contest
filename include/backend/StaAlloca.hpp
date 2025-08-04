@@ -64,6 +64,7 @@ class StackAllocator {
 
         int calculateStackSize(int overflowsize);
         int getOffset(std::string symbol);
+        int getParamOffset(std::string symbol);
         bool isTmpVar(std::string symbol);
         std::string emitPrologue(int stackSize) ;
         std::string emitEpilogue(int stackSize) ;
