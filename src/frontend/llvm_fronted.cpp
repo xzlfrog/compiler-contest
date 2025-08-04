@@ -326,7 +326,7 @@ Expression* create_binary_expr(int op, Expression* a, Expression* b){
 }
 
 Expression* create_unary_expr(int op, Expression* a){
-    BasicSymbol* res=SymbolFactory::createTmpVarSymbolWithScope(a->sym->data->getType(),scope);
+    BasicSymbol* res;
     //if(a->sym->data->getType()!=dataType::i32)
         //throw std::runtime_error("unary calculation can only be used in int32 type");
     LLVMList* llvmlist=new LLVMList();
@@ -343,6 +343,7 @@ Expression* create_unary_expr(int op, Expression* a){
                 //llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,res,dynamic_cast<BasicSymbol*>(a->sym),SymbolFactory::createConstSymbol(createData(dataType::i32,-1))));
                 BasicSymbol* tmp1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
                 llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::icmp_eq,tmp1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::i32)));
+                res=SymbolFactory::createTmpVarSymbolWithScope(dataType::i32,scope);
                 //BasicSymbol* tmp2=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
                 //llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,tmp2,tmp1,SymbolFactory::createConstSymbol(createData(dataType::i1,true))));
                 llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,tmp1,res));
@@ -351,6 +352,7 @@ Expression* create_unary_expr(int op, Expression* a){
             else if(a->sym->data->getType()==dataType::f32){
                 BasicSymbol* tmp1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
                 llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_oeq,tmp1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::f32)));
+                res=SymbolFactory::createTmpVarSymbolWithScope(dataType::i32,scope);
                 //BasicSymbol* tmp2=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
                 //llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::logical_xor,tmp2,tmp1,SymbolFactory::createConstSymbol(createData(dataType::i1,true))));
                 llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,tmp1,res));
@@ -362,6 +364,7 @@ Expression* create_unary_expr(int op, Expression* a){
                 if(exp!=nullptr){
                     return exp;
                 }
+                res=SymbolFactory::createTmpVarSymbolWithScope(dataType::i32,scope);
                 llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::sub,res,SymbolFactory::createConstSymbol(createData(dataType::i32,0)),dynamic_cast<BasicSymbol*>(a->sym)));
             }
             else if(a->sym->data->getType()==dataType::f32){
@@ -369,6 +372,7 @@ Expression* create_unary_expr(int op, Expression* a){
                 if(exp!=nullptr){
                     return exp;
                 }
+                res=SymbolFactory::createTmpVarSymbolWithScope(dataType::f32,scope);
                 llvmlist->InsertTail(LLVMfactory::createUnaryOperationLLVM(res,dynamic_cast<BasicSymbol*>(a->sym),LLVMtype::llvm_fneg));
             }
             break;

@@ -781,6 +781,7 @@ void CallLLVM::out_arm_str()  {
             else{
                 //普通数组 直接找到首地址并传递
                 int offset = out_Arm.stackAllocator.getOffset(array_symbol->getName());
+                
                 arg_str = out_Arm.DispatchReg(array_symbol);
                 if(offset>0){
                     if(offset>4095){
@@ -1780,6 +1781,14 @@ void XRegAllocator::promoteToRegister(std::string symbol) {
     }   
 }
 
+bool endsWithLoader(const std::string &str) {
+    const std::string suffix = ".loader";
+    if (str.length() >= suffix.length()) {
+        return (0 == str.compare(str.length() - suffix.length(), suffix.length(), suffix));
+    }
+    return false;
+}
+
 void XRegAllocator::spillToStack(std::string symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     StackAllocator& stackAllocator = StackAllocator::getInstance();
@@ -1789,10 +1798,20 @@ void XRegAllocator::spillToStack(std::string symbol) {
         return;
     }
 
+    if(symbol == ""){
+        this->freeRegister(reg_name);
+        return;
+    }
+
     int stack_offset;
 
     //临时的直接不管了 溢出的干活
     if(stackAllocator.isTmpVar(symbol) || stackAllocator.Tmp_StackAddress_InReg.count(symbol)){
+        this->freeRegister(reg_name);
+        return ;
+    }
+
+    if(!endsWithLoader(symbol)){
         this->freeRegister(reg_name);
         return ;
     }
