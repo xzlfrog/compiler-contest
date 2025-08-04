@@ -608,6 +608,11 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
         //函数参数！！！
         else if(sym->getType()==symType::variable){
             bs=dynamic_cast<VarSymbol*>(sym);
+            if(cnt_array_init>0){
+                PointerSymbol* ps_store=SymbolFactory::createTmpPointerSymbolWithScope(bs->getDataType(),scope);
+                llvmlist->InsertTail(LLVMfactory::createGetElementPtrLLVM(ps_store,dynamic_cast<ArraySymbol*>(sym_defining),intVectorToBasicSymbolVector(array_init_idx)));
+                llvmlist->InsertTail(LLVMfactory::createStoreLLVM(bs,ps_store));
+            }
         }
         else if(sym->getType()==symType::constant_var){
             ConstVarSymbol* cvs=dynamic_cast<ConstVarSymbol*>(sym);
