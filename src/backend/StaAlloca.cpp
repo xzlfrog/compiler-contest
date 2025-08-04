@@ -103,8 +103,8 @@ int StackAllocator::allocateLocal(int size, std::string symbol) {
         throw std::runtime_error("Duplicate variable: " + name);
     }
     
-    this->currentTop -= size;
     this->localVarOffsets[name] = this->currentTop;
+    this->currentTop -= size;
     
     return address;
 }
@@ -126,9 +126,9 @@ int StackAllocator::allocateArray(int elementSize, const std::vector<int>& dimen
     this->currentTop = this->align(this->currentTop,-16);
 
     this->currentTop -= totalSize;
-    this->localVarOffsets[name] = this->currentTop;
+    this->localVarOffsets[name] = this->currentTop + 4;
 
-    return address;
+    return this->currentTop + 4;
 }
 
 //未对齐可能有隐患
