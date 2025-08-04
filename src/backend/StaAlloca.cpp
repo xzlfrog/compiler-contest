@@ -176,7 +176,7 @@ std::string StackAllocator::emitPrologue(int stackSize) {
     int str_lpfp = 16;
     
     if(stackSize!=0){
-        out << "\tSUB SP, SP," << std::to_string(-stackSize) << "\n";
+        out << "\tSUB SP, SP, #" << std::to_string(-stackSize) << "\n";
     }
     
     //out << "\t; Function prologue\n";
@@ -274,7 +274,7 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
     out << "\tLDP X29, X30, [SP], #" << ldr_spfp << "\n";
     //移除多的栈空间 如果有
     if(stackSize!=0){
-        out << "\tADD SP, SP, " << stackSize << "\n";  
+        out << "\tADD SP, SP, #" << stackSize << "\n";  
     }  
     return out.str();
 }
