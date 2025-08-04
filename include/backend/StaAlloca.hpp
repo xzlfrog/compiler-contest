@@ -20,7 +20,7 @@ class StackAllocator {
     private:
         static StackAllocator* stackInstance; // 单例模式
         std::unordered_map<std::string, int> localVarOffsets;
-        int currentTop = 0;                      // 栈顶
+        int currentTop = 4;                      // 栈顶
         int getTypeSize(Symbol* symbol);
         
 
