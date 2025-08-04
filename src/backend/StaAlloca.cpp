@@ -191,8 +191,9 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
     int ldr_spfp = 16;
 
     //将指针移至 spfp 处
-    int current_top = this->stack_currentOffset;
+    int current_top =-this->stack_currentOffset;
     if (current_top != 0) {
+        if(current_top < 0){
         if(current_top > -4095){
             out << "\tADD SP, SP, #" << -current_top << "\n";
         }else{
@@ -227,7 +228,45 @@ std::string StackAllocator::emitEpilogue(int stackSize) {
                 }
             }
             out << "\tADD SP, SP, " << reg_new << "\n";
+        }
+
             // 如果全为 0
+        }else{
+            if(current_top <= 4095){
+            out << "\tSUB SP, SP, #" << current_top << "\n";
+        }else{
+            std::string reg = "X8";
+            int imm = current_top;
+
+            bool first = true;
+            std::string reg_new;
+            if(reg.front()=='W'){
+                reg_new = "X" + reg.substr(1);
+            }else{
+                reg_new = reg;
+            }
+            // 提取四个 16 位段
+            uint16_t parts[4] = {
+                static_cast<uint16_t>(imm & 0xFFFF),           // bits 0-15
+                static_cast<uint16_t>((imm >> 16) & 0xFFFF),   // bits 16-31
+                static_cast<uint16_t>((imm >> 32) & 0xFFFF),   // bits 32-47
+                static_cast<uint16_t>((imm >> 48) & 0xFFFF)    // bits 48-63
+            };
+            int shifts[4] = {0, 16, 32, 48};
+        
+            for (int i = 3; i >= 0; i--) {
+                if (parts[i] != 0 || (first && i == 0)) {
+                    std::string instr = first ? "MOVZ" : "MOVK";
+                    if (shifts[i] == 0) {
+                        out << "\t" << instr << " " << reg_new << ", #" << std::to_string(parts[i]) << "\n";
+                    } else {
+                        out << "\t" << instr << " " << reg_new << ", #" << std::to_string(parts[i]) << ", LSL #" << std::to_string(shifts[i]) << "\n";
+                    }
+                    first = false;
+                }
+            }
+            out << "\tSUB SP, SP, " << reg_new << "\n";
+        }
         }
     }
     

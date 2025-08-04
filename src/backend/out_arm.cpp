@@ -1766,6 +1766,7 @@ void XRegAllocator::promoteToRegister(std::string symbol) {
             OutArm::outString("\tLDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
         }else{
             OutArm::emitLargeNumber(reg_name,stack_offset);
+            OutArm::outString("\tADD " + reg_name + ", SP, " + reg_name);
             OutArm::outString("\tLDR " + reg_name + ", [" + reg_name + "]");
         }   
         int position = this->var_to_reg[symbol]; 
@@ -1812,7 +1813,12 @@ void XRegAllocator::spillToStack(std::string symbol) {
     }else{
         if(stack_offset <= 255 && stack_offset>=-255){
             OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]!");
-            out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+            if(stack_offset>0){
+                OutArm::outString("\tSUB SP, SP, #" + std::to_string(stack_offset));
+            }else if(stack_offset<0){
+                OutArm::outString("\tADD SP, SP, #" + std::to_string(-stack_offset));
+            }
+            //out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
         }else if(stack_offset < -255){
             if( stack_offset >= -4095 ){
                 OutArm::outString("\tMOV X8, #" + std::to_string(-stack_offset));
@@ -1823,7 +1829,8 @@ void XRegAllocator::spillToStack(std::string symbol) {
             }
             OutArm::outString("\tSUB SP, SP, X8");
             OutArm::outString("\tSTR " + reg_name + ", [SP]");
-            out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+            OutArm::outString("\tADD SP, SP, X8");
+            //out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
         }else if(stack_offset > 255){
             if( stack_offset <=4095 ){
                 OutArm::outString("\tMOV X8, #" + std::to_string(stack_offset));
@@ -1834,7 +1841,8 @@ void XRegAllocator::spillToStack(std::string symbol) {
             }
             OutArm::outString("\tADD SP, SP, X8");
             OutArm::outString("\tSTR " + reg_name + ", [SP]");
-            out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+            OutArm::outString("\tSUB SP, SP, X8");
+            //out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
         }
     }
    
@@ -1856,6 +1864,7 @@ void DRegAllocator::promoteToRegister(std::string symbol) {
             OutArm::outString("\tLDR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]");
         }else{
             OutArm::emitLargeNumber(reg_name,stack_offset);
+            OutArm::outString("\tADD " + reg_name + ", SP, " + reg_name);
             OutArm::outString("\tLDR " + reg_name + ", [" + reg_name + "]");
         }
 
@@ -1902,7 +1911,12 @@ void DRegAllocator::spillToStack(std::string symbol) {
     }else{
         if(-255 <= stack_offset <= 255){
             OutArm::outString("\tSTR " + reg_name + ", [SP, #" + std::to_string(stack_offset) + "]!");
-            out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+            if(stack_offset>0){
+                OutArm::outString("\tSUB SP, SP, #" + std::to_string(stack_offset));
+            }else if(stack_offset<0){
+                OutArm::outString("\tADD SP, SP, #" + std::to_string(-stack_offset));
+            }
+            //out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
         }else if(stack_offset < -255){
             if( -4095 <= stack_offset ){
                 OutArm::outString("\tMOV X8, #" + std::to_string(-stack_offset));
@@ -1913,7 +1927,9 @@ void DRegAllocator::spillToStack(std::string symbol) {
             }
             OutArm::outString("\tSUB SP, SP, X8");
             OutArm::outString("\tSTR " + reg_name + ", [SP]");
-            out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+            OutArm::outString("\tADD SP, SP, X8");
+            //out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+            //out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
         }else if(stack_offset > 255){
             if( stack_offset <=4095 ){
                 OutArm::outString("\tMOV X8, #" + std::to_string(stack_offset));
@@ -1924,7 +1940,8 @@ void DRegAllocator::spillToStack(std::string symbol) {
             }
             OutArm::outString("\tADD SP, SP, X8");
             OutArm::outString("\tSTR " + reg_name + ", [SP]");
-            out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
+            OutArm::outString("\tSUB SP, SP, X8");
+            //out_Arm.stackAllocator.stack_currentOffset -= stack_offset; 
         }
     }
    
@@ -2000,7 +2017,7 @@ void OutArm::SPmove( bool isStore, const std::string& reg, int offsets){
         //用完回退
         if(offset>0){
             OutArm::outString("\tADD SP, SP, #" + std::to_string(offset));
-        }else(offset<0){
+        }else if(offset<0){
             OutArm::outString("\tSUB SP, SP, #" + std::to_string(-offset));
         }
         //out_Arm.stackAllocator.stack_currentOffset += offset; 
@@ -2177,6 +2194,7 @@ void out_arm(std::string outputFileName, ModuleList* module_list) {
         // 遍历每个llvm语句
         for (LLVM* llvm = module->head; llvm != nullptr; llvm = llvm->next) {
             llvm->out_arm_str();
+   //     OutArm::outString(std::to_string(Out_Arm.stackAllocator.stack_currentOffset));
         }
         
         if(flag)
