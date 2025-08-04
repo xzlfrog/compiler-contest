@@ -316,8 +316,8 @@ Expression* create_binary_expr(int op, Expression* a, Expression* b){
     else
         throw std::runtime_error("the type is not allowed in symY");
     Expression* ret;
-    llvmlist->InsertHead(a->llvmlist);
     llvmlist->InsertHead(b->llvmlist);
+    llvmlist->InsertHead(a->llvmlist);
     if(flag)
         ret=new Expression(llvmlist,resi);
     else
