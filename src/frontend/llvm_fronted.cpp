@@ -8,6 +8,7 @@ extern std::vector<int>dim_array;
 extern Symbol* sym_defining;
 extern bool Make_llvm;
 extern bool ssa_flag;
+bool flag_need_load;
 
 bool isConst(Symbol* sym){
     if(sym->getType()==symType::constant_var||sym->getType()==symType::constant_nonvar){
@@ -485,13 +486,17 @@ Expression* create_func_call(std::string name, Expression* exp){
     return new Expression(llvmlist,bs);
 }
 
-std::vector<std::pair<dataType,BasicSymbol*>>& getIdxFromExp(std::vector<Expression*>* exps,bool flag){
+std::vector<std::pair<dataType,BasicSymbol*>>& getIdxFromExp(std::vector<Expression*>* exps,bool flag,const std::vector<int>&dims){
     static std::vector<std::pair<dataType,BasicSymbol*>> res;
     res.clear();
     if(!flag)
         res.push_back({dataType::i32,getZeroSym(dataType::i32)});
     for(auto &exp : (*exps)){
-        res.push_back({exp->sym->data->getType(),dynamic_cast<BasicSymbol*>(exp->sym)});
+        res.push_back({dataType::i32,dynamic_cast<BasicSymbol*>(exp->sym)});
+    }
+    for(int i=res.size();i<=dims.size();i++){
+        flag_need_load=false;
+        res.push_back({dataType::i32,getZeroSym(dataType::i32)});
     }
     return res;
 }
@@ -571,9 +576,10 @@ Expression* get_element(std::string name,std::vector<Expression*>* exps){
             ps=SymbolFactory::createTmpPointerSymbolWithScope(array->getArrayType(),scope);
             ps->isConst=array->isConst;
             bool flag=array->scope==1;
-            std::vector<std::pair<dataType,BasicSymbol*>> idxs=getIdxFromExp(exps,flag);
+            flag_need_load=true;
+            std::vector<std::pair<dataType,BasicSymbol*>> idxs=getIdxFromExp(exps,flag,array->getDimensions());
             llvmlist->InsertHead(LLVMfactory::createGetElementPtrLLVM(ps,array,idxs));
-            if(idxs.size()>array->getDimensions().size())
+            if(flag_need_load)
                 llvmlist->InsertTail(LLVMfactory::createLoadLLVM(ps,bs));
             else 
                 is_ps=true;

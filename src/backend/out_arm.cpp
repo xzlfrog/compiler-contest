@@ -898,6 +898,7 @@ void CallLLVM::out_arm_str()  {
                 }
             }else if(out_Arm.stackAllocator.hasVariable(pointer_symbol->getName())){
                 int offset = out_Arm.stackAllocator.getOffset(pointer_symbol->getName());
+                arg_str = "X8";
                 if(offset>0){
                     if(offset<4095){
                         OutArm::outString("\tADD " + arg_str + ", SP, #" + std::to_string(offset));
