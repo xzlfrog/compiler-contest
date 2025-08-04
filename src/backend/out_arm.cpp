@@ -898,6 +898,7 @@ void CallLLVM::out_arm_str()  {
                 }
             }else if(out_Arm.stackAllocator.hasVariable(pointer_symbol->getName())){
                 int offset = out_Arm.stackAllocator.getOffset(pointer_symbol->getName());
+                arg_str = "X8";
                 if(offset>0){
                     if(offset<4095){
                         OutArm::outString("\tADD " + arg_str + ", SP, #" + std::to_string(offset));
@@ -1304,13 +1305,17 @@ void StoreLLVM::out_arm_str()  {
 
     //store语句 特殊处理src为常数情况
     if(src_str.front() == '#' && this->src_sym->getDataType()==dataType::i32){
-        std::string tmp_num_str = src_str;
-        VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
-        src_str = out_Arm.DispatchReg(tmp);
-        if(std::stoi(src_str.substr(1)) > 4095){
-            out_Arm.emitLargeNumber(src_str,std::stoi(src_str.substr(1)));
-        }else{
-            OutArm::outString("\tMOV " + src_str + ", " + tmp_num_str);
+        if(src_str.substr(1) == "0"){
+            src_str = "WZR";
+    }else{
+            std::string tmp_num_str = src_str;
+            VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::i32, 1);
+            src_str = out_Arm.DispatchReg(tmp);
+            if(std::stoi(src_str.substr(1)) > 4095){
+                out_Arm.emitLargeNumber(src_str,std::stoi(src_str.substr(1)));
+            }else{
+                OutArm::outString("\tMOV " + src_str + ", " + tmp_num_str);
+            }
         }
     }else if(src_str.front() == '=' && this->src_sym->getDataType()==dataType::f32){
         std::string tmp_num_str = src_str;
