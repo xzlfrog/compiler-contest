@@ -362,7 +362,24 @@ void ArithmeticOperationLLVM::out_arm_str(){
         default:
             throw std::invalid_argument("Unsupported LLVM type for ARM conversion");
     }
-    
+
+    //溢出参数情况
+    switch(this->llvmType){
+        case llvm_fadd:
+        case add:
+            {
+            OutArm& out_Arm = OutArm::getInstance();
+            std::string a_name = this->getA()->getName();
+            if(out_Arm.stackAllocator.func_Params_Stacks.count(a_name)){
+                int offset = out_Arm.stackAllocator.getOffset(a_name);
+                std::string a_str = out_Arm.DispatchReg(this->getA());
+                out_Arm.SPmove(true,a_str,offset);
+            }
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
