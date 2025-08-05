@@ -254,28 +254,29 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
             reg_name = "X8" ;
             return reg_name;
     }//常数情况
-    else if(symbol->getType() == symType::constant_nonvar){
-            if(symbol->getDataType() == dataType::i32){
-                if(std::stoi(getSymOut(symbol)) < 4096 && std::stoi(getSymOut(symbol)) > -4096){
-                    reg_name = "#" + getSymOut(symbol);
+    else if(auto* const_Symbol = dynamic_cast<ConstSymbol*>(symbol)){
+    // else if(symbol->getType() == symType::constant_nonvar){
+            if(const_Symbol->getDataType() == dataType::i32){
+                if(std::stoi(getSymOut(const_Symbol)) < 4096 && std::stoi(getSymOut(const_Symbol)) > -4096){
+                    reg_name = "#" + getSymOut(const_Symbol);
                 }else{
                     VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
                     reg_name = out_Arm.DispatchReg(tmp_sym);
-                    out_Arm.emitLargeNumber(reg_name,std::stoi(getSymOut(symbol)));
+                    out_Arm.emitLargeNumber(reg_name,std::stoi(getSymOut(const_Symbol)));
                 }
-        }else if(symbol->getDataType() == dataType::i1){
-            if(std::stoi(getSymOut(symbol)) < 4096 && std::stoi(getSymOut(symbol)) > -4096){
-                reg_name = "#" + getSymOut(symbol);
+        }else if(const_Symbol->getDataType() == dataType::i1){
+            if(std::stoi(getSymOut(const_Symbol)) < 4096 && std::stoi(getSymOut(const_Symbol)) > -4096){
+                reg_name = "#" + getSymOut(const_Symbol);
             }else{
                 VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
                 reg_name = out_Arm.DispatchReg(tmp_sym);
-                out_Arm.emitLargeNumber(reg_name,std::stoi(getSymOut(symbol)));
+                out_Arm.emitLargeNumber(reg_name,std::stoi(getSymOut(const_Symbol)));
             }
         }
-        else if(symbol->getDataType() == dataType::f32){
+        else if(const_Symbol->getDataType() == dataType::f32){
             VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::f32);
             reg_name = out_Arm.DispatchReg(tmp_sym);
-            out_Arm.emitLoadFloatSymbol(reg_name, symbol);
+            out_Arm.emitLoadFloatSymbol(reg_name, const_Symbol);
         }
         return reg_name;
     }//数组情况
@@ -1388,7 +1389,9 @@ void LoadLLVM::out_arm_str()  {
     out_Arm.stackAllocator.RegVar_StackVar[dest_sym->getName()] = src_sym->getName();
 
     std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
-
+    if(dest_str.front()=='='){
+        dest_str = out_Arm.dRegAllocator.getRegister(this->dest_sym->getName());
+    }
 
     //加载普通变量 数组首位 已计算过【1】【2】地址的数组  ---- ----  全局变量 [i][j] 地址的数组
     if(!out_Arm.globalAllocator.find_symbol(src_sym->getName()) && !out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(src_sym->getName())){
