@@ -1476,8 +1476,8 @@ void StoreLLVM::out_arm_str()  {
     else{
         std::string dest_str = out_Arm.DispatchReg(this->dest_sym);
         if(out_Arm.globalAllocator.find_symbol(dest_sym->getName())){
-                VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
-                std::string tmp_str = out_Arm.DispatchReg(tmp_sym);
+                //VarSymbol* tmp_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                std::string tmp_str = "X8";
              //全局变量 而不是临时变量
              if(!out_Arm.globalAllocator.symbol_to_global.count(dest_sym->getName())){
                 OutArm::outString("\tADRP " + tmp_str + ", " + dest_str);
