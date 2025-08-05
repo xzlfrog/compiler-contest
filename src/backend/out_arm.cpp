@@ -690,6 +690,8 @@ void ReturnLLVM::out_arm_str()  {
         }
 }
 
+
+
 void CallLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
     std::string func_name = this->function->getName();
@@ -727,6 +729,8 @@ void CallLLVM::out_arm_str()  {
 
     int side_of_stack = 8;
     int arg_index = 0;
+    std::unordered_map<std::string,std::string> tmp_param_used_later;//前为 tmp寄存器 后为可能被覆盖的参数
+
     for (const auto& arg : this->arguments) {
         ori_str = ori_strs[i];
         if (auto* array_symbol = dynamic_cast<ArraySymbol*>(arg)) {
@@ -808,6 +812,7 @@ void CallLLVM::out_arm_str()  {
             }
 
             if(arg_index < side_of_stack){
+                if(this->arguments.count)
                 if(ori_str.front() == 'S'){
                     OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
                 }else{
