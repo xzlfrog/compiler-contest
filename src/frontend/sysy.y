@@ -98,11 +98,14 @@ decl : const_decl
     { $$ = $1; }
 ;
 
-const_decl : CONST btype const_def_list ';'
-    { 
+const_decl : CONST btype {
         if($2==VOID_TYPE)
             throw std::runtime_error("the variable is not allowed to be a void type");
-        $$ = create_const_decl($2, $3); 
+        type_now=$2==INT_TYPE?i32:f32;
+    }
+    const_def_list ';'
+    { 
+        $$ = create_const_decl($2,$4); 
     }
 ;
 

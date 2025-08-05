@@ -23,6 +23,7 @@ int cnt_array_init;
 dataType func_ret_type;
 Symbol* sym_defining;
 bool ssa_flag;
+dataType type_now;
 //std::stack<int>array_initial;
 
 bool Make_llvm = true;//不输出

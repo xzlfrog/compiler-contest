@@ -806,7 +806,7 @@ Symbol* create_const_def(std::string name,Expression* exp){
     //std::swap(empty_stack,array_initial);
     cnt_array_init=0;
     assign_queue.push(exp);
-    ConstVarSymbol* constVarSymbol=SymbolFactory::createConstVarSymbolWithScope(name,scope,exp->sym->data);
+    ConstVarSymbol* constVarSymbol=SymbolFactory::createConstVarSymbolWithScope(name,scope,typeConversion(type_now,exp->sym->data));
     if(variable_table[scope].find(name)!=variable_table[scope].end())
         throw std::runtime_error("the identifier was defined before!");
     variable_table[scope][name]=copy(constVarSymbol);
