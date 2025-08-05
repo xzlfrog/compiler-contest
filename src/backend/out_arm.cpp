@@ -1591,11 +1591,6 @@ void GetElementPtrLLVM::out_arm_str()  {
     const auto& container = this->getTyAndIdx();
     std::string arr_name = this->getSrcSymbol()->getName();
 
-    std::string tmp_name = this->getDestSymbol()->getName();
-    if(tmp_name == "%tmp_var.7269.scope2.id0"){
-        out_Arm.outString("999");
-    } 
-
     bool index_allnumber = true;//判断逻辑 是否为[1][1] 还是[a][b]
     for (const auto& [data_type, symbol_ptr] : this->getTyAndIdx()) {
         if (!symbol_ptr) {
