@@ -362,7 +362,24 @@ void ArithmeticOperationLLVM::out_arm_str(){
         default:
             throw std::invalid_argument("Unsupported LLVM type for ARM conversion");
     }
-    
+
+    //溢出参数情况
+    switch(this->llvmType){
+        case llvm_fadd:
+        case add:
+            {
+            OutArm& out_Arm = OutArm::getInstance();
+            std::string a_name = this->getA()->getName();
+            if(out_Arm.stackAllocator.func_Params_Stacks.count(a_name)){
+                int offset = out_Arm.stackAllocator.getOffset(a_name);
+                std::string a_str = out_Arm.DispatchReg(this->getA());
+                out_Arm.SPmove(true,a_str,offset);
+            }
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
@@ -1574,6 +1591,11 @@ void GetElementPtrLLVM::out_arm_str()  {
     const auto& container = this->getTyAndIdx();
     std::string arr_name = this->getSrcSymbol()->getName();
 
+    std::string tmp_name = this->getDestSymbol()->getName();
+    if(tmp_name == "%tmp_var.7269.scope2.id0"){
+        out_Arm.outString("999");
+    } 
+
     bool index_allnumber = true;//判断逻辑 是否为[1][1] 还是[a][b]
     for (const auto& [data_type, symbol_ptr] : this->getTyAndIdx()) {
         if (!symbol_ptr) {
@@ -2426,7 +2448,7 @@ void OutArm::resetReg(){
     Out_Arm.dRegAllocator.reset();
     Out_Arm.xRegAllocator.reset();
     
-    Out_Arm.stackAllocator.set_top(4);
+    Out_Arm.stackAllocator.set_top(-4);
     Out_Arm.stackAllocator.stack_currentOffset = 0;
     Out_Arm.stackAllocator.func_Params_Stacks.clear();
     Out_Arm.stackAllocator.func_overflowstacksize.clear();
