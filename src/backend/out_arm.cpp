@@ -695,7 +695,7 @@ void ReturnLLVM::out_arm_str()  {
         }
 }
 
-bool isRegisterConflict(const std::string& target_reg, const std::vector<std::string>& reg_list) {
+bool isRegisterConflict(const std::string& target_reg, const std::deque<std::string>& reg_list) {
     if (target_reg.empty()) return false;
 
     // 标准化目标寄存器名称（X/W -> "R", S/D -> "F"）
@@ -773,9 +773,16 @@ void CallLLVM::out_arm_str()  {
     int side_of_stack = 8;
     int arg_index = 0;
     std::unordered_map<std::string,std::string> tmp_param_used_later;//前为 tmp寄存器 后为可能被覆盖的参数
+    std::deque<std::string> tmp_unused_param;
+    for(auto& orig  : ori_strs){
+        tmp_unused_param.push_back(orig);
+    }
+
 
     for (const auto& arg : this->arguments) {
         ori_str = ori_strs[i];
+        tmp_unused_param.pop_front();
+
         if (auto* array_symbol = dynamic_cast<ArraySymbol*>(arg)) {
 
                 //全局变量 - 全局数组 
@@ -856,7 +863,7 @@ void CallLLVM::out_arm_str()  {
 
 
             if(arg_index < side_of_stack){
-                if(isRegisterConflict(arg_str,ori_strs)){
+                if(isRegisterConflict(arg_str,tmp_unused_param)){
                     VarSymbol* tmp_ori_sym;
                     std::string tmp_ori_str;
                     if(ori_str.front() == 'S'){
@@ -914,7 +921,7 @@ void CallLLVM::out_arm_str()  {
 
 
             if(arg_index < side_of_stack){
-                if(isRegisterConflict(arg_str,ori_strs)){
+                if(isRegisterConflict(arg_str,tmp_unused_param)){
                     VarSymbol* tmp_ori_sym;
                     std::string tmp_ori_str;
                     if(ori_str.front() == 'S'){
@@ -933,7 +940,7 @@ void CallLLVM::out_arm_str()  {
                             OutArm::outString("\tMOV " + tmp_ori_str + ", " + arg_str); 
                         }
                     }
-                    tmp_param_used_later[tmp_ori_str]=ori_str;
+                    tmp_param_used_later[ori_str]=tmp_ori_str;
                 }else{
                     if(ori_str.front() == 'S'){
                         OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
@@ -941,11 +948,12 @@ void CallLLVM::out_arm_str()  {
                         OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
                     }   
                 }
-                }else{
-                    int tmp_offset = -((arg_index-8)*8);
-                    OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-                }
-                auto tmp_param = tmp_param_used_later.find(arg_str);
+            }else{
+                int tmp_offset = -((arg_index-8)*8);
+                OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+            } 
+            
+            auto tmp_param = tmp_param_used_later.find(arg_str);
             if (tmp_param != tmp_param_used_later.end()) {
                 // 获取找到的键值对
                 const auto& [reg_name, value] = *tmp_param;  // C++17结构化绑定
@@ -1026,7 +1034,7 @@ void CallLLVM::out_arm_str()  {
             }
 
             if(arg_index < side_of_stack){
-                if(isRegisterConflict(arg_str,ori_strs)){
+                if(isRegisterConflict(arg_str,tmp_unused_param)){
                     VarSymbol* tmp_ori_sym;
                     std::string tmp_ori_str;
                     if(ori_str.front() == 'S'){
@@ -1045,7 +1053,7 @@ void CallLLVM::out_arm_str()  {
                             OutArm::outString("\tMOV " + tmp_ori_str + ", " + arg_str); 
                         }
                     }
-                    tmp_param_used_later[tmp_ori_str]=ori_str;
+                    tmp_param_used_later[ori_str]=tmp_ori_str;
                 }else{
                     if(ori_str.front() == 'S'){
                         OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
@@ -1053,23 +1061,24 @@ void CallLLVM::out_arm_str()  {
                         OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
                     }   
                 }
-                }else{
-                    int tmp_offset = -((arg_index-8)*8);
-                    OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+            }else{
+                int tmp_offset = -((arg_index-8)*8);
+                OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+            } 
+            
+            auto tmp_param = tmp_param_used_later.find(arg_str);
+            if (tmp_param != tmp_param_used_later.end()) {
+                // 获取找到的键值对
+                const auto& [reg_name, value] = *tmp_param;  // C++17结构化绑定
+                
+                if (!reg_name.empty() && reg_name.front() == 'S') {
+                    // 浮点寄存器使用 FMOV
+                    OutArm::outString("\tFMOV " + reg_name + ", " + value);
+                } else {
+                    // 通用寄存器使用 MOV
+                    OutArm::outString("\tMOV " + reg_name + ", " + value);
                 }
-                auto tmp_param = tmp_param_used_later.find(arg_str);
-                if (tmp_param != tmp_param_used_later.end()) {
-                    // 获取找到的键值对
-                    const auto& [reg_name, value] = *tmp_param;  // C++17结构化绑定
-                    
-                    if (!reg_name.empty() && reg_name.front() == 'S') {
-                        // 浮点寄存器使用 FMOV
-                        OutArm::outString("\tFMOV " + reg_name + ", " + value);
-                    } else {
-                        // 通用寄存器使用 MOV
-                        OutArm::outString("\tMOV " + reg_name + ", " + value);
-                    }
-                }
+            }
         } else if (arguments[i]->getType() == symType::constant_nonvar){
             ConstSymbol* const_symbol=dynamic_cast<ConstSymbol*>(arguments[i]);
             if(arg_index < side_of_stack){
