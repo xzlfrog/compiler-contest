@@ -228,6 +228,7 @@ Expression* create_binary_expr(int op, Expression* a, Expression* b){
                 llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::llvm_frem,res,dynamic_cast<BasicSymbol*>(a->sym),dynamic_cast<BasicSymbol*>(b->sym)));
                 break;
             case BINARY_AND:{
+                flag=true;
                 llvmlist->InsertHead(a->llvmlist);
                 BasicSymbol* res_i1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
                 llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,res_i1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::f32)));
@@ -238,10 +239,11 @@ Expression* create_binary_expr(int op, Expression* a, Expression* b){
                 llvmlist->InsertTail(b->llvmlist);
                 llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,res_i1,dynamic_cast<BasicSymbol*>(b->sym),getZeroSym(dataType::f32)));
                 llvmlist->InsertTail(LLVMfactory::createLableLLVM(z_label));
-                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,res_i1,res));
-                return new Expression(llvmlist,res);
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,res_i1,resi));
+                return new Expression(llvmlist,resi);
             }
             case BINARY_OR:{
+                flag=true;
                 llvmlist->InsertHead(a->llvmlist);
                 BasicSymbol* res_i1=SymbolFactory::createTmpVarSymbolWithScope(dataType::i1,scope);
                 llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,res_i1,dynamic_cast<BasicSymbol*>(a->sym),getZeroSym(dataType::f32)));
@@ -252,8 +254,8 @@ Expression* create_binary_expr(int op, Expression* a, Expression* b){
                 llvmlist->InsertTail(b->llvmlist);
                 llvmlist->InsertTail(LLVMfactory::createBasicOperationLLVM(LLVMtype::fcmp_one,res_i1,dynamic_cast<BasicSymbol*>(b->sym),getZeroSym(dataType::f32)));
                 llvmlist->InsertTail(LLVMfactory::createLableLLVM(uz_label));
-                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,res_i1,res));
-                return new Expression(llvmlist,res);
+                llvmlist->InsertTail(LLVMfactory::createTypeConversionOperation(LLVMtype::zext,res_i1,resi));
+                return new Expression(llvmlist,resi);
             }
                 break;
             case BINARY_EQ:
