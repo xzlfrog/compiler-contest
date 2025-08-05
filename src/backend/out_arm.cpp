@@ -150,7 +150,7 @@ void OutArm::emitLoadFloat(const std::string& reg, float value) {
 void OutArm::emitLoadFloatSymbol(const std::string& reg, Symbol* float_symbol) {
     OutArm& out_Arm = OutArm::getInstance();
     std::string tmp_str = float_symbol->getName();
-    if(!out_Arm.globalAllocator.rodata.count(float_symbol->getName())){
+    if((!out_Arm.globalAllocator.rodata.count(float_symbol->getName()) && (float_symbol->getType() == symType::constant_nonvar))){
         std::vector<Data*> float_value;
         float_value.push_back(float_symbol->data);
         
@@ -168,7 +168,7 @@ void OutArm::emitLoadFloatSymbol(const std::string& reg, Symbol* float_symbol) {
     else {
         // 错误：不是浮点寄存器
         // 可以抛出错误或断言
-        OutArm::outString("\t// ERROR: invalid float register: " + reg);
+        //OutArm::outString("\t// ERROR: invalid float register: " + reg);
     }
 }
 
