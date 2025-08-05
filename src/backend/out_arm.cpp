@@ -1400,8 +1400,8 @@ void LoadLLVM::out_arm_str()  {
     
         std::string src_str = out_Arm.DispatchReg(this->src_sym);
         if(out_Arm.globalAllocator.find_symbol(src_sym->getName())) {
-            VarSymbol* tmp_address_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
-            std::string tmp_address_str = out_Arm.DispatchReg(tmp_address_sym);
+            // VarSymbol* tmp_address_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+            std::string tmp_address_str = "X8";
             //全局变量 非数组情况
             if(!out_Arm.globalAllocator.symbol_to_global.count(src_sym->getName())){ 
                 // out_Arm.stackAllocator.Tmp_StackAddress_InReg[src_sym->getName()] = dest_str;
