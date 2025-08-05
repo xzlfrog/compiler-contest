@@ -44,6 +44,46 @@ void OutArm::emitSmallNumber(const std::string& w_reg, uint32_t imm) {
     }
 }
 
+std::string tmp_emitLargeNumber(const std::string& reg, uint64_t imm) {
+    std::string result;
+    bool first = true;
+    std::string reg_new;
+    
+    if (reg.front() == 'W') {
+        reg_new = "X" + reg.substr(1);
+    } else {
+        reg_new = reg;
+    }
+    
+    // Extract four 16-bit segments
+    uint16_t parts[4] = {
+        static_cast<uint16_t>(imm & 0xFFFF),           // bits 0-15
+        static_cast<uint16_t>((imm >> 16) & 0xFFFF),  // bits 16-31
+        static_cast<uint16_t>((imm >> 32) & 0xFFFF), // bits 32-47
+        static_cast<uint16_t>((imm >> 48) & 0xFFFF)   // bits 48-63
+    };
+    
+    int shifts[4] = {0, 16, 32, 48};
+    
+    for (int i = 3; i >= 0; i--) {
+        if (parts[i] != 0 || (first && i == 0)) {
+            std::string instr = first ? "MOVZ" : "MOVK";
+            if (shifts[i] == 0) {
+                result += "\t" + instr + " " + reg_new + ", #" + std::to_string(parts[i]) + "\n";
+            } else {
+                result += "\t" + instr + " " + reg_new + ", #" + std::to_string(parts[i]) + ", LSL #" + std::to_string(shifts[i]) + "\n";
+            }
+            first = false;
+        }
+    }
+    
+    // If all parts are zero
+    if (first) {
+        result += "\tMOVZ " + reg + ", #0\n";
+    }
+    
+    return result;
+}
 
 void OutArm::emitLargeNumber(const std::string& reg, uint64_t imm){
         bool first = true;
@@ -363,23 +403,6 @@ void ArithmeticOperationLLVM::out_arm_str(){
             throw std::invalid_argument("Unsupported LLVM type for ARM conversion");
     }
 
-    //溢出参数情况
-    switch(this->llvmType){
-        case llvm_fadd:
-        case add:
-            {
-            OutArm& out_Arm = OutArm::getInstance();
-            std::string a_name = this->getA()->getName();
-            if(out_Arm.stackAllocator.func_Params_Stacks.count(a_name)){
-                int offset = out_Arm.stackAllocator.getOffset(a_name);
-                std::string a_str = out_Arm.DispatchReg(this->getA());
-                out_Arm.SPmove(true,a_str,offset);
-            }
-            break;
-        }
-        default:
-            break;
-    }
 }
 
 std::string OutArm::RemOperation(ArithmeticOperationLLVM* REMllvm){
@@ -525,6 +548,47 @@ std::string OutArm::ASMDOperation(ArithmeticOperationLLVM* ASMDllvm){
     
     default:
         break;
+    }
+
+    //溢出参数情况
+    switch(ASMDllvm->llvmType){
+        case llvm_fadd:
+        case add:
+            {
+            OutArm& out_Arm = OutArm::getInstance();
+            std::string a_name = ASMDllvm->getA()->getName();
+            if(out_Arm.stackAllocator.func_Params_Stacks.count(a_name)){
+                int offset = out_Arm.stackAllocator.getOffset(a_name);
+                std::string output_str;
+                if(offset>0){
+                    if(offset<=255){
+                        output_str = "\tSTR " + a_str + ", [SP, #" + std::to_string(offset) + "]";
+                    }else{
+                        //VarSymbol* tmp_num = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                        //std::string tmp_str = out_Arm.DispatchReg(tmp_num);
+                        std::string tmp_str = "X8";
+                        std::string tmp_str2 = "\tADD " + tmp_str + ", SP, " + tmp_str + "\n";
+                        std::string tmp_str3 = "\tSTR " + a_str + ", [X8]";
+                        output_str = tmp_emitLargeNumber(tmp_str,offset) + tmp_str2 + tmp_str3;
+                    }
+                }else if(offset<0){
+                    if(offset>=-255){
+                        output_str = "\tSTR " + a_str + ", [SP, #" + std::to_string(offset) + "]";
+                    }else{
+                        std::string tmp_str = "X8";
+                        std::string tmp_str2 = "\tSUB " + tmp_str + ", SP, " + tmp_str + "\n";
+                        std::string tmp_str3 = "\tSTR " + a_str + ", [X8]";
+                        output_str = tmp_emitLargeNumber(tmp_str,-offset) + tmp_str2 + tmp_str3;
+                    }
+                }else{
+                        output_str = "\tSTR " + a_str + ", [SP]";
+                }
+                return op + " " + a_str + ", " + b_str + ", " + c_str + "\n" + output_str ;
+            }
+            break;
+        }
+        default:
+            break;
     }
     return op + " " + a_str + ", " + b_str + ", " + c_str;
 }
