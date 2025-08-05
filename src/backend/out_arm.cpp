@@ -3,6 +3,10 @@
 #include "../../include/llvm.hpp"
 #include <variant>
 #include <cstdint>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <cctype>
 // extern std:ofstream outputArmFile;
 OutArm* OutArm::instance = nullptr; 
 std::ofstream outputArmFile;
@@ -690,7 +694,45 @@ void ReturnLLVM::out_arm_str()  {
         }
 }
 
+bool isRegisterConflict(const std::string& target_reg, const std::vector<std::string>& reg_list) {
+    if (target_reg.empty()) return false;
 
+    // 标准化目标寄存器名称（X/W -> "R", S/D -> "F"）
+    char target_prefix = toupper(target_reg[0]);
+    std::string normalized_target;
+
+    if (target_prefix == 'X' || target_prefix == 'W') {
+        normalized_target = "R" + target_reg.substr(1);  // 例如: X0 -> R0
+    } else if (target_prefix == 'S' || target_prefix == 'D') {
+        normalized_target = "F" + target_reg.substr(1);   // 例如: D3 -> F3
+    } else {
+        return false;  // 非寄存器名称，直接忽略
+    }
+
+    // 遍历列表，检查冲突
+    for (const auto& reg : reg_list) {
+        if (reg.empty()) continue;
+
+        char prefix = toupper(reg[0]);
+        std::string normalized_reg;
+
+        // 标准化列表中的寄存器名称
+        if (prefix == 'X' || prefix == 'W') {
+            normalized_reg = "R" + reg.substr(1);
+        } else if (prefix == 'S' || prefix == 'D') {
+            normalized_reg = "F" + reg.substr(1);
+        } else {
+            continue;  // 忽略无效寄存器名
+        }
+
+        // 比较标准化后的名称
+        if (normalized_target == normalized_reg) {
+            return true;  // 发现冲突
+        }
+    }
+
+    return false;  // 无冲突
+}
 
 void CallLLVM::out_arm_str()  {
     OutArm& out_Arm = OutArm::getInstance();
@@ -811,18 +853,39 @@ void CallLLVM::out_arm_str()  {
                 
             }
 
+
             if(arg_index < side_of_stack){
-                if(this->arguments.count)
-                if(ori_str.front() == 'S'){
-                    OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+                if(isRegisterConflict(arg_str,ori_strs)){
+                    VarSymbol* tmp_ori_sym;
+                    std::string tmp_ori_str;
+                    if(ori_str.front() == 'S'){
+                        tmp_ori_sym = SymbolFactory::createTmpVarSymbol(dataType::f32);
+                        tmp_ori_str = out_Arm.DispatchReg(tmp_ori_sym);
+                        OutArm::outString("\tFMOV " + tmp_ori_str + ", " + arg_str);                        
+                    }
+                    else{
+                        if(ori_str.front() == 'W'){
+                            tmp_ori_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                            tmp_ori_str = out_Arm.DispatchReg(tmp_ori_sym);
+                            OutArm::outString("\tMOV " + tmp_ori_str + ", " + arg_str);                        
+                        }else{
+                            tmp_ori_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                            tmp_ori_str = out_Arm.DispatchReg(tmp_ori_sym);
+                            OutArm::outString("\tMOV " + tmp_ori_str + ", " + arg_str); 
+                        }
+                    }
+                    tmp_param_used_later[tmp_ori_str]=ori_str;
                 }else{
-                    OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
+                    if(ori_str.front() == 'S'){
+                        OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+                    }else{
+                        OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
+                    }   
                 }
             }else{
                 int tmp_offset = -((arg_index-8)*8);
                 OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-            }
-
+            }    
         }
         else if (auto* var_symbol = dynamic_cast<VarSymbol*>(arg)) {
             arg_str = out_Arm.DispatchReg(var_symbol);
@@ -833,19 +896,40 @@ void CallLLVM::out_arm_str()  {
                 out_Arm.SPmove(true,tmp_str,offset);
                 arg_str = tmp_str;
             }
-            if(arg_index < side_of_stack){
-                if(ori_str.front() == 'S'){
-                    OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
-                }else if(arg_str.front() == 'S' && ori_str.front() == 'X'){
-                    OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
-                }else{
-                    OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
-                }
-            }else{
-                int tmp_offset = -((arg_index-8)*8);
-                OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-            }
 
+
+            if(arg_index < side_of_stack){
+                if(isRegisterConflict(arg_str,ori_strs)){
+                    VarSymbol* tmp_ori_sym;
+                    std::string tmp_ori_str;
+                    if(ori_str.front() == 'S'){
+                        tmp_ori_sym = SymbolFactory::createTmpVarSymbol(dataType::f32);
+                        tmp_ori_str = out_Arm.DispatchReg(tmp_ori_sym);
+                        OutArm::outString("\tFMOV " + tmp_ori_str + ", " + arg_str);                        
+                    }
+                    else{
+                        if(ori_str.front() == 'W'){
+                            tmp_ori_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                            tmp_ori_str = out_Arm.DispatchReg(tmp_ori_sym);
+                            OutArm::outString("\tMOV " + tmp_ori_str + ", " + arg_str);                        
+                        }else{
+                            tmp_ori_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                            tmp_ori_str = out_Arm.DispatchReg(tmp_ori_sym);
+                            OutArm::outString("\tMOV " + tmp_ori_str + ", " + arg_str); 
+                        }
+                    }
+                    tmp_param_used_later[tmp_ori_str]=ori_str;
+                }else{
+                    if(ori_str.front() == 'S'){
+                        OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+                    }else{
+                        OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
+                    }   
+                }
+                }else{
+                    int tmp_offset = -((arg_index-8)*8);
+                    OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+                }
         }else if (auto* pointer_symbol = dynamic_cast<PointerSymbol*>(arg)){
             //pointer 作为symbol_to_global时候
             if(out_Arm.globalAllocator.find_symbol(pointer_symbol->getName())){
@@ -879,28 +963,9 @@ void CallLLVM::out_arm_str()  {
                         //经计算后 读取地址应该在
                         arg_str = tmp_str;
 
-                        if(arg_index < side_of_stack){
-                    if(ori_str.front() == 'S'){
-                        OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
-                    }else{
-                        OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
-                    }
-                    }else{
-                        int tmp_offset = -((arg_index-8)*8);
-                        OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-                    }
             }else if(out_Arm.stackAllocator.Tmp_StackAddress_InReg.count(pointer_symbol->getName())){
                 arg_str = "X8";
-                if(arg_index < side_of_stack){
-                    if(ori_str.front() == 'S'){
-                        OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
-                    }else{
-                        OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
-                    }
-                }else{
-                    int tmp_offset = -((arg_index-8)*8);
-                    OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-                }
+
             }else if(out_Arm.stackAllocator.hasVariable(pointer_symbol->getName())){
                 int offset = out_Arm.stackAllocator.getOffset(pointer_symbol->getName());
                 arg_str = "X8";
@@ -926,20 +991,44 @@ void CallLLVM::out_arm_str()  {
                     OutArm::outString("\tMOV " + arg_str + ", [SP]");
                 }
 
-                if(arg_index < side_of_stack){
-                    if(ori_str.front() == 'S'){
-                        OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
-                    }else{
-                        OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
-                    }
-                }else{
-                    int tmp_offset = -((arg_index-8)*8);
-                    OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
-                }
+
             }
             else {
                 OutArm::outString("遗漏的地方");
             }
+
+            if(arg_index < side_of_stack){
+                if(isRegisterConflict(arg_str,ori_strs)){
+                    VarSymbol* tmp_ori_sym;
+                    std::string tmp_ori_str;
+                    if(ori_str.front() == 'S'){
+                        tmp_ori_sym = SymbolFactory::createTmpVarSymbol(dataType::f32);
+                        tmp_ori_str = out_Arm.DispatchReg(tmp_ori_sym);
+                        OutArm::outString("\tFMOV " + tmp_ori_str + ", " + arg_str);                        
+                    }
+                    else{
+                        if(ori_str.front() == 'W'){
+                            tmp_ori_sym = SymbolFactory::createTmpVarSymbol(dataType::i32);
+                            tmp_ori_str = out_Arm.DispatchReg(tmp_ori_sym);
+                            OutArm::outString("\tMOV " + tmp_ori_str + ", " + arg_str);                        
+                        }else{
+                            tmp_ori_sym = SymbolFactory::createTmpVarSymbol(dataType::i64);
+                            tmp_ori_str = out_Arm.DispatchReg(tmp_ori_sym);
+                            OutArm::outString("\tMOV " + tmp_ori_str + ", " + arg_str); 
+                        }
+                    }
+                    tmp_param_used_later[tmp_ori_str]=ori_str;
+                }else{
+                    if(ori_str.front() == 'S'){
+                        OutArm::outString("\tFMOV " + ori_str + ", " + arg_str);
+                    }else{
+                        OutArm::outString("\tMOV " + ori_str + ", " + arg_str);
+                    }   
+                }
+                }else{
+                    int tmp_offset = -((arg_index-8)*8);
+                    OutArm::outString("\tSTR " + arg_str + ", [SP, #" + std::to_string(tmp_offset) + "]" );
+                }
         } else if (arguments[i]->getType() == symType::constant_nonvar){
             ConstSymbol* const_symbol=dynamic_cast<ConstSymbol*>(arguments[i]);
             if(arg_index < side_of_stack){
@@ -1031,6 +1120,14 @@ void CallLLVM::out_arm_str()  {
         ++arg_index;
     }  
     
+    for (const auto& tmp_param : tmp_param_used_later){
+        if(tmp_param.first.front() == 'S'){
+            OutArm::outString("\tFMOV " + tmp_param.first + ", " + tmp_param.second);
+        }else{
+            OutArm::outString("\tMOV " + tmp_param.first + ", " + tmp_param.second);
+        } 
+    }
+
     //释放传参用空间
     if(out_Arm.stackAllocator.stack_currentOffset != tmp_fp){
         int tmp_offset = tmp_fp - out_Arm.stackAllocator.stack_currentOffset ;
