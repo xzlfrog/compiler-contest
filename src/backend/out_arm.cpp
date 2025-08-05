@@ -280,7 +280,14 @@ std::string OutArm::DispatchReg(Symbol* symbol) {
             if((out_Arm.globalAllocator.rodata[symbol->getName()].front()->getType()) == dataType::i32){
                 reg_name = "#" + my_to_string(out_Arm.globalAllocator.rodata[symbol->getName()].front());
             }else{
-                reg_name = "=" + my_to_string(out_Arm.globalAllocator.rodata[symbol->getName()].front());
+                VarSymbol* tmp = SymbolFactory::createTmpVarSymbolWithScope(dataType::f32, 1);
+                std::string tmp_tmp_str = out_Arm.DispatchReg(tmp);
+                std::string const_float_name = symbol->getName().substr(1);
+                OutArm::outString("\tADRP X8, " + const_float_name);
+                OutArm::outString("\tADD X8, X8, :lo12:" + const_float_name);
+                OutArm::outString("\tLDR " + tmp_tmp_str + ", " + "[X8]");
+
+                reg_name = tmp_tmp_str;
             }
                 
         }else{
