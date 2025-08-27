@@ -853,8 +853,8 @@ void CallLLVM::out_arm_str()  {
 
     out_Arm.stackAllocator.stack_currentOffset += diff_bl;
   
-    out_Arm.protectRegs();
-    out_Arm.stackAllocator.stack_currentOffset -= 384;
+    // out_Arm.protectRegs();
+    // out_Arm.stackAllocator.stack_currentOffset -= 384;
 
     int tmp_fp = out_Arm.stackAllocator.stack_currentOffset;
 
@@ -1351,7 +1351,7 @@ void CallLLVM::out_arm_str()  {
     }
 
     //跳转回来后
-    out_Arm.restoreRegs();
+    //out_Arm.restoreRegs();
     if (this->dest_sym) {
         dest_str= out_Arm.DispatchReg(this->dest_sym);
         if(this->function->getReturnType() == dataType::f32 || this->function->getReturnType() == dataType::f64) {
@@ -1361,7 +1361,7 @@ void CallLLVM::out_arm_str()  {
         } 
     }
     OutArm::outString("\tADD SP, SP , #" + std::to_string(384));
-    out_Arm.stackAllocator.stack_currentOffset += 384;
+    // out_Arm.stackAllocator.stack_currentOffset += 384;
     
 
     //将栈指针放回
